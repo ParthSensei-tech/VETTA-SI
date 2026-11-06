@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../../platform/auth/middleware.ts";
-import { ensureUserOrg } from "./org.server.ts";
-import { assertOrgPermission } from "./rbac.server.ts";
+import { authMiddleware } from "../../../platform/auth/middleware.ts";
+import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
+import { assertOrgPermission } from "../../../lib/recruiting/rbac.server.ts";
 import {
   getEmbeddingIndexStatus,
   startModelReindex,
@@ -11,7 +11,7 @@ import {
   triggerEmbeddingBackfill,
   processEmbeddingQueueBatch,
   type EmbeddingIndexStatus,
-} from "./embedding-queue.server.ts";
+} from "../server/embedding-queue.server.ts";
 
 /**
  * Retrieves comprehensive semantic indexing progress, coverage, and model version info for the organization.

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../../platform/db.ts";
-import { ensureUserOrg } from "./org.server.ts";
-import { executeTalentSearch, indexNewCandidate } from "./search-api.ts";
+import { getSql } from "../../../platform/db.ts";
+import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
+import { executeTalentSearch, indexNewCandidate } from "../../pipeline/api/search-api.ts";
 import {
   computeRetrievalMetrics,
   reciprocalRankFusion,

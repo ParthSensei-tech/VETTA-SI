@@ -7,7 +7,7 @@ import {
   calibrateGroundingScore,
 } from "../server/ai-guard.server.ts";
 import { RankResponseSchema, extractAndValidateJson } from "./ai-schema.ts";
-import { evaluateRoleRequirements, matchCandidateToRole } from "../../../lib/recruiting/match-engine.ts";
+import { evaluateRoleRequirements, matchCandidateToRole } from "../../ranking/domain/match-engine.ts";
 import { parseAndRank } from "../server/ai.server.ts";
 
 test("Structured Output Validation: Validates conforming schema and rejects malformed payloads", () => {

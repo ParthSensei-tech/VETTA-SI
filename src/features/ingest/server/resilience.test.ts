@@ -148,7 +148,7 @@ test("Duplicate Resumes: ingesting identical resume text for same role deduplica
   const resumeHash = hashResumeText(resumeContent);
 
   // Ingest first job
-  const { persistRanked } = await import("../../../lib/recruiting/queue.server.ts");
+  const { persistRanked } = await import("../../pipeline/server/queue.server.ts");
   const job1Id = `job_dup_1_${Date.now()}`;
   const res1 = await persistRanked({
     id: job1Id,

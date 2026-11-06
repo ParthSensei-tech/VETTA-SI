@@ -12,15 +12,15 @@ import {
   cancelModelReindex,
   triggerEmbeddingBackfill,
   getActiveEmbeddingModel,
-} from "../../../lib/recruiting/embedding-queue.server.ts";
+} from "../../pipeline/server/embedding-queue.server.ts";
 import {
   DEFAULT_EMBEDDING_MODEL,
   SUPPORTED_EMBEDDING_MODELS,
   embedTexts,
   getModelInfo,
 } from "../server/embed-text.server.ts";
-import { executeTalentSearch } from "../../../lib/recruiting/search-api.ts";
-import { indexNewCandidate } from "../../../lib/recruiting/search.server.ts";
+import { executeTalentSearch } from "../../pipeline/api/search-api.ts";
+import { indexNewCandidate } from "../../pipeline/server/search.server.ts";
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

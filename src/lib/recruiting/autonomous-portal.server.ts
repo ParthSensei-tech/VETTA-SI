@@ -10,7 +10,7 @@ import type {
   AtsWebhookPayload,
 } from "./types.ts";
 import { getSql } from "../../platform/db.ts";
-import { matchCandidateToRole } from "./match-engine.ts";
+import { matchCandidateToRole } from "../../features/ranking/domain/match-engine.ts";
 import { parseJson } from "../../shared/utils.ts";
 
 // ============================================================================

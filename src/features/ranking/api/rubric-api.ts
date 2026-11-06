@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/platform/auth/middleware";
-import type { RubricVersion } from "./rubric-types";
+import type { RubricVersion } from "../domain/rubric-types";
 
 const criterionSchema = z.object({
   id: z.string().min(1).optional(),
@@ -23,7 +23,7 @@ export const generateRoleRubric = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ roleId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }) => {
-    const { generateRubricDraft } = await import("./rubric-version.server");
+    const { generateRubricDraft } = await import("../server/rubric-version.server");
     return generateRubricDraft({ userId: context.userId, roleId: data.roleId });
   });
 
@@ -31,7 +31,7 @@ export const getActiveRubric = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ roleId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }): Promise<RubricVersion | null> => {
-    const { loadEditableRubric } = await import("./rubric-version.server");
+    const { loadEditableRubric } = await import("../server/rubric-version.server");
     return loadEditableRubric(context.userId, data.roleId);
   });
 
@@ -49,7 +49,7 @@ export const saveRubricEdits = createServerFn({ method: "POST" })
   )
   .handler(
     async ({ context, data }): Promise<{ rubric: RubricVersion; rerankTriggered: boolean }> => {
-      const { persistRubricEdits } = await import("./rubric-version.server");
+      const { persistRubricEdits } = await import("../server/rubric-version.server");
       return persistRubricEdits({
         userId: context.userId,
         roleId: data.roleId,

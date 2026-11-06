@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FileSpreadsheet, Link2 } from "lucide-react";
 import { BatchIngestDialog } from "@/components/batch-ingest-dialog";
 import { ExportSlateDialog } from "@/components/export-slate-dialog";
-import { RubricEditor } from "@/components/rubric-editor";
+import { RubricEditor } from "@/features/ranking/ui/rubric-editor";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -14,12 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { NightQueue } from "@/components/night-queue";
+import { NightQueue } from "@/features/pipeline/ui/night-queue";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { CandidatePanel } from "@/components/candidate-panel";
+import { CandidatePanel } from "@/features/ranking/ui/candidate-panel";
 import { EmptyState } from "@/shared/components/empty-state";
 import { PipelineChip, ScoreChip, StageChip } from "@/shared/components/status-chip";
-import { StaleBanner } from "@/components/provenance-badge";
+import { StaleBanner } from "@/features/ranking/ui/provenance-badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ingestResume, rerankStaleApplications } from "@/lib/recruiting/api";
 import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/lib/recruiting/query";

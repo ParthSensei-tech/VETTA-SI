@@ -3,8 +3,8 @@ import { z } from "zod";
 import { authMiddleware } from "@/platform/auth/middleware";
 import { getSql } from "@/platform/db";
 import { parseJson } from "@/shared/utils";
-import { OUTCOME_KINDS } from "./outcome";
-import type { RankResult } from "./types";
+import { OUTCOME_KINDS } from "../domain/outcome";
+import type { RankResult } from "../../../lib/recruiting/types";
 
 export const recordOutcome = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -15,9 +15,9 @@ export const recordOutcome = createServerFn({ method: "POST" })
     async ({
       context,
       data,
-    }): Promise<{ ok: true; forecast: import("./outcome").OutcomeForecast }> => {
+    }): Promise<{ ok: true; forecast: import("../domain/outcome").OutcomeForecast }> => {
       const sql = await getSql();
-      const { ensureUserOrg, assertOrgMember } = await import("./org.server");
+      const { ensureUserOrg, assertOrgMember } = await import("../../../lib/recruiting/org.server");
       const org = await ensureUserOrg(context.userId);
 
       const apps = await sql<{
@@ -38,7 +38,7 @@ export const recordOutcome = createServerFn({ method: "POST" })
         throw new Error("Application not found");
       }
 
-      const { trainOutcome, forecastOutcome } = await import("./outcome.server");
+      const { trainOutcome, forecastOutcome } = await import("../server/outcome.server");
       const orgId = app.org_id || org.orgId;
       const rank = parseJson<RankResult>(app.rank_json, {
         score: 0,

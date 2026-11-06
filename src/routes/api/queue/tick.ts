@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { processQueueSlice } from "@/lib/recruiting/queue.server";
+import { processQueueSlice } from "@/features/pipeline/server/queue.server";
 
 async function tick() {
   const result = await processQueueSlice({ maxJobs: 4, budgetMs: 50_000 });

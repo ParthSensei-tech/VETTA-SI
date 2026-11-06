@@ -3,7 +3,7 @@
  * background embedding queueing.
  */
 
-import { getSql } from "../../platform/db.ts";
+import { getSql } from "../../../platform/db.ts";
 
 export async function indexNewCandidate(
   candidateId: string,

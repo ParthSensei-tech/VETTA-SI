@@ -14,7 +14,7 @@ import {
   localEvaluate,
   localScreen,
   rankLocally,
-} from "../../../lib/recruiting/local-rank.ts";
+} from "../../ranking/domain/local-rank.ts";
 import {
   ClientCardResponseSchema,
   RankResponseSchema,
@@ -332,15 +332,15 @@ export async function parseAndRank(input: {
     if (!allowed) return { ok: false, error: purposeDenied("recruitment_evaluation") };
   }
 
-  let weights: import("../../../lib/recruiting/match-engine").MatchWeights | null = null;
-  let hardConstraints: import("../../../lib/recruiting/match-engine").MatchHardConstraints | null = null;
-  let criteria: import("../../../lib/recruiting/match-engine").MatchCriterion[] | null = null;
+  let weights: import("../../ranking/domain/match-engine").MatchWeights | null = null;
+  let hardConstraints: import("../../ranking/domain/match-engine").MatchHardConstraints | null = null;
+  let criteria: import("../../ranking/domain/match-engine").MatchCriterion[] | null = null;
   let rubricVersionId: string | null = null;
   let rubricVersion: number | null = null;
   let rubricHash: string | null = null;
   if (input.orgId) {
     try {
-      const { loadRubricWeights } = await import("../../../lib/recruiting/rubric.server.ts");
+      const { loadRubricWeights } = await import("../../ranking/server/rubric.server.ts");
       weights = await loadRubricWeights({ orgId: input.orgId, roleId: input.roleId });
     } catch {
       weights = null;
@@ -348,7 +348,7 @@ export async function parseAndRank(input: {
   }
   if (input.roleId) {
     try {
-      const { loadActiveRubricForRole } = await import("../../../lib/recruiting/rubric-version.server.ts");
+      const { loadActiveRubricForRole } = await import("../../ranking/server/rubric-version.server.ts");
       const active = await loadActiveRubricForRole(input.roleId);
       if (active) {
         rubricVersionId = active.id;
@@ -384,7 +384,7 @@ export async function parseAndRank(input: {
   }
 
   if (input.userId && !input.bypassCache) {
-    const { getRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
+    const { getRankCache } = await import("../../ranking/server/rank-cache.server.ts");
     const cached = await getRankCache({
       userId: input.userId,
       resumeHash,
@@ -459,11 +459,11 @@ export async function parseAndRank(input: {
         orgId: input.orgId,
       });
       localRank = applyDomainToRank(localRaw.rank, domain);
-      const { attachExplanation, refreshHrLexicon } = await import("../../../lib/recruiting/calibrate.server.ts");
+      const { attachExplanation, refreshHrLexicon } = await import("../../ranking/server/calibrate.server.ts");
       if (Math.random() < 0.08) void refreshHrLexicon(false).catch(() => undefined);
       localRank = await attachExplanation(localRank, input.orgId);
       try {
-        const { forecastOutcome } = await import("../../../lib/recruiting/outcome.server.ts");
+        const { forecastOutcome } = await import("../../ranking/server/outcome.server.ts");
         localRank = { ...localRank, outcome: await forecastOutcome(localRank, input.orgId) };
       } catch {
         /* outcome tables may be mid-migration */
@@ -489,7 +489,7 @@ export async function parseAndRank(input: {
     };
     local.rank.provenance = localProvenance;
     if (input.userId) {
-      const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
+      const { setRankCache } = await import("../../ranking/server/rank-cache.server.ts");
       await setRankCache({
         userId: input.userId,
         resumeHash,
@@ -718,7 +718,7 @@ ${wrappedResume}`,
     };
     local.rank.provenance = localProvenance;
     if (input.userId) {
-      const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
+      const { setRankCache } = await import("../../ranking/server/rank-cache.server.ts");
       await setRankCache({
         userId: input.userId,
         resumeHash,
@@ -894,7 +894,7 @@ ${wrappedResume}`,
   // Populate requirements if model left them empty
   let requirements = parsed.rank.requirements || [];
   if (requirements.length === 0) {
-    const { evaluateRoleRequirements } = await import("../../../lib/recruiting/match-engine.ts");
+    const { evaluateRoleRequirements } = await import("../../ranking/domain/match-engine.ts");
     requirements = evaluateRoleRequirements({
       resumeText: input.resumeText,
       role: input.role,
@@ -924,7 +924,7 @@ ${wrappedResume}`,
   };
 
   if (input.userId) {
-    const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
+    const { setRankCache } = await import("../../ranking/server/rank-cache.server.ts");
     await setRankCache({
       userId: input.userId,
       resumeHash,

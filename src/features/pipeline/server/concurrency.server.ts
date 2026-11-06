@@ -1,5 +1,5 @@
-import { getSql } from "../../platform/db.ts";
-import { ConcurrencyConflictError } from "./concurrency.ts";
+import { getSql } from "../../../platform/db.ts";
+import { ConcurrencyConflictError } from "../domain/concurrency.ts";
 
 export type OptimisticTable = "roles" | "candidates" | "applications" | "candidate_notes";
 

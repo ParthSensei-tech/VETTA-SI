@@ -13,7 +13,7 @@
  */
 
 import { getSql } from "../../../platform/db.ts";
-import { rankLocally } from "../local-rank.ts";
+import { rankLocally } from "../../../features/ranking/domain/local-rank.ts";
 import type { CallContext } from "../../../features/ai/domain/model-registry.ts";
 import {
   buildResumeList,
@@ -312,7 +312,7 @@ export async function phaseL2(ctx: BenchCtx, n: number, warmup: number) {
  */
 export async function phaseL3(ctx: BenchCtx, n: number, warmup: number) {
   const { parseAndRank } = await import("../../../features/ai/server/ai.server.ts");
-  const { clearRankCache } = await import("../rank-cache.server.ts");
+  const { clearRankCache } = await import("../../../features/ranking/server/rank-cache.server.ts");
   const role = ctx.roles[0];
   const target = ctx.resumes[3] ?? ctx.resumes[0];
   const args = {
@@ -352,7 +352,7 @@ export async function phaseL3(ctx: BenchCtx, n: number, warmup: number) {
 
 /** L4 — full ingest of one resume: rank + candidate/application writes + search index. */
 export async function phaseL4(ctx: BenchCtx, n: number, warmup: number) {
-  const { persistRanked } = await import("../queue.server.ts");
+  const { persistRanked } = await import("../../../features/pipeline/server/queue.server.ts");
   const batchId = await seedSlate(ctx, ctx.resumes.slice(0, Math.max(n + warmup, 4)));
   const sql = await getSql();
   const samples: number[] = [];
@@ -382,7 +382,7 @@ export async function phaseL5(
   ctx: BenchCtx,
   opts: { n: number; maxJobs: number; concurrency: number; budgetMs: number; deadlineMs: number },
 ) {
-  const { processQueueSlice } = await import("../queue.server.ts");
+  const { processQueueSlice } = await import("../../../features/pipeline/server/queue.server.ts");
   const list = buildResumeList({ count: opts.n, roles: ctx.roles });
   const batchId = await seedSlate(ctx, list);
   const sql = await getSql();

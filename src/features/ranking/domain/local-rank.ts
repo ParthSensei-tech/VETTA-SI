@@ -17,7 +17,7 @@ import type {
   RankResult,
   ScreenEvaluation,
   ScreenQuestion,
-} from "./types";
+} from "../../../lib/recruiting/types";
 
 export type RankCalibration = "production" | "strict";
 

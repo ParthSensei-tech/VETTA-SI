@@ -10,16 +10,16 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { scanCriterionText, validateCriteria } from "@/lib/recruiting/rubric-guardrails";
-import { generateRoleRubric, getActiveRubric, saveRubricEdits } from "@/lib/recruiting/rubric-api";
+import { scanCriterionText, validateCriteria } from "@/features/ranking/domain/rubric-guardrails";
+import { generateRoleRubric, getActiveRubric, saveRubricEdits } from "@/features/ranking/api/rubric-api";
 import type {
   CriterionKind,
   CriterionWeight,
   HardConstraints,
   RubricCriterion,
   RubricVersion,
-} from "@/lib/recruiting/rubric-types";
-import { DEFAULT_HARD_CONSTRAINTS } from "@/lib/recruiting/rubric-types";
+} from "@/features/ranking/domain/rubric-types";
+import { DEFAULT_HARD_CONSTRAINTS } from "@/features/ranking/domain/rubric-types";
 import { errorMessage } from "@/lib/recruiting/query";
 import { cn } from "@/shared/utils";
 

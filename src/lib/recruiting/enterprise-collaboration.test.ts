@@ -32,8 +32,8 @@ import {
   updateTaskStatus,
   getRecruitingTasks,
 } from "./collaboration.server.ts";
-import { updateWithOptimisticLock } from "./concurrency.server.ts";
-import { ConcurrencyConflictError } from "./concurrency.ts";
+import { updateWithOptimisticLock } from "../../features/pipeline/server/concurrency.server.ts";
+import { ConcurrencyConflictError } from "../../features/pipeline/domain/concurrency.ts";
 
 function uid(): string {
   return crypto.randomUUID();

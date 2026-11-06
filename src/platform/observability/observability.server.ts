@@ -455,7 +455,7 @@ export async function retryFailedJobs(opts?: {
           set status = 'queued', attempts = 0, error = '', run_after = now(), updated_at = now()
           where batch_id = ${opts.batchId} and status = 'failed'
           returning id`;
-        const { refreshBatchStats } = await import("@/lib/recruiting/queue.server.ts");
+        const { refreshBatchStats } = await import("@/features/pipeline/server/queue.server.ts");
         await refreshBatchStats(opts.batchId);
         return updated.length;
       }
@@ -497,7 +497,7 @@ export async function retryFailedJobs(opts?: {
           )
         returning id`;
       if (updated.length > 0) {
-        const { refreshBatchStats } = await import("@/lib/recruiting/queue.server.ts");
+        const { refreshBatchStats } = await import("@/features/pipeline/server/queue.server.ts");
         await refreshBatchStats(opts.batchId);
       }
       return updated.length;

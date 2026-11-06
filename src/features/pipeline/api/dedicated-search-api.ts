@@ -4,14 +4,14 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../../platform/auth/middleware.ts";
+import { authMiddleware } from "../../../platform/auth/middleware.ts";
 import {
   executeDedicatedHybridSearch,
   getSearchInfrastructureTelemetry,
   reviewAndAdvanceCandidate,
   type DedicatedSearchResponse,
-} from "./dedicated-search.server.ts";
-import type { PipelineStatus } from "./types.ts";
+} from "../server/dedicated-search.server.ts";
+import type { PipelineStatus } from "../../../lib/recruiting/types.ts";
 
 export const dedicatedHybridSearch = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -29,7 +29,7 @@ export const dedicatedHybridSearch = createServerFn({ method: "POST" })
       .parse(input ?? {}),
   )
   .handler(async ({ context, data }): Promise<DedicatedSearchResponse> => {
-    const { ensureUserOrg } = await import("./org.server.ts");
+    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
     const org = await ensureUserOrg(context.userId);
 
     return executeDedicatedHybridSearch({
@@ -68,7 +68,7 @@ export const advanceCandidateStatus = createServerFn({ method: "POST" })
       .parse(input ?? {}),
   )
   .handler(async ({ context, data }) => {
-    const { ensureUserOrg } = await import("./org.server.ts");
+    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
     const org = await ensureUserOrg(context.userId);
 
     return reviewAndAdvanceCandidate({
@@ -84,7 +84,7 @@ export const advanceCandidateStatus = createServerFn({ method: "POST" })
 export const getSearchTelemetry = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const { ensureUserOrg } = await import("./org.server.ts");
+    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
     const org = await ensureUserOrg(context.userId);
     return getSearchInfrastructureTelemetry(org.orgId);
   });

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { NightQueue } from "@/components/night-queue";
+import { NightQueue } from "@/features/pipeline/ui/night-queue";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EmptyState } from "@/shared/components/empty-state";
 import { StageChip } from "@/shared/components/status-chip";

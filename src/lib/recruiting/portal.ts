@@ -406,7 +406,7 @@ export const applyToJob = createServerFn({ method: "POST" })
         ${profile.years_experience}, ${resumeText}, ${JSON.stringify(profile)}, ${org.orgId}
       )`;
     try {
-      const { indexNewCandidate } = await import("./search.server");
+      const { indexNewCandidate } = await import("../../features/pipeline/server/search.server");
       await indexNewCandidate(
         candidateId,
         ranked.ok ? ranked.rank.india.notice_period_days : null,

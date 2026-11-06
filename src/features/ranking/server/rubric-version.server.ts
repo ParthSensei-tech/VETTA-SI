@@ -3,8 +3,8 @@
  * Edits after scoring create a new version; lock when shortlist is stamped.
  */
 
-import { getSql } from "../../platform/db.ts";
-import { iso, parseJson } from "../../shared/utils.ts";
+import { getSql } from "../../../platform/db.ts";
+import { iso, parseJson } from "../../../shared/utils.ts";
 import {
   DEFAULT_HARD_CONSTRAINTS,
   type CriterionKind,
@@ -13,10 +13,10 @@ import {
   type RubricCriterion,
   type RubricStatus,
   type RubricVersion,
-} from "./rubric-types";
-import { validateCriteria } from "./rubric-guardrails";
-import { computeRubricHash } from "./hash";
-import { routeTelemetry } from "../../features/ai/domain/model-router.ts";
+} from "../domain/rubric-types";
+import { validateCriteria } from "../domain/rubric-guardrails";
+import { computeRubricHash } from "../../../lib/recruiting/hash";
+import { routeTelemetry } from "../../ai/domain/model-router.ts";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -180,7 +180,7 @@ export async function generateRubricDraft(opts: {
   heuristicOnly?: boolean;
 }): Promise<RubricVersion> {
   const role = await loadRoleOwned(opts.userId, opts.roleId);
-  const { ensureUserOrg } = await import("./org.server");
+  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
   const org = await ensureUserOrg(opts.userId, role.company_name);
   const orgId = role.org_id || org.orgId;
 
@@ -205,7 +205,7 @@ export async function generateRubricDraft(opts: {
 
   if (!opts.heuristicOnly) {
     try {
-      const { completeWithRouter } = await import("../../features/ai/server/providers.server");
+      const { completeWithRouter } = await import("../../ai/server/providers.server");
       const result = await completeWithRouter({
         task: "rubric_draft",
         orgId,
@@ -235,7 +235,7 @@ ${fields.jdText.slice(0, 6000)}`,
         // parse is known to be usable, since the spend already happened either way.
         void (async () => {
           try {
-            const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
+            const { recordModelCost } = await import("../../../platform/observability/observability.server.ts");
             await recordModelCost({
               userId: opts.userId ?? null,
               taskType: "rubric_draft",
@@ -364,7 +364,7 @@ export async function persistRubricEdits(opts: {
   activate: boolean;
 }): Promise<{ rubric: RubricVersion; rerankTriggered: boolean }> {
   const role = await loadRoleOwned(opts.userId, opts.roleId);
-  const { ensureUserOrg } = await import("./org.server");
+  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
   const org = await ensureUserOrg(opts.userId, role.company_name);
   const orgId = role.org_id || org.orgId;
 

@@ -126,7 +126,7 @@ export const createIngestBatch = createServerFn({ method: "POST" })
     await sql`
       insert into ingest_batches (id, user_id, role_id, source_name, status, org_id)
       values (${id}, ${context.userId}, ${data.roleId}, ${data.sourceName}, 'queued', ${org.orgId})`;
-    const { ensureQueueWorker } = await import("../../../lib/recruiting/queue.server");
+    const { ensureQueueWorker } = await import("../../pipeline/server/queue.server");
     ensureQueueWorker();
     return mapBatch(await loadOwnedBatch(context.userId, id));
   });
@@ -154,7 +154,7 @@ export const appendIngestItems = createServerFn({ method: "POST" })
     async ({ context, data }): Promise<{ added: number; failed: number; errors: string[] }> => {
       const { decodeBase64, parseUploadToResumes } = await import("../server/parse.server");
       const { ensureQueueWorker, processQueueSlice, refreshBatchStats } =
-        await import("../../../lib/recruiting/queue.server");
+        await import("../../pipeline/server/queue.server");
       const batch = await loadOwnedBatch(context.userId, data.batchId);
       if (
         batch.status === "cancelled" ||
@@ -230,7 +230,7 @@ export const listIngestBatches = createServerFn({ method: "GET" })
     z.object({ roleId: z.string().min(1).optional() }).parse(input ?? {}),
   )
   .handler(async ({ context, data }): Promise<IngestBatch[]> => {
-    const { ensureQueueWorker } = await import("../../../lib/recruiting/queue.server");
+    const { ensureQueueWorker } = await import("../../pipeline/server/queue.server");
     ensureQueueWorker();
     const sql = await getSql();
     const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
@@ -257,7 +257,7 @@ export const getIngestBatch = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ batchId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }): Promise<IngestBatch> => {
-    const { ensureQueueWorker } = await import("../../../lib/recruiting/queue.server");
+    const { ensureQueueWorker } = await import("../../pipeline/server/queue.server");
     ensureQueueWorker();
     const row = await loadOwnedBatch(context.userId, data.batchId);
     const jobs = await loadJobs(context.userId, data.batchId);
@@ -268,7 +268,7 @@ export const cancelIngestBatch = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ batchId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }): Promise<IngestBatch> => {
-    const { refreshBatchStats } = await import("../../../lib/recruiting/queue.server");
+    const { refreshBatchStats } = await import("../../pipeline/server/queue.server");
     const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
     const org = await ensureUserOrg(context.userId);
     const sql = await getSql();
@@ -291,7 +291,7 @@ export const cancelIngestBatch = createServerFn({ method: "POST" })
 export const tickMyQueue = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const { ensureQueueWorker, processQueueSlice } = await import("../../../lib/recruiting/queue.server");
+    const { ensureQueueWorker, processQueueSlice } = await import("../../pipeline/server/queue.server");
     ensureQueueWorker();
     return processQueueSlice({ userId: context.userId, maxJobs: 2, budgetMs: 25_000 });
   });

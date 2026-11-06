@@ -5,7 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { PipelineChip, ScoreChip } from "@/shared/components/status-chip";
-import { ProvenanceChip, ProvenanceDetail } from "@/components/provenance-badge";
+import { ProvenanceChip, ProvenanceDetail } from "@/features/ranking/ui/provenance-badge";
 import {
   generateAsyncScreen,
   prepareClientPack,
@@ -16,7 +16,7 @@ import {
 import { FIT_LABEL, KNOWLEDGE_LABEL } from "@/lib/recruiting/constants";
 import { copyText } from "@/lib/recruiting/links";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import { recordOutcome } from "@/lib/recruiting/outcome-api";
+import { recordOutcome } from "@/features/ranking/api/outcome-api";
 import { getScreenInvite, recordScreenReminder } from "@/lib/recruiting/screen-session";
 import type { Application, PipelineStatus } from "@/lib/recruiting/types";
 import { cn } from "@/shared/utils";

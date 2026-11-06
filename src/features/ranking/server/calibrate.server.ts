@@ -3,8 +3,8 @@
  */
 
 import { getSql } from "@/platform/db";
-import type { RankResult } from "./types";
-import { hashFeatures } from "../../features/ai/domain/domain-embed";
+import type { RankResult } from "../../../lib/recruiting/types";
+import { hashFeatures } from "../../ai/domain/domain-embed";
 import {
   deserializeCal,
   explainRank,
@@ -16,7 +16,7 @@ import {
   type CalWeights,
   type Explanation,
   type HrChunk,
-} from "./calibrate-explain";
+} from "../domain/calibrate-explain";
 
 const SHARED = "shared";
 

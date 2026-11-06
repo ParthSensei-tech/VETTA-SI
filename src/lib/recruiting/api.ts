@@ -514,7 +514,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
     try {
       const { domainModelStatus, refreshMarketSnapshot } = await import("../../features/ai/server/domain-embed.server");
       void refreshMarketSnapshot(false).catch(() => undefined);
-      const { refreshHrLexicon } = await import("./calibrate.server");
+      const { refreshHrLexicon } = await import("../../features/ranking/server/calibrate.server");
       void refreshHrLexicon(false).catch(() => undefined);
       domainModel = await domainModelStatus();
     } catch {
@@ -569,7 +569,7 @@ export const createRole = createServerFn({ method: "POST" })
       orgId: org.orgId,
     });
     try {
-      const { generateRubricDraft } = await import("./rubric-version.server");
+      const { generateRubricDraft } = await import("../../features/ranking/server/rubric-version.server");
       await generateRubricDraft({ userId: context.userId, roleId: id, heuristicOnly: true });
     } catch {
       /* rubric_versions may not exist yet */
@@ -736,7 +736,7 @@ export const ingestResume = createServerFn({ method: "POST" })
     }
 
     try {
-      const { indexNewCandidate } = await import("./search.server");
+      const { indexNewCandidate } = await import("../../features/pipeline/server/search.server");
       await indexNewCandidate(
         candidateId,
         ranked.ok ? ranked.rank.india.notice_period_days : null,
@@ -878,7 +878,7 @@ export const deepenTopCandidates = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("./deepen.server");
+    const { deepenRoleTopN } = await import("../../features/ranking/server/deepen.server");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -905,7 +905,7 @@ export const rerankStaleApplications = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("./deepen.server");
+    const { deepenRoleTopN } = await import("../../features/ranking/server/deepen.server");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -1063,7 +1063,7 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
       const verdict = evaluated.evaluation.verdict;
       if (verdict === "advance" || verdict === "reject") {
         try {
-          const { trainOutcome } = await import("./outcome.server");
+          const { trainOutcome } = await import("../../features/ranking/server/outcome.server");
           const { ensureUserOrg } = await import("./org.server");
           const org = await ensureUserOrg(context.userId);
           const rank = parseJson<import("./types").RankResult>(app.rank_json, {
@@ -1305,7 +1305,7 @@ export const decideApproval = createServerFn({ method: "POST" })
     // Lock active rubric when a client pack is stamped (approved or sent).
     if (data.decision === "approved" || data.decision === "sent") {
       try {
-        const { lockRubricForRole } = await import("./rubric-version.server");
+        const { lockRubricForRole } = await import("../../features/ranking/server/rubric-version.server");
         await lockRubricForRole({ userId: context.userId, roleId: row.role_id });
       } catch {
         /* rubric_versions may not exist until migration */

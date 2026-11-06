@@ -11,12 +11,12 @@
  *   7. Client Shortlist → Interview → Hire Tracking & Outcome-Driven Calibration Loop
  */
 
-import { getSql } from "../../platform/db.ts";
-import { candidateDocument, cosine, reciprocalRankFusion } from "./retrieve.ts";
-import { embedTexts } from "../../features/ai/server/embed-text.server.ts";
+import { getSql } from "../../../platform/db.ts";
+import { candidateDocument, cosine, reciprocalRankFusion } from "../../ranking/domain/retrieve.ts";
+import { embedTexts } from "../../ai/server/embed-text.server.ts";
 import { getActiveEmbeddingModel } from "./embedding-queue.server.ts";
-import { matchCandidateToRole } from "./match-engine.ts";
-import type { FitLevel, PipelineStatus } from "./types.ts";
+import { matchCandidateToRole } from "../../ranking/domain/match-engine.ts";
+import type { FitLevel, PipelineStatus } from "../../../lib/recruiting/types.ts";
 
 // -----------------------------------------------------------------------------
 // 1. Types & Data Structures

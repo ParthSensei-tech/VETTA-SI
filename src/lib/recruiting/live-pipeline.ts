@@ -386,7 +386,7 @@ async function processApplicant(opts: {
       ${profile.years_experience ?? null}, ${resume}, ${JSON.stringify(profile)}
     )`;
   try {
-    const { indexNewCandidate } = await import("./search.server");
+    const { indexNewCandidate } = await import("../../features/pipeline/server/search.server");
     await indexNewCandidate(
       candId,
       ranked.ok ? ranked.rank.india.notice_period_days : null,

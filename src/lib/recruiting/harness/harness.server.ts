@@ -8,7 +8,7 @@ import {
   type RankMeta,
   type RankRoleInput,
 } from "../../../features/ai/server/ai.server";
-import { calibrateRank, calibrationFromPrompt, rankLocally } from "../local-rank";
+import { calibrateRank, calibrationFromPrompt, rankLocally } from "../../../features/ranking/domain/local-rank";
 import type {
   EvalCase,
   EvalRun,

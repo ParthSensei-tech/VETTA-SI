@@ -1,6 +1,6 @@
-import { getSql } from "../../platform/db.ts";
-import { parseJson } from "../../shared/utils.ts";
-import type { CompanyStage, WorkMode } from "./types.ts";
+import { getSql } from "../../../platform/db.ts";
+import { parseJson } from "../../../shared/utils.ts";
+import type { CompanyStage, WorkMode } from "../../../lib/recruiting/types.ts";
 
 /**
  * Background deepen: re-rank top N with provider ladder.
@@ -13,7 +13,7 @@ export async function deepenRoleTopN(opts: {
   topN?: number;
   forceStale?: boolean;
   /** `bulk` when a recruiter asked for it, `background` when the batch completion triggered it. */
-  context?: import("../../features/ai/domain/model-registry.ts").CallContext;
+  context?: import("../../ai/domain/model-registry.ts").CallContext;
   /** Tolerance for one rank. A slow local arm is only offered the task when it fits this. */
   deadlineMs?: number;
   /** Tolerance for the whole loop, so N long calls cannot outlive the request that started them. */
@@ -50,7 +50,7 @@ export async function deepenRoleTopN(opts: {
   const role = roles[0];
   if (!role) return { deepened: 0, engines: [] };
 
-  const { ensureUserOrg, assertOrgMember } = await import("./org.server.ts");
+  const { ensureUserOrg, assertOrgMember } = await import("../../../lib/recruiting/org.server.ts");
   let targetOrgId = role.org_id;
   if (role.org_id) {
     try {
@@ -94,7 +94,7 @@ export async function deepenRoleTopN(opts: {
 
   const org = { orgId: targetOrgId! };
 
-  const { parseAndRank } = await import("../../features/ai/server/ai.server.ts");
+  const { parseAndRank } = await import("../../ai/server/ai.server.ts");
   const engines: string[] = [];
   let deepened = 0;
 

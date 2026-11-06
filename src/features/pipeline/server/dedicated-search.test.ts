@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../../platform/db.ts";
-import { ensureUserOrg } from "./org.server.ts";
+import { getSql } from "../../../platform/db.ts";
+import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
 import {
   extractCandidateProfile,
   extractJobRequirements,
@@ -10,8 +10,8 @@ import {
   reviewAndAdvanceCandidate,
   getSearchInfrastructureTelemetry,
 } from "./dedicated-search.server.ts";
-import { indexNewCandidate } from "./search-api.ts";
-import { embedTexts } from "../../features/ai/server/embed-text.server.ts";
+import { indexNewCandidate } from "../api/search-api.ts";
+import { embedTexts } from "../../ai/server/embed-text.server.ts";
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

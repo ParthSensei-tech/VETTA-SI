@@ -19,7 +19,7 @@ import {
   updateTaskStatus,
   getRecruitingTasks,
 } from "./collaboration.server.ts";
-import { updateWithOptimisticLock } from "./concurrency.server.ts";
+import { updateWithOptimisticLock } from "../../features/pipeline/server/concurrency.server.ts";
 import {
   recordStageTransition,
   recordPlacement,
@@ -29,7 +29,7 @@ import {
 import { createWorkspaceBackup, restoreWorkspaceBackup } from "./backup.server.ts";
 import { loadPublicShareView } from "./share.ts";
 import { loadScreenByApplicationForUser } from "./screen-session.ts";
-import { deepenRoleTopN } from "./deepen.server.ts";
+import { deepenRoleTopN } from "../../features/ranking/server/deepen.server.ts";
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

@@ -133,7 +133,7 @@ export const submitRankLabel = createServerFn({ method: "POST" })
           ? await mayProcess({ orgId, subjectId, purpose: "model_improvement" })
           : false;
         if (learn) {
-          const { trainCalibrationOnLabel } = await import("./calibrate.server");
+          const { trainCalibrationOnLabel } = await import("../../features/ranking/server/calibrate.server");
           await trainCalibrationOnLabel({ orgId, rank, positive });
         }
       } catch {
@@ -144,7 +144,7 @@ export const submitRankLabel = createServerFn({ method: "POST" })
     // Attempt to recompute org rubric from accumulated labels
     let learned = false;
     try {
-      const { recomputeRubricFromLabels } = await import("./rubric.server");
+      const { recomputeRubricFromLabels } = await import("../../features/ranking/server/rubric.server");
       const next = await recomputeRubricFromLabels(orgId);
       learned = Boolean(next);
     } catch {

@@ -367,7 +367,7 @@ export async function eraseSubject(opts: {
       where (user_id = ${scope.userId} or ${scope.userId} = '') and resume_hash = any(${scope.resumeHashes}) returning 1`;
     stores.rank_cache = cache.length;
     try {
-      const { evictRankCache } = await import("./rank-cache.server");
+      const { evictRankCache } = await import("../../features/ranking/server/rank-cache.server");
       evictRankCache(scope.resumeHashes);
     } catch {
       /* in-memory cache eviction */
@@ -617,7 +617,7 @@ export async function purgeExpiredCandidateData(orgId?: string): Promise<{ purge
           where a.user_id = rc.user_id and a.resume_hash = rc.resume_hash and a.resume_hash <> ''
         )`;
     try {
-      const { clearRankCache } = await import("./rank-cache.server");
+      const { clearRankCache } = await import("../../features/ranking/server/rank-cache.server");
       clearRankCache();
     } catch {
       /* in-memory cache clear */

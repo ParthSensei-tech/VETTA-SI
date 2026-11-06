@@ -1,4 +1,4 @@
-import { getSql } from "../../platform/db.ts";
+import { getSql } from "../../../platform/db.ts";
 import {
   DEFAULT_EMBEDDING_MODEL,
   SUPPORTED_EMBEDDING_MODELS,
@@ -7,8 +7,8 @@ import {
   toModelDto,
   type EmbeddingModelDto,
   type EmbeddingModelInfo,
-} from "../../features/ai/server/embed-text.server.ts";
-import { candidateDocument } from "./retrieve.ts";
+} from "../../ai/server/embed-text.server.ts";
+import { candidateDocument } from "../../ranking/domain/retrieve.ts";
 
 function newId(): string {
   return crypto.randomUUID();

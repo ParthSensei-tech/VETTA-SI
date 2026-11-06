@@ -52,7 +52,7 @@ export async function ensureUserOrg(
     values (${newId()}, ${orgId}, ${userId}, ${"owner"})`;
 
   // Default system rubric for the org
-  const { DEFAULT_RUBRIC_WEIGHTS } = await import("./rubric.server.ts");
+  const { DEFAULT_RUBRIC_WEIGHTS } = await import("../../features/ranking/server/rubric.server.ts");
   await sql`
     insert into match_rubrics (id, org_id, role_id, name, weights_json, source)
     values (

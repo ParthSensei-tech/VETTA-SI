@@ -1,6 +1,6 @@
-import { getSql } from "../../platform/db.ts";
-import { parseJson } from "../../shared/utils.ts";
-import type { CompanyStage, ParsedProfile, WorkMode } from "./types";
+import { getSql } from "../../../platform/db.ts";
+import { parseJson } from "../../../shared/utils.ts";
+import type { CompanyStage, ParsedProfile, WorkMode } from "../../../lib/recruiting/types";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -116,7 +116,7 @@ export async function refreshBatchStats(batchId: string) {
     if (row) {
       void (async () => {
         try {
-          const { deepenRoleTopN } = await import("./deepen.server");
+          const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
           await deepenRoleTopN({
             userId: row.user_id,
             roleId: row.role_id,
@@ -143,20 +143,20 @@ export async function persistRanked(job: JobRow): Promise<{ applicationId: strin
   const role = roles[0];
   if (!role) throw new Error("Role not found");
 
-  const { ensureUserOrg } = await import("./org.server.ts");
+  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
   const org = await ensureUserOrg(job.user_id);
 
   let candidateId = newId();
   const applicationId = newId();
 
-  const { recordEmployerIntake } = await import("./privacy.server.ts");
+  const { recordEmployerIntake } = await import("../../../lib/recruiting/privacy.server.ts");
   await recordEmployerIntake({
     orgId: org.orgId,
     subjectId: candidateId,
     source: `batch:${job.batch_id}`,
   });
 
-  const { parseAndRank } = await import("../../features/ai/server/ai.server.ts");
+  const { parseAndRank } = await import("../../ai/server/ai.server.ts");
   const ranked = await parseAndRank({
     resumeText: job.resume_text,
     role: {
@@ -361,7 +361,7 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
   const recordMetric = (status: "completed" | "failed" | "requeued", error: string = "") => {
     void (async () => {
       try {
-        const { recordQueueMetric } = await import("../../platform/observability/observability.server.ts");
+        const { recordQueueMetric } = await import("../../../platform/observability/observability.server.ts");
         await recordQueueMetric({
           jobId: job.id,
           batchId: job.batch_id,

@@ -19,7 +19,7 @@ import {
   updateTaskStatus,
   getRecruitingTasks,
 } from "./collaboration.server";
-import { updateWithOptimisticLock } from "./concurrency.server";
+import { updateWithOptimisticLock } from "../../features/pipeline/server/concurrency.server";
 
 // 1. Team & Membership
 export const getOrgMembersFn = createServerFn({ method: "GET" })

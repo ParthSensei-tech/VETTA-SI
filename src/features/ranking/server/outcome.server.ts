@@ -3,7 +3,7 @@
  */
 
 import { getSql } from "@/platform/db";
-import type { RankResult } from "./types";
+import type { RankResult } from "../../../lib/recruiting/types";
 import {
   OUTCOME_HEADS,
   deserializeHead,
@@ -17,7 +17,7 @@ import {
   type OutcomeForecast,
   type OutcomeHead,
   type OutcomeKind,
-} from "./outcome";
+} from "../domain/outcome";
 
 const SHARED = "shared";
 

@@ -5,15 +5,15 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../../platform/auth/middleware.ts";
-import { getSql } from "../../platform/db.ts";
-import type { PipelineStatus, TalentRow } from "./types.ts";
+import { authMiddleware } from "../../../platform/auth/middleware.ts";
+import { getSql } from "../../../platform/db.ts";
+import type { PipelineStatus, TalentRow } from "../../../lib/recruiting/types.ts";
 import {
   candidateDocument,
   cosine,
   mergeRetrievalScore,
   reciprocalRankFusion,
-} from "./retrieve.ts";
+} from "../../ranking/domain/retrieve.ts";
 
 type Hit = {
   id: string;
@@ -126,9 +126,9 @@ export async function executeTalentSearch(opts: {
 
   if (q.length >= 2 && requestedMode !== "lexical") {
     try {
-      const { embedTexts } = await import("../../features/ai/server/embed-text.server.ts");
+      const { embedTexts } = await import("../../ai/server/embed-text.server.ts");
       const { getActiveEmbeddingModel, enqueueCandidatesBulk } =
-        await import("./embedding-queue.server.ts");
+        await import("../server/embedding-queue.server.ts");
       model = await getActiveEmbeddingModel(opts.orgId);
 
       // Opportunistically backfill missing embeddings for candidates matching filters
@@ -366,7 +366,7 @@ export const searchTalent = createServerFn({ method: "POST" })
         retrievalMode: "hybrid" | "lexical" | "semantic";
       };
     }> => {
-      const { ensureUserOrg } = await import("./org.server.ts");
+      const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
       const org = await ensureUserOrg(context.userId);
       return executeTalentSearch({
         userId: context.userId,

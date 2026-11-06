@@ -4,8 +4,8 @@
  * Rank labels nudge weights toward what this org actually shortlists.
  */
 
-import { getSql } from "../../platform/db.ts";
-import { parseJson } from "../../shared/utils.ts";
+import { getSql } from "../../../platform/db.ts";
+import { parseJson } from "../../../shared/utils.ts";
 
 export type RubricWeights = {
   function: number;

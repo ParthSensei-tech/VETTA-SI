@@ -30,7 +30,7 @@ import type {
 import { getSql } from "../../platform/db.ts";
 import { randomUUID } from "node:crypto";
 import { parseJson } from "../../shared/utils.ts";
-import { matchCandidateToRole } from "./match-engine.ts";
+import { matchCandidateToRole } from "../../features/ranking/domain/match-engine.ts";
 
 export const getAutonomousPortalConfig = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
