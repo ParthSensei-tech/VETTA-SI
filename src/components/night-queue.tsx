@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
-import { cancelIngestBatch, getIngestBatch, tickMyQueue } from "@/lib/recruiting/batch";
+import { cancelIngestBatch, getIngestBatch, tickMyQueue } from "@/features/ingest/api/batch";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import type { IngestBatch, IngestJobStatus } from "@/lib/recruiting/types";
 import { cn } from "@/shared/utils";

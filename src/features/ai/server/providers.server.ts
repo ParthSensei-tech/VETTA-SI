@@ -497,7 +497,7 @@ export type RoutedResult =
       attempts: number;
       durationMs: number;
       routedLocal: boolean;
-      route: import("./model-router.ts").RouteDecision;
+      route: import("../domain/model-router.ts").RouteDecision;
     }
   | {
       ok: false;
@@ -507,7 +507,7 @@ export type RoutedResult =
       /** True when we killed the last attempt on the clock, rather than the arm failing. */
       timedOut?: boolean;
       durationMs: number;
-      route: import("./model-router.ts").RouteDecision;
+      route: import("../domain/model-router.ts").RouteDecision;
     };
 
 /**
@@ -517,7 +517,7 @@ export type RoutedResult =
  * itself so the ledger can record why. `completeWithLadder` stays for the benchmark's A/B.
  */
 export async function completeWithRouter(args: {
-  task: import("../../platform/observability/types.ts").ModelTaskType;
+  task: import("../../../platform/observability/types.ts").ModelTaskType;
   system: string;
   user: string;
   maxTokens: number;
@@ -531,7 +531,7 @@ export async function completeWithRouter(args: {
   /** Only for an explicit user-initiated max-quality call. */
   allowOwnerQuota?: boolean;
   /** Whose patience this is: `interactive`, `bulk` or `background`. */
-  context?: import("./model-registry.ts").CallContext;
+  context?: import("../domain/model-registry.ts").CallContext;
   /** Total tolerance for an answer. Arms that cannot fit it are never offered the task. */
   deadlineMs?: number;
   /** Floor on one attempt; the historical 14 s, now a floor rather than the rule. */
@@ -539,7 +539,7 @@ export async function completeWithRouter(args: {
 }): Promise<RoutedResult> {
   const started = Date.now();
   const { planRoute } = await import("./model-router.server.ts");
-  const { armModel } = await import("./model-registry.ts");
+  const { armModel } = await import("../domain/model-registry.ts");
   const route = await planRoute({
     task: args.task,
     promptText: `${args.system}\n${args.user}`,
@@ -589,7 +589,7 @@ export async function completeWithRouter(args: {
   // a second of the caller's clock is left, the honest answer is "this arm did not answer".
   const clockLeftMs = () => deadlineAt - Date.now();
   const maxAttempts = args.maxAttemptsPerProvider ?? 2;
-  const { getArm } = await import("./model-registry.ts");
+  const { getArm } = await import("../domain/model-registry.ts");
 
   // The router ranked these; a transient failure on the top arm should not waste the task, so the
   // runner-on is tried too. Only two, because every extra arm is another round of waiting.

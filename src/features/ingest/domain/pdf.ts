@@ -1,4 +1,4 @@
-import type { ShareView } from "./types";
+import type { ShareView } from "../../../lib/recruiting/types";
 
 function latin(text: string): string {
   return text

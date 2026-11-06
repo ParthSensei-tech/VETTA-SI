@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { RankEvidence, StackMatch } from "./types.ts";
+import type { RankEvidence, StackMatch } from "../../../lib/recruiting/types.ts";
 
 export type InjectionRisk = "clean" | "suspicious" | "detected";
 
@@ -325,7 +325,7 @@ export async function recordRankTrace(opts: {
 }): Promise<string> {
   const id = randomUUID();
   try {
-    const { getSql } = await import("../../platform/db.ts");
+    const { getSql } = await import("../../../platform/db.ts");
     const sql = await getSql();
     await sql`
       insert into rank_traces (
@@ -355,7 +355,7 @@ export async function recordSecurityAudit(opts: {
 }): Promise<void> {
   if (opts.risk === "clean") return;
   try {
-    const { getSql } = await import("../../platform/db.ts");
+    const { getSql } = await import("../../../platform/db.ts");
     const sql = await getSql();
     await sql`
       insert into audit_events (

@@ -386,7 +386,7 @@ export async function eraseSubject(opts: {
     stores.ingest_jobs = (stores.ingest_jobs ?? 0) + leftover.length;
     await sql`delete from eval_cases where resume_text = ${scope.resumeText}`;
     try {
-      const { forgetObservedDocument } = await import("./domain-embed.server");
+      const { forgetObservedDocument } = await import("../../features/ai/server/domain-embed.server");
       stores.embed_seen = await forgetObservedDocument(scope.resumeText);
     } catch {
       stores.embed_seen = 0;
@@ -520,7 +520,7 @@ export async function withdrawConsent(opts: {
     }
     if (scope.resumeText.trim().length >= 40) {
       try {
-        const { forgetObservedDocument } = await import("./domain-embed.server");
+        const { forgetObservedDocument } = await import("../../features/ai/server/domain-embed.server");
         await forgetObservedDocument(scope.resumeText);
       } catch {
         /* best-effort forget */

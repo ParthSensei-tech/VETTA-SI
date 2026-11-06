@@ -30,7 +30,7 @@ import {
   submitIntakeResponses,
   type PublicPortalRole,
 } from "@/lib/recruiting/autonomous-portal-api";
-import { extractResumeText } from "@/lib/recruiting/resume-file";
+import { extractResumeText } from "@/features/ingest/domain/resume-file";
 
 export const Route = createFileRoute("/portal/$slug")({ component: PublicCareerPortal });
 

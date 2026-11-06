@@ -5,7 +5,7 @@
  */
 
 import type { RankResult } from "./types";
-import { cosine, hashFeatures } from "./domain-embed.ts";
+import { cosine, hashFeatures } from "../../features/ai/domain/domain-embed.ts";
 
 export const CAL_DIM = 6;
 export const MIN_CAL_SAMPLES = 12;

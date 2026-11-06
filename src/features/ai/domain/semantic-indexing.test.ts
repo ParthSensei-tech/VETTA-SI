@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../../platform/db.ts";
-import { ensureUserOrg } from "./org.server.ts";
+import { getSql } from "../../../platform/db.ts";
+import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
 import {
   enqueueCandidateForEmbedding,
   enqueueCandidatesBulk,
@@ -12,15 +12,15 @@ import {
   cancelModelReindex,
   triggerEmbeddingBackfill,
   getActiveEmbeddingModel,
-} from "./embedding-queue.server.ts";
+} from "../../../lib/recruiting/embedding-queue.server.ts";
 import {
   DEFAULT_EMBEDDING_MODEL,
   SUPPORTED_EMBEDDING_MODELS,
   embedTexts,
   getModelInfo,
-} from "./embed-text.server.ts";
-import { executeTalentSearch } from "./search-api.ts";
-import { indexNewCandidate } from "./search.server.ts";
+} from "../server/embed-text.server.ts";
+import { executeTalentSearch } from "../../../lib/recruiting/search-api.ts";
+import { indexNewCandidate } from "../../../lib/recruiting/search.server.ts";
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

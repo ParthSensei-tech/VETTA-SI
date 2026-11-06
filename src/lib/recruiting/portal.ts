@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/platform/db";
 import { iso, parseJson } from "@/shared/utils";
-import { normalizeQuestions, normalizeTranscript, lastAgentTurn } from "./normalize-screen";
+import { normalizeQuestions, normalizeTranscript, lastAgentTurn } from "../../features/ingest/domain/normalize-screen";
 import type {
   CompanyStage,
   EmploymentType,
@@ -260,7 +260,7 @@ async function ensureScreen(args: {
     order by created_at desc limit 1`;
   if (existing[0]) return;
 
-  const { generateScreen } = await import("./ai.server");
+  const { generateScreen } = await import("../../features/ai/server/ai.server");
   const generated = await generateScreen({
     roleTitle: args.role.title,
     companyName: args.role.companyName,
@@ -346,7 +346,7 @@ export const applyToJob = createServerFn({ method: "POST" })
     const candidateId = newId();
     const applicationId = newId();
 
-    const { parseAndRank } = await import("./ai.server");
+    const { parseAndRank } = await import("../../features/ai/server/ai.server");
     const ranked = await parseAndRank({
       resumeText,
       role: {

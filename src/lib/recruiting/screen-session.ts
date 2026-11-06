@@ -13,7 +13,7 @@ import {
   normalizeQuestions,
   normalizeTranscript,
   openingMessage,
-} from "./normalize-screen.ts";
+} from "../../features/ingest/domain/normalize-screen.ts";
 import type {
   PortalApplication,
   PublicJob,
@@ -196,7 +196,7 @@ async function finishScreen(
 ) {
   const sql = await getSql();
   const answers = answersFromTranscript(transcript);
-  const { evaluateScreen } = await import("./ai.server");
+  const { evaluateScreen } = await import("../../features/ai/server/ai.server");
   const head = await loadHead(screen.application_id);
   const evaluated = await evaluateScreen({
     roleTitle: head.title,
@@ -346,7 +346,7 @@ export const postScreenTurn = createServerFn({ method: "POST" })
     if (next.kind === "followup" && next.question) {
       let prompt = next.followUp?.prompt ?? "";
       try {
-        const { generateFollowUp } = await import("./ai.server");
+        const { generateFollowUp } = await import("../../features/ai/server/ai.server");
         const generated = await generateFollowUp({
           roleTitle: head.title,
           question: next.question,
@@ -438,7 +438,7 @@ export const postScreenVoice = createServerFn({ method: "POST" })
       purpose: "voice_prescreen",
     });
 
-    const { transcribePcm16 } = await import("./transcribe.server");
+    const { transcribePcm16 } = await import("../../features/ai/server/transcribe.server");
     const heard = await transcribePcm16(data.pcmBase64);
     return postScreenTurn({
       data: {

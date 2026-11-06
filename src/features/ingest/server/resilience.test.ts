@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../../platform/db.ts";
+import { getSql } from "../../../platform/db.ts";
 import { parseUploadToResumes } from "./parse.server.ts";
-import { withBoundedRetries, defaultIsRetryable } from "./ai-retry.server.ts";
-import { completeWithLadder, completeWithRouter } from "./providers.server.ts";
-import { routerHistory } from "./model-router.server.ts";
-import { recordModelCost } from "../../platform/observability/observability.server.ts";
-import { parseAndRank } from "./ai.server.ts";
+import { withBoundedRetries, defaultIsRetryable } from "../../ai/server/ai-retry.server.ts";
+import { completeWithLadder, completeWithRouter } from "../../ai/server/providers.server.ts";
+import { routerHistory } from "../../ai/server/model-router.server.ts";
+import { recordModelCost } from "../../../platform/observability/observability.server.ts";
+import { parseAndRank } from "../../ai/server/ai.server.ts";
 import {
   createWorkspaceBackup,
   verifyBackupIntegrity,
   restoreWorkspaceBackup,
   type WorkspaceBackup,
-} from "./backup.server.ts";
-import { hashResumeText } from "./hash.ts";
+} from "../../../lib/recruiting/backup.server.ts";
+import { hashResumeText } from "../../../lib/recruiting/hash.ts";
 
 // =========================================================================
 // 1. QUEUE CONCURRENCY & ATOMIC CLAIMING
@@ -148,7 +148,7 @@ test("Duplicate Resumes: ingesting identical resume text for same role deduplica
   const resumeHash = hashResumeText(resumeContent);
 
   // Ingest first job
-  const { persistRanked } = await import("./queue.server.ts");
+  const { persistRanked } = await import("../../../lib/recruiting/queue.server.ts");
   const job1Id = `job_dup_1_${Date.now()}`;
   const res1 = await persistRanked({
     id: job1Id,

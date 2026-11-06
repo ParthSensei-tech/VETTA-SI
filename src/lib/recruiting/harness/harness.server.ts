@@ -7,7 +7,7 @@ import {
   hashPrompt,
   type RankMeta,
   type RankRoleInput,
-} from "../ai.server";
+} from "../../../features/ai/server/ai.server";
 import { calibrateRank, calibrationFromPrompt, rankLocally } from "../local-rank";
 import type {
   EvalCase,
@@ -143,7 +143,7 @@ export async function rankWithProductionPrompt(
 ) {
   await ensureHarness(userId);
   const prompt = await loadPromptBody(userId, "production");
-  const { parseAndRank } = await import("../ai.server");
+  const { parseAndRank } = await import("../../../features/ai/server/ai.server");
   return parseAndRank({
     resumeText: input.resumeText,
     role: input.role,
@@ -345,7 +345,7 @@ export async function runEvalSet(opts: {
     let rank: RankResult;
 
     if (opts.engine === "live") {
-      const { parseAndRank } = await import("../ai.server");
+      const { parseAndRank } = await import("../../../features/ai/server/ai.server");
       const ranked = await parseAndRank({
         resumeText: c.resume_text,
         role,
@@ -454,7 +454,7 @@ export async function runEvalSet(opts: {
   // The router only trades quality for cost on a critical task once an eval has proven the cheap
   // arm agrees with humans. This is that proof, remembered per engine rather than recomputed.
   try {
-    const { recordRouterGates } = await import("../model-router.server.ts");
+    const { recordRouterGates } = await import("../../../features/ai/server/model-router.server.ts");
     await recordRouterGates({
       task: "rank",
       engines: Array.from(new Set(scored.map((s) => s.engine))),

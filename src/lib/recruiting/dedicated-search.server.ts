@@ -13,7 +13,7 @@
 
 import { getSql } from "../../platform/db.ts";
 import { candidateDocument, cosine, reciprocalRankFusion } from "./retrieve.ts";
-import { embedTexts } from "./embed-text.server.ts";
+import { embedTexts } from "../../features/ai/server/embed-text.server.ts";
 import { getActiveEmbeddingModel } from "./embedding-queue.server.ts";
 import { matchCandidateToRole } from "./match-engine.ts";
 import type { FitLevel, PipelineStatus } from "./types.ts";

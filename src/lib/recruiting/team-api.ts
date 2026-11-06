@@ -11,7 +11,7 @@ import {
   getApplicationAssignments,
 } from "./assignments.server";
 import { getSharedCandidatePool, getCandidateFullDossier } from "./talent-pool.server";
-import { findDuplicateCandidates, mergeCandidates } from "./duplicates.server";
+import { findDuplicateCandidates, mergeCandidates } from "../../features/ingest/server/duplicates.server";
 import {
   addCandidateNote,
   getCandidateNotes,

@@ -346,8 +346,8 @@ export const exportRoleSlate = createServerFn({ method: "POST" })
       },
     });
     const { shareUrl: makeShareUrl } = await import("./origin");
-    const { shareToPdf, toBase64 } = await import("./pdf");
-    const { shareToNotionMarkdown, shareToXlsxBase64 } = await import("./sheet");
+    const { shareToPdf, toBase64 } = await import("../../features/ingest/domain/pdf");
+    const { shareToNotionMarkdown, shareToXlsxBase64 } = await import("../../features/ingest/domain/sheet");
     const view = viewFromRow(row);
     const url = makeShareUrl(row.token);
     view.token = row.token;
@@ -475,7 +475,7 @@ export const sendPackToClient = createServerFn({ method: "POST" })
       },
     });
     const { shareUrl: makeShareUrl } = await import("./origin");
-    const { shareToNotionMarkdown } = await import("./sheet");
+    const { shareToNotionMarkdown } = await import("../../features/ingest/domain/sheet");
     const url = makeShareUrl(shareRow.token);
 
     const approval: Approval =

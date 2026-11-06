@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { appendIngestItems, createIngestBatch } from "@/lib/recruiting/batch";
-import { chunkItems, prepareBatchFiles, sourceLabel } from "@/lib/recruiting/batch-client";
+import { appendIngestItems, createIngestBatch } from "@/features/ingest/api/batch";
+import { chunkItems, prepareBatchFiles, sourceLabel } from "@/features/ingest/domain/batch-client";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import { cn } from "@/shared/utils";
 

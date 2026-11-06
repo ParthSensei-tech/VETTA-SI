@@ -112,7 +112,7 @@ export const submitRankLabel = createServerFn({ method: "POST" })
             ? await mayProcess({ orgId, subjectId, purpose: "model_improvement" })
             : false;
           if (learn) {
-            const { trainOnLabel } = await import("./domain-embed.server");
+            const { trainOnLabel } = await import("../../features/ai/server/domain-embed.server");
             await trainOnLabel({
               orgId,
               resumeText: doc.resume_text,

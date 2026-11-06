@@ -14,9 +14,9 @@
  * `decodeTokensPerSec` should change its output rather than break CI.
  */
 
-import { decideRoute } from "../src/lib/recruiting/model-router.ts";
+import { decideRoute } from "../src/features/ai/domain/model-router.ts";
 import { buildResumeList, buildRoles, longJdText } from "../src/lib/recruiting/benchmark/corpus.ts";
-import { MODEL_ARMS, TASK_PROFILES } from "../src/lib/recruiting/model-registry.ts";
+import { MODEL_ARMS, TASK_PROFILES } from "../src/features/ai/domain/model-registry.ts";
 
 const CLOUD_KEYS = {
   GROQ_API_KEY: "replay",

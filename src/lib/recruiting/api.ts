@@ -31,7 +31,7 @@ import {
   answersFromTranscript,
   normalizeQuestions,
   normalizeTranscript,
-} from "./normalize-screen.ts";
+} from "../../features/ingest/domain/normalize-screen.ts";
 
 const stageSchema = z.enum(["seed", "series_a", "series_b"]);
 const workModeSchema = z.enum(["onsite", "hybrid", "remote"]);
@@ -501,7 +501,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       rate: sent > 0 ? Math.round((completed / sent) * 100) : 0,
     };
 
-    const { describeAi } = await import("./ai.server");
+    const { describeAi } = await import("../../features/ai/server/ai.server");
     const ai = describeAi();
     let domainModel = {
       steps: 0,
@@ -512,7 +512,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       ready: false,
     };
     try {
-      const { domainModelStatus, refreshMarketSnapshot } = await import("./domain-embed.server");
+      const { domainModelStatus, refreshMarketSnapshot } = await import("../../features/ai/server/domain-embed.server");
       void refreshMarketSnapshot(false).catch(() => undefined);
       const { refreshHrLexicon } = await import("./calibrate.server");
       void refreshHrLexicon(false).catch(() => undefined);
@@ -672,7 +672,7 @@ export const ingestResume = createServerFn({ method: "POST" })
     const candidateId = newId();
     const applicationId = newId();
 
-    const { parseAndRank } = await import("./ai.server");
+    const { parseAndRank } = await import("../../features/ai/server/ai.server");
     const ranked = await parseAndRank({
       resumeText: data.resumeText,
       role: {
@@ -797,7 +797,7 @@ export const rerankApplication = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<Application> => {
     const bundle = await loadApplicationBundle(context.userId, data.applicationId);
     const role = mapRole(await loadRoleOrThrow(context.userId, bundle.app.role_id));
-    const { parseAndRank } = await import("./ai.server");
+    const { parseAndRank } = await import("../../features/ai/server/ai.server");
     const ranked = await parseAndRank({
       resumeText: bundle.cand.resume_text,
       role: {
@@ -981,7 +981,7 @@ export const generateAsyncScreen = createServerFn({ method: "POST" })
       stack_match: [],
       screen_focus: [],
     });
-    const { generateScreen } = await import("./ai.server");
+    const { generateScreen } = await import("../../features/ai/server/ai.server");
     const generated = await generateScreen({
       roleTitle: role.title,
       companyName: role.companyName,
@@ -1045,7 +1045,7 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
       where id = ${screen.id}`;
 
     if (data.evaluate) {
-      const { evaluateScreen } = await import("./ai.server");
+      const { evaluateScreen } = await import("../../features/ai/server/ai.server");
       const app = bundle.app;
       const role = mapRole(await loadRoleOrThrow(context.userId, app.role_id));
       const evaluated = await evaluateScreen({
@@ -1145,7 +1145,7 @@ export const prepareClientPack = createServerFn({ method: "POST" })
       });
     }
 
-    const { draftClientCard } = await import("./ai.server");
+    const { draftClientCard } = await import("../../features/ai/server/ai.server");
     const drafted = await draftClientCard({
       roleTitle: role.title,
       companyName: role.companyName,

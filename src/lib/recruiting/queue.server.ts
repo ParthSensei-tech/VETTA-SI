@@ -156,7 +156,7 @@ export async function persistRanked(job: JobRow): Promise<{ applicationId: strin
     source: `batch:${job.batch_id}`,
   });
 
-  const { parseAndRank } = await import("./ai.server.ts");
+  const { parseAndRank } = await import("../../features/ai/server/ai.server.ts");
   const ranked = await parseAndRank({
     resumeText: job.resume_text,
     role: {

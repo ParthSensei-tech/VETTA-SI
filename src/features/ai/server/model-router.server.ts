@@ -6,17 +6,17 @@
  * from its inputs, which is the only way to answer "why did this resume get ranked by that model".
  */
 
-import { getSql } from "../../platform/db.ts";
-import { USD_TO_INR_RATE } from "../../platform/observability/cost.ts";
-import type { ModelTaskType } from "../../platform/observability/types.ts";
-import { MODEL_ARMS, armModel, type CallContext, type ModelCandidate } from "./model-registry.ts";
+import { getSql } from "../../../platform/db.ts";
+import { USD_TO_INR_RATE } from "../../../platform/observability/cost.ts";
+import type { ModelTaskType } from "../../../platform/observability/types.ts";
+import { MODEL_ARMS, armModel, type CallContext, type ModelCandidate } from "../domain/model-registry.ts";
 import {
   decideRoute,
   type ArmHistory,
   type GatePass,
   type RouteDecision,
   type RouteInput,
-} from "./model-router.ts";
+} from "../domain/model-router.ts";
 
 /** Cost and latency of a served call are only meaningful over a recent window. */
 const HISTORY_WINDOW_DAYS = 7;

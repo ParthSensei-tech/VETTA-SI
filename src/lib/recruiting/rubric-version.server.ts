@@ -16,7 +16,7 @@ import {
 } from "./rubric-types";
 import { validateCriteria } from "./rubric-guardrails";
 import { computeRubricHash } from "./hash";
-import { routeTelemetry } from "./model-router.ts";
+import { routeTelemetry } from "../../features/ai/domain/model-router.ts";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -205,7 +205,7 @@ export async function generateRubricDraft(opts: {
 
   if (!opts.heuristicOnly) {
     try {
-      const { completeWithRouter } = await import("./providers.server");
+      const { completeWithRouter } = await import("../../features/ai/server/providers.server");
       const result = await completeWithRouter({
         task: "rubric_draft",
         orgId,

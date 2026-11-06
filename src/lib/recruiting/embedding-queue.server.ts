@@ -7,7 +7,7 @@ import {
   toModelDto,
   type EmbeddingModelDto,
   type EmbeddingModelInfo,
-} from "./embed-text.server.ts";
+} from "../../features/ai/server/embed-text.server.ts";
 import { candidateDocument } from "./retrieve.ts";
 
 function newId(): string {

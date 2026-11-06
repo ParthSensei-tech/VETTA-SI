@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pcm16ToFloat } from "./transcribe.server.ts";
+import { pcm16ToFloat } from "../../features/ai/server/transcribe.server.ts";
 import { phonesMatch } from "./prescreen.ts";
 
 test("pcm16 round-trips a quiet sample", () => {

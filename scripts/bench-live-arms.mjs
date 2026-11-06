@@ -129,7 +129,7 @@ if (L7.armsMeasured.length) {
 
   // The payoff: the same route decision, re-planned now that this machine's numbers are in the ledger.
   const { planRoute, clearRouterBeliefs } =
-    await import("../src/lib/recruiting/model-router.server.ts");
+    await import("../src/features/ai/server/model-router.server.ts");
   // `planRoute` reuses a one-second-old history window; the reps above just wrote a fresher one.
   clearRouterBeliefs();
   console.log("\nwhat the next rank call will actually be given (planned from the rows above):");

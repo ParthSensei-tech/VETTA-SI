@@ -126,7 +126,7 @@ export async function executeTalentSearch(opts: {
 
   if (q.length >= 2 && requestedMode !== "lexical") {
     try {
-      const { embedTexts } = await import("./embed-text.server.ts");
+      const { embedTexts } = await import("../../features/ai/server/embed-text.server.ts");
       const { getActiveEmbeddingModel, enqueueCandidatesBulk } =
         await import("./embedding-queue.server.ts");
       model = await getActiveEmbeddingModel(opts.orgId);

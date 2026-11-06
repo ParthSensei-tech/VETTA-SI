@@ -4,7 +4,7 @@
 
 import { getSql } from "@/platform/db";
 import type { RankResult } from "./types";
-import { hashFeatures } from "./domain-embed";
+import { hashFeatures } from "../../features/ai/domain/domain-embed";
 import {
   deserializeCal,
   explainRank,

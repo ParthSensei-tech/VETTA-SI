@@ -63,7 +63,7 @@ const ctx = await P.setupBench({
   orgCoversTraining: opts.orgCoversTraining,
 });
 {
-  const { parseAndRank } = await import("../src/lib/recruiting/ai.server.ts");
+  const { parseAndRank } = await import("../src/features/ai/server/ai.server.ts");
   const probeRole = ctx.roles[0];
   const probe = await parseAndRank({
     resumeText: ctx.resumes[5].resumeText,
@@ -142,7 +142,7 @@ const costCentsPerRankLocal =
 // Two completion figures, because they differ by ~9x:
 //   typical = what a local/short rank actually returns (recordModelCost uses 250)
 //   cap     = maxTokens 2200 passed to the rank call (ai.server.ts:672)
-const { RANK_SYSTEM } = await import("../src/lib/recruiting/ai.server.ts");
+const { RANK_SYSTEM } = await import("../src/features/ai/server/ai.server.ts");
 const PROVIDERS = [
   { provider: "groq", model: "llama-3.3-70b-versatile" },
   { provider: "gemini", model: "gemini-2.0-flash" },

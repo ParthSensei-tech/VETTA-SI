@@ -13,7 +13,7 @@ export async function deepenRoleTopN(opts: {
   topN?: number;
   forceStale?: boolean;
   /** `bulk` when a recruiter asked for it, `background` when the batch completion triggered it. */
-  context?: import("./model-registry.ts").CallContext;
+  context?: import("../../features/ai/domain/model-registry.ts").CallContext;
   /** Tolerance for one rank. A slow local arm is only offered the task when it fits this. */
   deadlineMs?: number;
   /** Tolerance for the whole loop, so N long calls cannot outlive the request that started them. */
@@ -94,7 +94,7 @@ export async function deepenRoleTopN(opts: {
 
   const org = { orgId: targetOrgId! };
 
-  const { parseAndRank } = await import("./ai.server.ts");
+  const { parseAndRank } = await import("../../features/ai/server/ai.server.ts");
   const engines: string[] = [];
   let deepened = 0;
 

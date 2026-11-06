@@ -14,7 +14,7 @@
 
 import { getSql } from "../../../platform/db.ts";
 import { rankLocally } from "../local-rank.ts";
-import type { CallContext } from "../model-registry.ts";
+import type { CallContext } from "../../../features/ai/domain/model-registry.ts";
 import {
   buildResumeList,
   buildRoles,
@@ -281,7 +281,7 @@ export async function phaseL1(ctx: BenchCtx, n: number, warmup: number) {
 
 /** L2 — production fast path, forced cache miss. This is real per-resume pipeline cost. */
 export async function phaseL2(ctx: BenchCtx, n: number, warmup: number) {
-  const { parseAndRank } = await import("../ai.server.ts");
+  const { parseAndRank } = await import("../../../features/ai/server/ai.server.ts");
   const internalLatency: number[] = [];
   const res = await timed(
     n,
@@ -311,7 +311,7 @@ export async function phaseL2(ctx: BenchCtx, n: number, warmup: number) {
  * `memHit` (process-local Map) and `dbHit` (SELECT + hit_count UPDATE).
  */
 export async function phaseL3(ctx: BenchCtx, n: number, warmup: number) {
-  const { parseAndRank } = await import("../ai.server.ts");
+  const { parseAndRank } = await import("../../../features/ai/server/ai.server.ts");
   const { clearRankCache } = await import("../rank-cache.server.ts");
   const role = ctx.roles[0];
   const target = ctx.resumes[3] ?? ctx.resumes[0];
@@ -450,8 +450,8 @@ export async function phaseL5(
 /** L6 — the routed model path (`parseAndRank` mode "full"). Without keys this measures the
  *  router's own overhead plus refused provider connections, not model latency. */
 export async function phaseL6(ctx: BenchCtx, opts: { n: number; openCircuits: boolean }) {
-  const { parseAndRank, isAiConfigured, describeAi } = await import("../ai.server.ts");
-  const { availableLadderProviders } = await import("../providers.server.ts");
+  const { parseAndRank, isAiConfigured, describeAi } = await import("../../../features/ai/server/ai.server.ts");
+  const { availableLadderProviders } = await import("../../../features/ai/server/providers.server.ts");
   if (opts.openCircuits) openAllCircuits();
   const role = ctx.roles[1] ?? ctx.roles[0];
   const samples: number[] = [];
@@ -512,9 +512,9 @@ export async function phaseLiveArms(
     deepenApps?: number;
   },
 ) {
-  const { parseAndRank } = await import("../ai.server.ts");
-  const { MODEL_ARMS, armModel } = await import("../model-registry.ts");
-  const { routerHistory, ollamaHostUp } = await import("../model-router.server.ts");
+  const { parseAndRank } = await import("../../../features/ai/server/ai.server.ts");
+  const { MODEL_ARMS, armModel } = await import("../../../features/ai/domain/model-registry.ts");
+  const { routerHistory, ollamaHostUp } = await import("../../../features/ai/server/model-router.server.ts");
 
   const KEY_NAMES = [
     "GROQ_API_KEY",

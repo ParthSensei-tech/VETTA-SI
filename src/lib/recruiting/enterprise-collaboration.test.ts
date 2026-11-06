@@ -24,7 +24,7 @@ import {
   normalizeLinkedin,
   findDuplicateCandidates,
   mergeCandidates,
-} from "./duplicates.server.ts";
+} from "../../features/ingest/server/duplicates.server.ts";
 import {
   addCandidateNote,
   getCandidateNotes,

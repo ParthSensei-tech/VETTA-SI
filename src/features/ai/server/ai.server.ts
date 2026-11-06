@@ -6,7 +6,7 @@ import type {
   RankResult,
   ScreenEvaluation,
   ScreenQuestion,
-} from "./types";
+} from "../../../lib/recruiting/types";
 import {
   calibrationFromPrompt,
   calibrateRank,
@@ -14,7 +14,7 @@ import {
   localEvaluate,
   localScreen,
   rankLocally,
-} from "./local-rank.ts";
+} from "../../../lib/recruiting/local-rank.ts";
 import {
   ClientCardResponseSchema,
   RankResponseSchema,
@@ -22,7 +22,7 @@ import {
   ScreenFollowUpResponseSchema,
   ScreenQuestionsResponseSchema,
   extractAndValidateJson,
-} from "./ai-schema.ts";
+} from "../domain/ai-schema.ts";
 import {
   calibrateGroundingScore,
   recordRankTrace,
@@ -32,9 +32,9 @@ import {
   verifyStackMatch,
   wrapUntrustedBlock,
 } from "./ai-guard.server.ts";
-import { estimateTokensFromText } from "../../platform/observability/cost.ts";
-import { MODEL_ARMS } from "./model-registry.ts";
-import { routeTelemetry } from "./model-router.ts";
+import { estimateTokensFromText } from "../../../platform/observability/cost.ts";
+import { MODEL_ARMS } from "../domain/model-registry.ts";
+import { routeTelemetry } from "../domain/model-router.ts";
 
 const XAI_MODEL = "grok-4.5";
 /** Best general Ollama model for this ranking work (structured JSON + reasoning, 2026). */
@@ -119,18 +119,18 @@ async function complete(args: {
   system: string;
   user: string;
   maxTokens: number;
-  task: import("../../platform/observability/types").ModelTaskType;
+  task: import("../../../platform/observability/types").ModelTaskType;
   /**
    * Whose patience this call buys. Defaults to `interactive` because every current caller is a
    * recruiter waiting on one answer; bulk and background paths say so explicitly.
    */
-  context?: import("./model-registry").CallContext;
+  context?: import("../domain/model-registry").CallContext;
   deadlineMs?: number;
   disclosure?: {
     orgId?: string | null;
     subjectId?: string | null;
     applicationId?: string | null;
-    purpose: import("./privacy").PurposeId;
+    purpose: import("../../../lib/recruiting/privacy").PurposeId;
   };
 }): Promise<
   /** `routedLocal` says the router chose the in-process engine: use your local path, and do not
@@ -141,7 +141,7 @@ async function complete(args: {
     const d = args.disclosure;
     if (!d?.orgId || !d.subjectId) return;
     try {
-      const { recordProviderDisclosure } = await import("./privacy.server.ts");
+      const { recordProviderDisclosure } = await import("../../../lib/recruiting/privacy.server.ts");
       await recordProviderDisclosure({
         orgId: d.orgId,
         subjectId: d.subjectId,
@@ -167,7 +167,7 @@ async function complete(args: {
     const { system, user, task } = args;
     void (async () => {
       try {
-        const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
+        const { recordModelCost } = await import("../../../platform/observability/observability.server.ts");
         await recordModelCost({
           userId: null,
           taskType: task,
@@ -300,7 +300,7 @@ export async function parseAndRank(input: {
    * candidate; `bulk` is a server function looping over many; `background` is detached work. The
    * router needs the distinction because it decides the per-attempt timeout, not the caller.
    */
-  context?: import("./model-registry").CallContext;
+  context?: import("../domain/model-registry").CallContext;
   deadlineMs?: number;
 }): Promise<RankOutcome | { ok: false; error: string }> {
   const started = Date.now();
@@ -317,13 +317,13 @@ export async function parseAndRank(input: {
     fallback,
     promptHash,
   });
-  const { hashResumeText, hashRolePayload } = await import("./hash.ts");
+  const { hashResumeText, hashRolePayload } = await import("../../../lib/recruiting/hash.ts");
   const resumeHash = hashResumeText(input.resumeText);
   const roleHash = hashRolePayload(input.role);
 
   if (input.orgId && input.candidateId) {
-    const { mayProcess } = await import("./privacy.server.ts");
-    const { purposeDenied } = await import("./privacy.ts");
+    const { mayProcess } = await import("../../../lib/recruiting/privacy.server.ts");
+    const { purposeDenied } = await import("../../../lib/recruiting/privacy.ts");
     const allowed = await mayProcess({
       orgId: input.orgId,
       subjectId: input.candidateId,
@@ -332,15 +332,15 @@ export async function parseAndRank(input: {
     if (!allowed) return { ok: false, error: purposeDenied("recruitment_evaluation") };
   }
 
-  let weights: import("./match-engine").MatchWeights | null = null;
-  let hardConstraints: import("./match-engine").MatchHardConstraints | null = null;
-  let criteria: import("./match-engine").MatchCriterion[] | null = null;
+  let weights: import("../../../lib/recruiting/match-engine").MatchWeights | null = null;
+  let hardConstraints: import("../../../lib/recruiting/match-engine").MatchHardConstraints | null = null;
+  let criteria: import("../../../lib/recruiting/match-engine").MatchCriterion[] | null = null;
   let rubricVersionId: string | null = null;
   let rubricVersion: number | null = null;
   let rubricHash: string | null = null;
   if (input.orgId) {
     try {
-      const { loadRubricWeights } = await import("./rubric.server.ts");
+      const { loadRubricWeights } = await import("../../../lib/recruiting/rubric.server.ts");
       weights = await loadRubricWeights({ orgId: input.orgId, roleId: input.roleId });
     } catch {
       weights = null;
@@ -348,7 +348,7 @@ export async function parseAndRank(input: {
   }
   if (input.roleId) {
     try {
-      const { loadActiveRubricForRole } = await import("./rubric-version.server.ts");
+      const { loadActiveRubricForRole } = await import("../../../lib/recruiting/rubric-version.server.ts");
       const active = await loadActiveRubricForRole(input.roleId);
       if (active) {
         rubricVersionId = active.id;
@@ -367,7 +367,7 @@ export async function parseAndRank(input: {
           compMaxLpa: active.hardConstraints.compMaxLpa,
           strictFilter: active.hardConstraints.strictFilter,
         };
-        const { computeRubricHash } = await import("./hash.ts");
+        const { computeRubricHash } = await import("../../../lib/recruiting/hash.ts");
         rubricHash = active.rubricHash || computeRubricHash(criteria, hardConstraints);
       }
     } catch {
@@ -376,7 +376,7 @@ export async function parseAndRank(input: {
   }
   if (!rubricHash && criteria) {
     try {
-      const { computeRubricHash } = await import("./hash.ts");
+      const { computeRubricHash } = await import("../../../lib/recruiting/hash.ts");
       rubricHash = computeRubricHash(criteria, hardConstraints ?? undefined);
     } catch {
       /* best-effort telemetry — never block the main path */
@@ -384,7 +384,7 @@ export async function parseAndRank(input: {
   }
 
   if (input.userId && !input.bypassCache) {
-    const { getRankCache } = await import("./rank-cache.server.ts");
+    const { getRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
     const cached = await getRankCache({
       userId: input.userId,
       resumeHash,
@@ -436,7 +436,7 @@ export async function parseAndRank(input: {
       let allowModelLearning = true;
       if (input.orgId && input.candidateId) {
         try {
-          const { mayProcess } = await import("./privacy.server.ts");
+          const { mayProcess } = await import("../../../lib/recruiting/privacy.server.ts");
           allowModelLearning = await mayProcess({
             orgId: input.orgId,
             subjectId: input.candidateId,
@@ -459,11 +459,11 @@ export async function parseAndRank(input: {
         orgId: input.orgId,
       });
       localRank = applyDomainToRank(localRaw.rank, domain);
-      const { attachExplanation, refreshHrLexicon } = await import("./calibrate.server.ts");
+      const { attachExplanation, refreshHrLexicon } = await import("../../../lib/recruiting/calibrate.server.ts");
       if (Math.random() < 0.08) void refreshHrLexicon(false).catch(() => undefined);
       localRank = await attachExplanation(localRank, input.orgId);
       try {
-        const { forecastOutcome } = await import("./outcome.server.ts");
+        const { forecastOutcome } = await import("../../../lib/recruiting/outcome.server.ts");
         localRank = { ...localRank, outcome: await forecastOutcome(localRank, input.orgId) };
       } catch {
         /* outcome tables may be mid-migration */
@@ -489,7 +489,7 @@ export async function parseAndRank(input: {
     };
     local.rank.provenance = localProvenance;
     if (input.userId) {
-      const { setRankCache } = await import("./rank-cache.server.ts");
+      const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
       await setRankCache({
         userId: input.userId,
         resumeHash,
@@ -507,7 +507,7 @@ export async function parseAndRank(input: {
     }
     void (async () => {
       try {
-        const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
+        const { recordModelCost } = await import("../../../platform/observability/observability.server.ts");
         await recordModelCost({
           userId: input.userId,
           taskType: "rank",
@@ -627,7 +627,7 @@ ${wrappedResume}`,
 
   void (async () => {
     try {
-      const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
+      const { recordModelCost } = await import("../../../platform/observability/observability.server.ts");
       if (result.ok && !result.routedLocal) {
         await recordModelCost({
           userId: input.userId,
@@ -672,7 +672,7 @@ ${wrappedResume}`,
 
   if (result.ok && !result.routedLocal && input.orgId && input.candidateId) {
     try {
-      const { recordProviderDisclosure } = await import("./privacy.server.ts");
+      const { recordProviderDisclosure } = await import("../../../lib/recruiting/privacy.server.ts");
       await recordProviderDisclosure({
         orgId: input.orgId,
         subjectId: input.candidateId,
@@ -718,7 +718,7 @@ ${wrappedResume}`,
     };
     local.rank.provenance = localProvenance;
     if (input.userId) {
-      const { setRankCache } = await import("./rank-cache.server.ts");
+      const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
       await setRankCache({
         userId: input.userId,
         resumeHash,
@@ -894,7 +894,7 @@ ${wrappedResume}`,
   // Populate requirements if model left them empty
   let requirements = parsed.rank.requirements || [];
   if (requirements.length === 0) {
-    const { evaluateRoleRequirements } = await import("./match-engine.ts");
+    const { evaluateRoleRequirements } = await import("../../../lib/recruiting/match-engine.ts");
     requirements = evaluateRoleRequirements({
       resumeText: input.resumeText,
       role: input.role,
@@ -924,7 +924,7 @@ ${wrappedResume}`,
   };
 
   if (input.userId) {
-    const { setRankCache } = await import("./rank-cache.server.ts");
+    const { setRankCache } = await import("../../../lib/recruiting/rank-cache.server.ts");
     await setRankCache({
       userId: input.userId,
       resumeHash,
@@ -1027,7 +1027,7 @@ Gaps to probe: ${input.screenFocus.join("; ")}`,
   if (!validated.ok) {
     return { ok: true, questions: localScreen(input) };
   }
-  const { normalizeQuestions } = await import("./normalize-screen.ts");
+  const { normalizeQuestions } = await import("../../ingest/domain/normalize-screen.ts");
   const questions = normalizeQuestions(validated.data.questions).slice(0, 6);
   if (questions.length < 4) return { ok: true, questions: localScreen(input) };
   const kinds = new Set(questions.map((q) => q.kind));

@@ -5,10 +5,10 @@ import {
   wrapUntrustedBlock,
   verifyEvidenceGrounding,
   calibrateGroundingScore,
-} from "./ai-guard.server.ts";
+} from "../server/ai-guard.server.ts";
 import { RankResponseSchema, extractAndValidateJson } from "./ai-schema.ts";
-import { evaluateRoleRequirements, matchCandidateToRole } from "./match-engine.ts";
-import { parseAndRank } from "./ai.server.ts";
+import { evaluateRoleRequirements, matchCandidateToRole } from "../../../lib/recruiting/match-engine.ts";
+import { parseAndRank } from "../server/ai.server.ts";
 
 test("Structured Output Validation: Validates conforming schema and rejects malformed payloads", () => {
   // 1. Valid structured payload

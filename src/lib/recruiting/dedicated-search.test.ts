@@ -11,7 +11,7 @@ import {
   getSearchInfrastructureTelemetry,
 } from "./dedicated-search.server.ts";
 import { indexNewCandidate } from "./search-api.ts";
-import { embedTexts } from "./embed-text.server.ts";
+import { embedTexts } from "../../features/ai/server/embed-text.server.ts";
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

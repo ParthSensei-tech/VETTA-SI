@@ -169,7 +169,7 @@ export const getRouterOverview = createServerFn({ method: "GET" })
       .parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
-    const { routerStatus } = await import("./model-router.server.ts");
+    const { routerStatus } = await import("../../features/ai/server/model-router.server.ts");
     if (data?.scope === "global") {
       const { assertAuthorizedOperator } = await import("./rbac.server.ts");
       await assertAuthorizedOperator(context.userId);

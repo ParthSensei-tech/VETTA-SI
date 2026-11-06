@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRoleWorkspace, getWorkspace, listApprovals } from "./api";
 import { searchTalent } from "./search-api";
-import { listIngestBatches } from "./batch";
+import { listIngestBatches } from "../../features/ingest/api/batch";
 import { getPortalApplication, getPublicJob, listOpenJobs } from "./portal";
 import { getPublicShare } from "./share";
 import { getScreenByApplication, getScreenByToken } from "./screen-session";

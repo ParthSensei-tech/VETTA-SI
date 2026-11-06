@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto";
 import { getSql } from "@/platform/db";
-import type { RankResult } from "./types";
+import type { RankResult } from "../../../lib/recruiting/types";
 import {
   EMBED_DIM,
   alignmentScore,
@@ -21,7 +21,7 @@ import {
   trainReconstruction,
   type EmbedWeights,
   type MarketMetric,
-} from "./domain-embed";
+} from "../domain/domain-embed";
 
 const MODEL_ID = "universal";
 

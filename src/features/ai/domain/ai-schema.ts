@@ -8,7 +8,7 @@ import type {
   ScreenEvaluation,
   ScreenQuestion,
   StackMatch,
-} from "./types";
+} from "../../../lib/recruiting/types";
 
 export const ParsedProfileSchema = z.object({
   full_name: z.string().trim().default("Unnamed candidate"),

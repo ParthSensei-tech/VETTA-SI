@@ -319,7 +319,7 @@ async function processApplicant(opts: {
     opts.person.resumeText,
   ].join("\n");
 
-  const { generateScreen, evaluateScreen } = await import("./ai.server");
+  const { generateScreen, evaluateScreen } = await import("../../features/ai/server/ai.server");
   const roleInput = {
     companyName: opts.role.companyName,
     companyStage: opts.role.companyStage,

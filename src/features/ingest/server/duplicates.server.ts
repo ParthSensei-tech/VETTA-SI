@@ -1,5 +1,5 @@
-import { getSql } from "../../platform/db.ts";
-import { ConcurrencyConflictError } from "./concurrency.ts";
+import { getSql } from "../../../platform/db.ts";
+import { ConcurrencyConflictError } from "../../../lib/recruiting/concurrency.ts";
 
 function newId(): string {
   return crypto.randomUUID();
