@@ -1,0 +1,16 @@
+# Every source file in this repo is LF-only and prettier enforces endOfLine=lf.
+# The system-level git on this machine has core.autocrlf=true, which would rewrite
+# the worktree to CRLF on any checkout/restore/revert and break prettier --check
+# plus make every move-diff look like a whole-file change.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary

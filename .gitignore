@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+.output/
+.nitro/
+.vercel/
+.cache/
+.tanstack/
+
+# Regenerated at runtime by the benchmark and QA CLIs
+artifacts/
+screenshots/
+scratch/
+
+# Redundant platform workspace snapshots (91 MB of zipped copies of this repo, no candidate data)
+attachments/
+
+# Local tool state
+.qoder/
+
+# Secrets — .env is never created here (the platform injects it on deploy); the template is tracked
+.env
+.env.*
+!.env.example
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.log
