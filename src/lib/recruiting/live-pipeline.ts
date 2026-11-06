@@ -332,7 +332,7 @@ async function processApplicant(opts: {
     niceToHaves: opts.role.niceToHaves,
     jdText: opts.role.jdText,
   };
-  const { rankWithProductionPrompt, safeRecordLiveRank } = await import("./harness/server");
+  const { rankWithProductionPrompt, safeRecordLiveRank } = await import("./harness/harness.server");
   const ranked = await rankWithProductionPrompt(opts.userId, {
     resumeText: resume,
     role: roleInput,

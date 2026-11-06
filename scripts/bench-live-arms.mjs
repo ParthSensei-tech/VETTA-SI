@@ -39,7 +39,7 @@ console.log(
     `${opts.deepenApps ? `, deep-rank=${opts.deepenApps} apps` : ""}`,
 );
 
-const P = await import("../src/lib/recruiting/benchmark/phases.ts");
+const P = await import("../src/lib/recruiting/benchmark/phases.server.ts");
 const ctx = await P.setupBench({
   slateSize: Math.max(opts.slate, opts.deepenApps) + 6,
   orgCoversTraining: false,

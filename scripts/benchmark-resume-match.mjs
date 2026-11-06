@@ -45,7 +45,7 @@ const { getSql, dbSource } = await import("../src/lib/db.ts");
 await getSql();
 const bootMs = Math.round(performance.now() - t_boot_start);
 
-const P = await import("../src/lib/recruiting/benchmark/phases.ts");
+const P = await import("../src/lib/recruiting/benchmark/phases.server.ts");
 const { calculateModelCost, formatCostSideBySide } =
   await import("../src/lib/observability/cost.ts");
 

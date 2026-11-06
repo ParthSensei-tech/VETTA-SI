@@ -130,7 +130,7 @@ export function useHarnessQuery() {
   return useQuery({
     queryKey: queryKeys.harness,
     queryFn: async () => {
-      const { getHarness } = await import("./harness/api");
+      const { getHarness } = await import("./harness/harness-api");
       return getHarness();
     },
   });

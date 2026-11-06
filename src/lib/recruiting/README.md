@@ -6,20 +6,20 @@ choice.
 
 | Kind                        | Pattern                 | Count | May import                               | Imported by                                    |
 | --------------------------- | ----------------------- | ----- | ---------------------------------------- | ---------------------------------------------- |
-| **Server-only**             | `*.server.ts`           | 30    | anything under `src/lib`                 | other server modules, `api.ts` wrappers, tests |
+| **Server-only**             | `*.server.ts`           | 32    | anything under `src/lib`                 | other server modules, `api.ts` wrappers, tests |
 | **Server-function wrapper** | `*-api.ts` and `api.ts` | 13    | server-only modules                      | client code (components, routes)               |
 | **Test**                    | `*.test.ts`             | 19    | anything                                 | `npm test` only                                |
-| **Pure domain**             | plain `*.ts`            | 38    | other pure modules, `@/lib/utils`, `zod` | both sides                                     |
+| **Pure domain**             | plain `*.ts`            | 36    | other pure modules, `@/lib/utils`, `zod` | both sides                                     |
 
-The two subfolders are where the naming rule breaks. `harness/server.ts` and `benchmark/phases.ts`
-are server-side code named by **folder**, not suffix, so they sit inside the 38 above; and
-`harness/api.ts` is a wrapper that does not match `*-api.ts`. Three files therefore layer correctly
-while ignoring the convention.
+The two subfolders used to be where the naming rule broke. `harness/server.ts`, `harness/api.ts` and
+`benchmark/phases.ts` were server-side code and a wrapper named by **folder**, not suffix, so they
+evaded the globs that read the filename. They now carry their own suffixes, and every file in this
+directory is classified by the patterns above — no exceptions.
 
-| Folder       | Files                                                         |
-| ------------ | ------------------------------------------------------------- |
-| `harness/`   | `api.ts` (wrapper), `server.ts` (I/O), `gold.ts`, `scorer.ts` |
-| `benchmark/` | `phases.ts` (I/O), `corpus.ts`                                |
+| Folder       | Files                                                                        |
+| ------------ | ---------------------------------------------------------------------------- |
+| `harness/`   | `harness-api.ts` (wrapper), `harness.server.ts` (I/O), `gold.ts`, `scorer.ts` |
+| `benchmark/` | `phases.server.ts` (I/O), `corpus.ts`                                          |
 
 ## The rules, and where they are enforced
 

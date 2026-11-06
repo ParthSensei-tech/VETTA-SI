@@ -291,7 +291,7 @@
       "to": "src/features/eval",
       "from": ["src/lib/recruiting/harness", "src/lib/recruiting/benchmark"],
       "batch": 8,
-      "_note": "batch 3 first gives the three folder-named modules real suffixes (harness/server.ts -> harness/harness.server.ts, harness/api.ts -> harness/harness-api.ts, benchmark/phases.ts -> benchmark/phases.server.ts) so they stop evading the lint globs. Scripts/bench-live-arms.mjs:40,122 and benchmark-resume-match.mjs:48 import these by path."
+      "_note": "batch 3 (applied) gave the three folder-named modules real suffixes in place — harness/server.ts -> harness/harness.server.ts, harness/api.ts -> harness/harness-api.ts, benchmark/phases.ts -> benchmark/phases.server.ts — so they stopped evading the filename-based globs. These directory entries therefore carry the renamed files into src/features/eval unchanged. scripts/bench-live-arms.mjs:42 and benchmark-resume-match.mjs:48 import phases.server.ts by path."
     },
     {
       "to": "src/features/recruiting/domain",

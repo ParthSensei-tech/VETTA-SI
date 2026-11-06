@@ -6,7 +6,7 @@ import type { EvalRun, HarnessSettings, HarnessSnapshot, PromptVersion } from ".
 export const getHarness = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<HarnessSnapshot> => {
-    const { loadHarnessSnapshot } = await import("./server");
+    const { loadHarnessSnapshot } = await import("./harness.server");
     return loadHarnessSnapshot(context.userId);
   });
 
@@ -21,7 +21,7 @@ export const runHarnessEval = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }): Promise<EvalRun> => {
-    const { runEvalSet } = await import("./server");
+    const { runEvalSet } = await import("./harness.server");
     return runEvalSet({ userId: context.userId, kind: data.kind, engine: data.engine });
   });
 
@@ -29,7 +29,7 @@ export const getEvalRun = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ runId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }): Promise<EvalRun> => {
-    const { loadRunDetail } = await import("./server");
+    const { loadRunDetail } = await import("./harness.server");
     return loadRunDetail(context.userId, data.runId);
   });
 
@@ -41,14 +41,14 @@ export const saveHarnessPrompt = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }): Promise<PromptVersion> => {
-    const { saveCandidatePrompt } = await import("./server");
+    const { saveCandidatePrompt } = await import("./harness.server");
     return saveCandidatePrompt(context.userId, data.body, data.name);
   });
 
 export const promoteHarnessPrompt = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<HarnessSettings> => {
-    const { promoteCandidatePrompt } = await import("./server");
+    const { promoteCandidatePrompt } = await import("./harness.server");
     return promoteCandidatePrompt(context.userId);
   });
 
@@ -56,6 +56,6 @@ export const setHarnessShadow = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) => z.object({ enabled: z.boolean() }).parse(input))
   .handler(async ({ context, data }): Promise<HarnessSettings> => {
-    const { setShadowEnabled } = await import("./server");
+    const { setShadowEnabled } = await import("./harness.server");
     return setShadowEnabled(context.userId, data.enabled);
   });
