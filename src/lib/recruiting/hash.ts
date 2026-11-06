@@ -48,7 +48,13 @@ export function hashRolePayload(role: {
  * Changes whenever weights, criteria text, kinds, or constraints change.
  */
 export function computeRubricHash(
-  criteria: Array<{ id?: string; name: string; weight: string; kind: string; strongEvidence?: string }>,
+  criteria: Array<{
+    id?: string;
+    name: string;
+    weight: string;
+    kind: string;
+    strongEvidence?: string;
+  }>,
   hardConstraints?: Record<string, unknown>,
 ): string {
   const norm = (s: string) => (s || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -56,7 +62,9 @@ export function computeRubricHash(
     .map((c) => `${norm(c.name)}:${norm(c.weight)}:${norm(c.kind)}:${norm(c.strongEvidence || "")}`)
     .sort()
     .join(";;");
-  const hc = hardConstraints ? JSON.stringify(hardConstraints, Object.keys(hardConstraints).sort()) : "";
+  const hc = hardConstraints
+    ? JSON.stringify(hardConstraints, Object.keys(hardConstraints).sort())
+    : "";
   return sha256Hex(`${sortedCriteria}\n${hc}`);
 }
 

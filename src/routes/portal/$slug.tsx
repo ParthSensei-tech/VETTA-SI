@@ -287,7 +287,8 @@ function AutonomousApplicationModal({
           <DialogHeader>
             <DialogTitle>Apply for {role.title}</DialogTitle>
             <DialogDescription>
-              Submit your resume. Our autonomous ingestion engine instantly extracts experience vectors with human review.
+              Submit your resume. Our autonomous ingestion engine instantly extracts experience
+              vectors with human review.
             </DialogDescription>
           </DialogHeader>
 
@@ -299,7 +300,12 @@ function AutonomousApplicationModal({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Email *</Label>
-                <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
 
@@ -316,13 +322,19 @@ function AutonomousApplicationModal({
 
             <div className="flex flex-col gap-1.5">
               <Label>LinkedIn Profile URL</Label>
-              <Input placeholder="https://linkedin.com/in/username" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
+              <Input
+                placeholder="https://linkedin.com/in/username"
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+              />
             </div>
 
             {/* Resume Upload / Text Area */}
             <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border bg-elevated/40 p-4">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">Resume / CV (PDF, DOCX, or Plain Text) *</Label>
+                <Label className="text-xs font-semibold">
+                  Resume / CV (PDF, DOCX, or Plain Text) *
+                </Label>
                 <input
                   type="file"
                   ref={fileRef}
@@ -355,7 +367,11 @@ function AutonomousApplicationModal({
 
             <div className="flex flex-col gap-1.5">
               <Label>Cover Note / Extra Context (Optional)</Label>
-              <Input placeholder="Brief note to the hiring team..." value={coverNote} onChange={(e) => setCoverNote(e.target.value)} />
+              <Input
+                placeholder="Brief note to the hiring team..."
+                value={coverNote}
+                onChange={(e) => setCoverNote(e.target.value)}
+              />
             </div>
 
             <Button type="submit" disabled={applyMut.isPending} className="mt-2 w-full gap-2">
@@ -377,13 +393,17 @@ function AutonomousApplicationModal({
               <DialogTitle>Quick Clarification Questions</DialogTitle>
             </div>
             <DialogDescription>
-              Our multi-stage match engine analyzed your CV and noticed a few unstated details. Answering these ensures accurate human review.
+              Our multi-stage match engine analyzed your CV and noticed a few unstated details.
+              Answering these ensures accurate human review.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-3">
             {intakeProbes.map((probe, i) => (
-              <div key={probe.id} className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-3.5">
+              <div
+                key={probe.id}
+                className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-3.5"
+              >
                 <Label className="text-xs font-semibold text-fg">
                   {i + 1}. {probe.prompt}
                 </Label>
@@ -418,7 +438,8 @@ function AutonomousApplicationModal({
           </div>
           <DialogTitle className="mt-2 text-2xl font-bold">Application Received!</DialogTitle>
           <DialogDescription className="mt-1 text-sm text-muted">
-            Your application for <strong>{role.title}</strong> has been extracted, indexed, and routed into the hiring team's Human-in-the-Loop review queue.
+            Your application for <strong>{role.title}</strong> has been extracted, indexed, and
+            routed into the hiring team's Human-in-the-Loop review queue.
           </DialogDescription>
           <Button onClick={onClose} className="mt-4 w-full">
             Close & Return to Jobs

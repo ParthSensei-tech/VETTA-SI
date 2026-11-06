@@ -27,7 +27,11 @@ import type {
   WorkMode,
   WorkspaceSnapshot,
 } from "./types.ts";
-import { answersFromTranscript, normalizeQuestions, normalizeTranscript } from "./normalize-screen.ts";
+import {
+  answersFromTranscript,
+  normalizeQuestions,
+  normalizeTranscript,
+} from "./normalize-screen.ts";
 
 const stageSchema = z.enum(["seed", "series_a", "series_b"]);
 const workModeSchema = z.enum(["onsite", "hybrid", "remote"]);
@@ -376,18 +380,22 @@ function toApplication(
   const rankEngine = app.rank_engine || (parsedRank?.provenance?.engine ?? "local");
   const isLocal = rankEngine === "local";
 
-  const provenance: RankProvenance | null = parsedRank?.provenance ?? (hasRank ? {
-    engine: rankEngine,
-    isLocal,
-    provider: app.provider || (isLocal ? "local" : "unknown"),
-    model: app.model || (isLocal ? "evidence" : "unknown"),
-    rubricVersion: app.rubric_version ?? null,
-    rubricVersionId: app.rubric_version_id ?? null,
-    rubricHash: app.rubric_hash ?? null,
-    evaluatedAt: iso(app.updated_at),
-    isStale,
-    staleReason,
-  } : null);
+  const provenance: RankProvenance | null =
+    parsedRank?.provenance ??
+    (hasRank
+      ? {
+          engine: rankEngine,
+          isLocal,
+          provider: app.provider || (isLocal ? "local" : "unknown"),
+          model: app.model || (isLocal ? "evidence" : "unknown"),
+          rubricVersion: app.rubric_version ?? null,
+          rubricVersionId: app.rubric_version_id ?? null,
+          rubricHash: app.rubric_hash ?? null,
+          evaluatedAt: iso(app.updated_at),
+          isStale,
+          staleReason,
+        }
+      : null);
 
   if (provenance) {
     provenance.isStale = isStale;
@@ -469,7 +477,12 @@ export const getWorkspace = createServerFn({ method: "GET" })
       where (org_id = ${orgId} or (org_id is null and user_id = ${context.userId})) and status = 'sent'
         and created_at > now() - interval '7 days'`;
 
-    const screenRows = await sql<{ sent: number; opened: number; started: number; completed: number }>`
+    const screenRows = await sql<{
+      sent: number;
+      opened: number;
+      started: number;
+      completed: number;
+    }>`
       select
         count(*)::int as sent,
         count(*) filter (where opened_at is not null)::int as opened,
@@ -511,16 +524,14 @@ export const getWorkspace = createServerFn({ method: "GET" })
     return {
       roles: roleRows.map(mapRole),
       pendingApprovals: pendingRows.map((row) => mapApproval(row)),
-      recentActivity: activity.map(
-        (e): AuditEvent => ({
-          id: e.id,
-          entityType: e.entity_type,
-          entityId: e.entity_id,
-          action: e.action,
-          meta: parseJson<Record<string, string>>(e.meta_json, {}),
-          createdAt: iso(e.created_at),
-        }),
-      ),
+      recentActivity: activity.map((e): AuditEvent => ({
+        id: e.id,
+        entityType: e.entity_type,
+        entityId: e.entity_id,
+        action: e.action,
+        meta: parseJson<Record<string, string>>(e.meta_json, {}),
+        createdAt: iso(e.created_at),
+      })),
       stats: {
         openRoles: roleRows.filter((r) => r.status === "open").length,
         rankedCandidates: asNumber(ranked[0]?.n),
@@ -553,7 +564,10 @@ export const createRole = createServerFn({ method: "POST" })
         ${JSON.stringify(data.stack)}, ${JSON.stringify(data.mustHaves)},
         ${JSON.stringify(data.niceToHaves)}, ${data.jdText}, ${org.orgId}
       )`;
-    await writeAudit(context.userId, "role", id, "created", { title: data.title, orgId: org.orgId });
+    await writeAudit(context.userId, "role", id, "created", {
+      title: data.title,
+      orgId: org.orgId,
+    });
     try {
       const { generateRubricDraft } = await import("./rubric-version.server");
       await generateRubricDraft({ userId: context.userId, roleId: id, heuristicOnly: true });
@@ -642,10 +656,12 @@ export const getRoleWorkspace = createServerFn({ method: "GET" })
 export const ingestResume = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) =>
-    z.object({
-      roleId: z.string().min(1),
-      resumeText: z.string().trim().min(40).max(40000),
-    }).parse(input),
+    z
+      .object({
+        roleId: z.string().min(1),
+        resumeText: z.string().trim().min(40).max(40000),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }): Promise<{ application: Application; warning?: string }> => {
     const roleRow = await loadRoleOrThrow(context.userId, data.roleId);
@@ -754,13 +770,19 @@ export const ingestResume = createServerFn({ method: "POST" })
         ''
       )`;
     await sql`update roles set updated_at = now() where id = ${data.roleId} and (org_id = ${org.orgId} or (org_id is null and user_id = ${context.userId}))`;
-    await writeAudit(context.userId, "application", applicationId, ranked.ok ? "ranked" : "ingested", {
-      name: profile.full_name,
-      role: role.title,
-      engine: rankEngine,
-      fromCache: ranked.ok ? ranked.fromCache : false,
-      orgId: org.orgId,
-    });
+    await writeAudit(
+      context.userId,
+      "application",
+      applicationId,
+      ranked.ok ? "ranked" : "ingested",
+      {
+        name: profile.full_name,
+        role: role.title,
+        engine: rankEngine,
+        fromCache: ranked.ok ? ranked.fromCache : false,
+        orgId: org.orgId,
+      },
+    );
 
     const bundle = await loadApplicationBundle(context.userId, applicationId);
     return {
@@ -983,7 +1005,10 @@ export const generateAsyncScreen = createServerFn({ method: "POST" })
     await sql`
       update applications set pipeline_status = 'screening', updated_at = now()
       where id = ${bundle.app.id} and (org_id = ${bundle.app.org_id} or (org_id is null and user_id = ${context.userId}))`;
-    await writeAudit(context.userId, "screen", id, "generated", { candidate: bundle.cand.full_name, orgId: bundle.app.org_id ?? undefined });
+    await writeAudit(context.userId, "screen", id, "generated", {
+      candidate: bundle.cand.full_name,
+      orgId: bundle.app.org_id ?? undefined,
+    });
     const next = await loadApplicationBundle(context.userId, data.applicationId);
     return toApplication(
       next.app,
@@ -1000,7 +1025,9 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
     z
       .object({
         screenId: z.string().min(1),
-        answers: z.array(z.object({ question_id: z.string(), answer: z.string().max(12000) })).max(16),
+        answers: z
+          .array(z.object({ question_id: z.string(), answer: z.string().max(12000) }))
+          .max(16),
         evaluate: z.boolean().optional(),
       })
       .parse(input),
@@ -1067,7 +1094,9 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
           /* outcome model optional until migration */
         }
       }
-      await writeAudit(context.userId, "screen", screen.id, "evaluated", { orgId: bundle.app.org_id ?? undefined });
+      await writeAudit(context.userId, "screen", screen.id, "evaluated", {
+        orgId: bundle.app.org_id ?? undefined,
+      });
     }
 
     const next = await loadApplicationBundle(context.userId, screen.application_id);
@@ -1083,7 +1112,12 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
 export const prepareClientPack = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) =>
-    z.object({ applicationId: z.string().min(1), artifactType: artifactSchema.default("client_card") }).parse(input),
+    z
+      .object({
+        applicationId: z.string().min(1),
+        artifactType: artifactSchema.default("client_card"),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }): Promise<Approval> => {
     const bundle = await loadApplicationBundle(context.userId, data.applicationId);
@@ -1143,7 +1177,10 @@ export const prepareClientPack = createServerFn({ method: "POST" })
     await sql`
       update applications set pipeline_status = 'ready', updated_at = now()
       where id = ${bundle.app.id} and (org_id = ${bundle.app.org_id} or (org_id is null and user_id = ${context.userId}))`;
-    await writeAudit(context.userId, "approval", id, "queued", { candidate: bundle.cand.full_name, orgId: bundle.app.org_id ?? undefined });
+    await writeAudit(context.userId, "approval", id, "queued", {
+      candidate: bundle.cand.full_name,
+      orgId: bundle.app.org_id ?? undefined,
+    });
     const rows = await sql<ApprovalRow>`
       select ap.*, r.title as role_title, r.company_name, c.full_name as candidate_name
       from approvals ap
@@ -1171,7 +1208,10 @@ async function shareUrlByApplication(userId: string, orgId?: string): Promise<Ma
         limit 200`;
   const map = new Map<string, string>();
   for (const share of shares) {
-    const view = parseJson<{ candidates?: Array<{ applicationId?: string }> }>(share.payload_json, {});
+    const view = parseJson<{ candidates?: Array<{ applicationId?: string }> }>(
+      share.payload_json,
+      {},
+    );
     for (const candidate of view.candidates ?? []) {
       if (candidate.applicationId && !map.has(candidate.applicationId)) {
         map.set(candidate.applicationId, makeShareUrl(share.token));
@@ -1258,7 +1298,9 @@ export const decideApproval = createServerFn({ method: "POST" })
     await sql`
       update applications set pipeline_status = ${nextPipeline}, updated_at = now()
       where id = ${row.application_id}`;
-    await writeAudit(context.userId, "approval", row.id, data.decision, { orgId: row.org_id ?? undefined });
+    await writeAudit(context.userId, "approval", row.id, data.decision, {
+      orgId: row.org_id ?? undefined,
+    });
 
     // Lock active rubric when a client pack is stamped (approved or sent).
     if (data.decision === "approved" || data.decision === "sent") {
@@ -1280,4 +1322,3 @@ export const decideApproval = createServerFn({ method: "POST" })
       limit 1`;
     return mapApproval(rows[0]!);
   });
-

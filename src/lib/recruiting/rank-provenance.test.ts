@@ -48,8 +48,20 @@ const dummyRank: RankResult = {
 
 test("computeRubricHash produces a deterministic 64-char hex hash", () => {
   const criteria = [
-    { id: "c1", name: "System Design", weight: "high", kind: "technical", strongEvidence: "Distributed architecture" },
-    { id: "c2", name: "Culture Fit", weight: "medium", kind: "soft", strongEvidence: "Ownership and startup mindset" },
+    {
+      id: "c1",
+      name: "System Design",
+      weight: "high",
+      kind: "technical",
+      strongEvidence: "Distributed architecture",
+    },
+    {
+      id: "c2",
+      name: "Culture Fit",
+      weight: "medium",
+      kind: "soft",
+      strongEvidence: "Ownership and startup mindset",
+    },
   ];
   const constraints = { noticeMaxDays: 60, strictFilter: false };
 
@@ -62,8 +74,20 @@ test("computeRubricHash produces a deterministic 64-char hex hash", () => {
 });
 
 test("computeRubricHash is order-independent across criteria list", () => {
-  const c1 = { id: "c1", name: "System Design", weight: "high", kind: "technical", strongEvidence: "Distributed architecture" };
-  const c2 = { id: "c2", name: "Culture Fit", weight: "medium", kind: "soft", strongEvidence: "Ownership" };
+  const c1 = {
+    id: "c1",
+    name: "System Design",
+    weight: "high",
+    kind: "technical",
+    strongEvidence: "Distributed architecture",
+  };
+  const c2 = {
+    id: "c2",
+    name: "Culture Fit",
+    weight: "medium",
+    kind: "soft",
+    strongEvidence: "Ownership",
+  };
 
   const hashAsc = computeRubricHash([c1, c2]);
   const hashDesc = computeRubricHash([c2, c1]);
@@ -72,9 +96,7 @@ test("computeRubricHash is order-independent across criteria list", () => {
 });
 
 test("computeRubricHash changes when weights or constraints change", () => {
-  const baseCriteria = [
-    { id: "c1", name: "System Design", weight: "high", kind: "technical" },
-  ];
+  const baseCriteria = [{ id: "c1", name: "System Design", weight: "high", kind: "technical" }];
 
   const hashBase = computeRubricHash(baseCriteria, { noticeMaxDays: 30 });
   const hashWeightChanged = computeRubricHash(
@@ -84,7 +106,11 @@ test("computeRubricHash changes when weights or constraints change", () => {
   const hashConstraintChanged = computeRubricHash(baseCriteria, { noticeMaxDays: 60 });
 
   assert.notEqual(hashBase, hashWeightChanged, "Changing weight must alter the rubric hash");
-  assert.notEqual(hashBase, hashConstraintChanged, "Changing hard constraints must alter the rubric hash");
+  assert.notEqual(
+    hashBase,
+    hashConstraintChanged,
+    "Changing hard constraints must alter the rubric hash",
+  );
 });
 
 test("cacheKey is deterministic across role, candidate and mode", () => {
@@ -176,7 +202,11 @@ test("getRankCache invalidates and evicts stale scores when rubricHash mismatche
     rubricHash: newRubricHash,
   });
 
-  assert.equal(staleMiss, null, "Mismatched rubric hash must invalidate cache entry and return null");
+  assert.equal(
+    staleMiss,
+    null,
+    "Mismatched rubric hash must invalidate cache entry and return null",
+  );
 
   // A subsequent query with old rubric hash should also be gone from memory
   const oldCheck = await getRankCache({

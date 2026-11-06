@@ -4,21 +4,14 @@ import { createHash } from "node:crypto";
 import { getSql } from "../db.ts";
 import { ensureUserOrg, assertOrgMember } from "./org.server.ts";
 import { addOrgMember, assertOrgPermission } from "./rbac.server.ts";
-import {
-  loadRoleWorkspaceForUser,
-  loadRoleOrThrow,
-  loadApplicationBundle,
-} from "./api.ts";
+import { loadRoleWorkspaceForUser, loadRoleOrThrow, loadApplicationBundle } from "./api.ts";
 import {
   assignUserToRole,
   assignUserToApplication,
   getRoleAssignments,
   getApplicationAssignments,
 } from "./assignments.server.ts";
-import {
-  getSharedCandidatePool,
-  getCandidateFullDossier,
-} from "./talent-pool.server.ts";
+import { getSharedCandidatePool, getCandidateFullDossier } from "./talent-pool.server.ts";
 import {
   addCandidateNote,
   getCandidateNotes,
@@ -33,10 +26,7 @@ import {
   updatePlacementLifecycle,
   getFunnelAnalytics,
 } from "./funnel-analytics.server.ts";
-import {
-  createWorkspaceBackup,
-  restoreWorkspaceBackup,
-} from "./backup.server.ts";
+import { createWorkspaceBackup, restoreWorkspaceBackup } from "./backup.server.ts";
 import { loadPublicShareView } from "./share.ts";
 import { loadScreenByApplicationForUser } from "./screen-session.ts";
 import { deepenRoleTopN } from "./deepen.server.ts";
@@ -150,284 +140,293 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
   // =========================================================================
   // SUBTEST 1: Same Organization Collaboration (Recruiter 1A & Recruiter 1B)
   // =========================================================================
-  await t.test("Recruiter 1B can access shared workspace, candidates, and role created by 1A", async () => {
-    // 1B loads the role workspace created by 1A
-    const workspace = await loadRoleWorkspaceForUser(rec1B, role1Id);
-    assert.equal(workspace.role.id, role1Id);
-    assert.equal(workspace.role.title, "Principal Backend Architect");
-    assert.equal(workspace.applications.length, 1);
-    assert.equal(workspace.applications[0]?.candidate.fullName, "Aarav Sharma");
+  await t.test(
+    "Recruiter 1B can access shared workspace, candidates, and role created by 1A",
+    async () => {
+      // 1B loads the role workspace created by 1A
+      const workspace = await loadRoleWorkspaceForUser(rec1B, role1Id);
+      assert.equal(workspace.role.id, role1Id);
+      assert.equal(workspace.role.title, "Principal Backend Architect");
+      assert.equal(workspace.applications.length, 1);
+      assert.equal(workspace.applications[0]?.candidate.fullName, "Aarav Sharma");
 
-    // 1B checks shared talent pool for Org 1
-    const pool = await getSharedCandidatePool({ orgId: org1.orgId });
-    assert.ok(pool.candidates.some((c) => c.id === cand1Id));
-    assert.ok(!pool.candidates.some((c) => c.id === cand2Id), "Org 1 talent pool must NOT contain Org 2 candidate");
+      // 1B checks shared talent pool for Org 1
+      const pool = await getSharedCandidatePool({ orgId: org1.orgId });
+      assert.ok(pool.candidates.some((c) => c.id === cand1Id));
+      assert.ok(
+        !pool.candidates.some((c) => c.id === cand2Id),
+        "Org 1 talent pool must NOT contain Org 2 candidate",
+      );
 
-    // 1B views full candidate dossier
-    const dossier = await getCandidateFullDossier(org1.orgId, cand1Id, rec1B);
-    assert.ok(dossier);
-    assert.equal(dossier.candidate.fullName, "Aarav Sharma");
-    assert.equal(dossier.applications.length, 1);
+      // 1B views full candidate dossier
+      const dossier = await getCandidateFullDossier(org1.orgId, cand1Id, rec1B);
+      assert.ok(dossier);
+      assert.equal(dossier.candidate.fullName, "Aarav Sharma");
+      assert.equal(dossier.applications.length, 1);
 
-    // 1A assigns 1B to the role
-    const assignment = await assignUserToRole({
-      orgId: org1.orgId,
-      roleId: role1Id,
-      userId: rec1B,
-      assignmentType: "recruiter",
-      assignedBy: rec1A,
-    });
-    assert.equal(assignment.roleId, role1Id);
-    assert.equal(assignment.userId, rec1B);
+      // 1A assigns 1B to the role
+      const assignment = await assignUserToRole({
+        orgId: org1.orgId,
+        roleId: role1Id,
+        userId: rec1B,
+        assignmentType: "recruiter",
+        assignedBy: rec1A,
+      });
+      assert.equal(assignment.roleId, role1Id);
+      assert.equal(assignment.userId, rec1B);
 
-    const roleAssignments = await getRoleAssignments(org1.orgId, role1Id);
-    assert.ok(roleAssignments.some((a) => a.userId === rec1B));
+      const roleAssignments = await getRoleAssignments(org1.orgId, role1Id);
+      assert.ok(roleAssignments.some((a) => a.userId === rec1B));
 
-    // 1B adds a collaborative note
-    const note = await addCandidateNote({
-      orgId: org1.orgId,
-      candidateId: cand1Id,
-      applicationId: app1Id,
-      authorId: rec1B,
-      authorName: "Recruiter 1B",
-      content: "Cleared initial screening, strong fit for high-throughput telecom backend.",
-      visibility: "team",
-    });
-    assert.equal(note.candidateId, cand1Id);
+      // 1B adds a collaborative note
+      const note = await addCandidateNote({
+        orgId: org1.orgId,
+        candidateId: cand1Id,
+        applicationId: app1Id,
+        authorId: rec1B,
+        authorName: "Recruiter 1B",
+        content: "Cleared initial screening, strong fit for high-throughput telecom backend.",
+        visibility: "team",
+      });
+      assert.equal(note.candidateId, cand1Id);
 
-    const notes = await getCandidateNotes({
-      orgId: org1.orgId,
-      candidateId: cand1Id,
-      viewerUserId: rec1A,
-    });
-    assert.equal(notes.length, 1);
-    assert.equal(notes[0]?.authorId, rec1B);
+      const notes = await getCandidateNotes({
+        orgId: org1.orgId,
+        candidateId: cand1Id,
+        viewerUserId: rec1A,
+      });
+      assert.equal(notes.length, 1);
+      assert.equal(notes[0]?.authorId, rec1B);
 
-    // 1B creates a recruiting task assigned to 1A
-    const task = await createRecruitingTask({
-      orgId: org1.orgId,
-      title: "Review tech screen evaluation",
-      candidateId: cand1Id,
-      applicationId: app1Id,
-      roleId: role1Id,
-      assigneeId: rec1A,
-      creatorId: rec1B,
-      priority: "high",
-    });
-    assert.equal(task.assigneeId, rec1A);
+      // 1B creates a recruiting task assigned to 1A
+      const task = await createRecruitingTask({
+        orgId: org1.orgId,
+        title: "Review tech screen evaluation",
+        candidateId: cand1Id,
+        applicationId: app1Id,
+        roleId: role1Id,
+        assigneeId: rec1A,
+        creatorId: rec1B,
+        priority: "high",
+      });
+      assert.equal(task.assigneeId, rec1A);
 
-    const tasks = await getRecruitingTasks({ orgId: org1.orgId, candidateId: cand1Id });
-    assert.equal(tasks.length, 1);
-    assert.equal(tasks[0]?.id, task.id);
+      const tasks = await getRecruitingTasks({ orgId: org1.orgId, candidateId: cand1Id });
+      assert.equal(tasks.length, 1);
+      assert.equal(tasks[0]?.id, task.id);
 
-    // 1B updates with optimistic lock
-    const optLock = await updateWithOptimisticLock({
-      table: "candidates",
-      id: cand1Id,
-      expectedVersion: 1,
-      userId: rec1B,
-      orgId: org1.orgId,
-      setClauses: { current_company: "Paytm Payments Bank" },
-    });
-    assert.equal(optLock.updated, true);
-    assert.equal(optLock.newVersion, 2);
+      // 1B updates with optimistic lock
+      const optLock = await updateWithOptimisticLock({
+        table: "candidates",
+        id: cand1Id,
+        expectedVersion: 1,
+        userId: rec1B,
+        orgId: org1.orgId,
+        setClauses: { current_company: "Paytm Payments Bank" },
+      });
+      assert.equal(optLock.updated, true);
+      assert.equal(optLock.newVersion, 2);
 
-    // 1B records stage transition & placement commercials
-    const transition = await recordStageTransition({
-      orgId: org1.orgId,
-      applicationId: app1Id,
-      toStage: "offered",
-      actorUserId: rec1B,
-      reason: "Bar raiser interview cleared",
-    });
-    assert.equal(transition.toStage, "offered");
+      // 1B records stage transition & placement commercials
+      const transition = await recordStageTransition({
+        orgId: org1.orgId,
+        applicationId: app1Id,
+        toStage: "offered",
+        actorUserId: rec1B,
+        reason: "Bar raiser interview cleared",
+      });
+      assert.equal(transition.toStage, "offered");
 
-    const placement = await recordPlacement({
-      orgId: org1.orgId,
-      roleId: role1Id,
-      candidateId: cand1Id,
-      applicationId: app1Id,
-      offeredCtc: 7000000,
-      feePercentage: 15,
-      currency: "INR",
-    });
-    assert.equal(placement.grossPlacementFee, 1050000);
+      const placement = await recordPlacement({
+        orgId: org1.orgId,
+        roleId: role1Id,
+        candidateId: cand1Id,
+        applicationId: app1Id,
+        offeredCtc: 7000000,
+        feePercentage: 15,
+        currency: "INR",
+      });
+      assert.equal(placement.grossPlacementFee, 1050000);
 
-    const updatedPlacement = await updatePlacementLifecycle({
-      orgId: org1.orgId,
-      applicationId: app1Id,
-      joiningStatus: "joined",
-      retentionStatus: "retained_90d",
-      retentionDays: 90,
-    });
-    assert.equal(updatedPlacement.joiningStatus, "joined");
+      const updatedPlacement = await updatePlacementLifecycle({
+        orgId: org1.orgId,
+        applicationId: app1Id,
+        joiningStatus: "joined",
+        retentionStatus: "retained_90d",
+        retentionDays: 90,
+      });
+      assert.equal(updatedPlacement.joiningStatus, "joined");
 
-    // 1B can load the screen for Org 1 application
-    const screen = await loadScreenByApplicationForUser(rec1B, app1Id);
-    assert.equal(screen.id, app1Id);
-    assert.equal(screen.candidateName, "Aarav Sharma");
-  });
+      // 1B can load the screen for Org 1 application
+      const screen = await loadScreenByApplicationForUser(rec1B, app1Id);
+      assert.equal(screen.id, app1Id);
+      assert.equal(screen.candidateName, "Aarav Sharma");
+    },
+  );
 
   // =========================================================================
   // SUBTEST 2: Cross-Tenant Isolation (Org 2 cannot access or mutate Org 1)
   // =========================================================================
-  await t.test("Recruiter 2A cannot read or mutate Org 1 role, candidate or applications", async () => {
-    // 2A attempts to load Org 1's role workspace -> must throw "Role not found"
-    await assert.rejects(
-      async () => {
-        await loadRoleWorkspaceForUser(rec2A, role1Id);
-      },
-      /Role not found/i,
-      "Recruiter 2A should not be able to load Org 1 role workspace"
-    );
+  await t.test(
+    "Recruiter 2A cannot read or mutate Org 1 role, candidate or applications",
+    async () => {
+      // 2A attempts to load Org 1's role workspace -> must throw "Role not found"
+      await assert.rejects(
+        async () => {
+          await loadRoleWorkspaceForUser(rec2A, role1Id);
+        },
+        /Role not found/i,
+        "Recruiter 2A should not be able to load Org 1 role workspace",
+      );
 
-    // 2A attempts loadRoleOrThrow for Org 1's role -> must throw "Role not found"
-    await assert.rejects(
-      async () => {
-        await loadRoleOrThrow(rec2A, role1Id);
-      },
-      /Role not found/i,
-      "loadRoleOrThrow must reject access to another tenant's role"
-    );
+      // 2A attempts loadRoleOrThrow for Org 1's role -> must throw "Role not found"
+      await assert.rejects(
+        async () => {
+          await loadRoleOrThrow(rec2A, role1Id);
+        },
+        /Role not found/i,
+        "loadRoleOrThrow must reject access to another tenant's role",
+      );
 
-    // 2A attempts loadApplicationBundle for Org 1's application -> must throw "Application not found"
-    await assert.rejects(
-      async () => {
-        await loadApplicationBundle(rec2A, app1Id);
-      },
-      /Application not found/i,
-      "loadApplicationBundle must reject access to another tenant's application"
-    );
+      // 2A attempts loadApplicationBundle for Org 1's application -> must throw "Application not found"
+      await assert.rejects(
+        async () => {
+          await loadApplicationBundle(rec2A, app1Id);
+        },
+        /Application not found/i,
+        "loadApplicationBundle must reject access to another tenant's application",
+      );
 
-    // 2A attempts loadScreenByApplicationForUser for Org 1's application -> must reject
-    await assert.rejects(
-      async () => {
-        await loadScreenByApplicationForUser(rec2A, app1Id);
-      },
-      /Not a member of this organization|Application not found/i,
-      "Org 2 cannot view screen session for Org 1 application"
-    );
+      // 2A attempts loadScreenByApplicationForUser for Org 1's application -> must reject
+      await assert.rejects(
+        async () => {
+          await loadScreenByApplicationForUser(rec2A, app1Id);
+        },
+        /Not a member of this organization|Application not found/i,
+        "Org 2 cannot view screen session for Org 1 application",
+      );
 
-    // 2A attempts to assign a role member to Org 1's role -> must reject
-    await assert.rejects(
-      async () => {
-        await assignUserToRole({
-          orgId: org2.orgId,
-          roleId: role1Id, // Cross-tenant IDOR attack
-          userId: rec2B,
-          assignmentType: "recruiter",
-          assignedBy: rec2A,
-        });
-      },
-      /Role not found/i,
-      "Org 2 cannot assign users to Org 1 role"
-    );
+      // 2A attempts to assign a role member to Org 1's role -> must reject
+      await assert.rejects(
+        async () => {
+          await assignUserToRole({
+            orgId: org2.orgId,
+            roleId: role1Id, // Cross-tenant IDOR attack
+            userId: rec2B,
+            assignmentType: "recruiter",
+            assignedBy: rec2A,
+          });
+        },
+        /Role not found/i,
+        "Org 2 cannot assign users to Org 1 role",
+      );
 
-    // 2A attempts to assign a user to Org 1's application -> must reject
-    await assert.rejects(
-      async () => {
-        await assignUserToApplication({
-          orgId: org2.orgId,
-          applicationId: app1Id, // Cross-tenant IDOR attack
-          userId: rec2B,
-          assignmentType: "reviewer",
-          assignedBy: rec2A,
-        });
-      },
-      /Application not found/i,
-      "Org 2 cannot assign users to Org 1 application"
-    );
+      // 2A attempts to assign a user to Org 1's application -> must reject
+      await assert.rejects(
+        async () => {
+          await assignUserToApplication({
+            orgId: org2.orgId,
+            applicationId: app1Id, // Cross-tenant IDOR attack
+            userId: rec2B,
+            assignmentType: "reviewer",
+            assignedBy: rec2A,
+          });
+        },
+        /Application not found/i,
+        "Org 2 cannot assign users to Org 1 application",
+      );
 
-    // 2A attempts to add candidate note to Org 1's candidate -> must reject
-    await assert.rejects(
-      async () => {
-        await addCandidateNote({
-          orgId: org2.orgId,
-          candidateId: cand1Id, // Cross-tenant IDOR attack
-          authorId: rec2A,
-          authorName: "Recruiter 2A",
-          content: "Spam note",
-        });
-      },
-      /Candidate not found/i,
-      "Org 2 cannot add notes to Org 1 candidate"
-    );
+      // 2A attempts to add candidate note to Org 1's candidate -> must reject
+      await assert.rejects(
+        async () => {
+          await addCandidateNote({
+            orgId: org2.orgId,
+            candidateId: cand1Id, // Cross-tenant IDOR attack
+            authorId: rec2A,
+            authorName: "Recruiter 2A",
+            content: "Spam note",
+          });
+        },
+        /Candidate not found/i,
+        "Org 2 cannot add notes to Org 1 candidate",
+      );
 
-    // 2A attempts to create task on Org 1's candidate -> must reject
-    await assert.rejects(
-      async () => {
-        await createRecruitingTask({
-          orgId: org2.orgId,
-          title: "Malicious task",
-          candidateId: cand1Id, // Cross-tenant IDOR attack
-          assigneeId: rec2A,
-          creatorId: rec2A,
-        });
-      },
-      /Candidate not found/i,
-      "Org 2 cannot create task on Org 1 candidate"
-    );
+      // 2A attempts to create task on Org 1's candidate -> must reject
+      await assert.rejects(
+        async () => {
+          await createRecruitingTask({
+            orgId: org2.orgId,
+            title: "Malicious task",
+            candidateId: cand1Id, // Cross-tenant IDOR attack
+            assigneeId: rec2A,
+            creatorId: rec2A,
+          });
+        },
+        /Candidate not found/i,
+        "Org 2 cannot create task on Org 1 candidate",
+      );
 
-    // 2A attempts optimistic lock update on Org 1's candidate -> must reject
-    await assert.rejects(
-      async () => {
-        await updateWithOptimisticLock({
-          table: "candidates",
-          id: cand1Id,
-          expectedVersion: 2,
-          userId: rec2A,
-          orgId: org2.orgId,
-          setClauses: { current_company: "Tata Malicious Overwrite" },
-        });
-      },
-      /Record not found/i,
-      "Optimistic lock must enforce org boundary on select and update"
-    );
+      // 2A attempts optimistic lock update on Org 1's candidate -> must reject
+      await assert.rejects(
+        async () => {
+          await updateWithOptimisticLock({
+            table: "candidates",
+            id: cand1Id,
+            expectedVersion: 2,
+            userId: rec2A,
+            orgId: org2.orgId,
+            setClauses: { current_company: "Tata Malicious Overwrite" },
+          });
+        },
+        /Record not found/i,
+        "Optimistic lock must enforce org boundary on select and update",
+      );
 
-    // 2A attempts optimistic lock update on Org 1's application -> must reject
-    await assert.rejects(
-      async () => {
-        await updateWithOptimisticLock({
-          table: "applications",
-          id: app1Id,
-          expectedVersion: 1,
-          userId: rec2A,
-          orgId: org2.orgId,
-          setClauses: { pipeline_status: "rejected" },
-        });
-      },
-      /Record not found/i,
-      "Optimistic lock must reject application mutation from another tenant"
-    );
+      // 2A attempts optimistic lock update on Org 1's application -> must reject
+      await assert.rejects(
+        async () => {
+          await updateWithOptimisticLock({
+            table: "applications",
+            id: app1Id,
+            expectedVersion: 1,
+            userId: rec2A,
+            orgId: org2.orgId,
+            setClauses: { pipeline_status: "rejected" },
+          });
+        },
+        /Record not found/i,
+        "Optimistic lock must reject application mutation from another tenant",
+      );
 
-    // 2A attempts to record placement on Org 1's application -> must reject
-    await assert.rejects(
-      async () => {
-        await recordPlacement({
-          orgId: org2.orgId,
-          roleId: role1Id,
-          candidateId: cand1Id,
-          applicationId: app1Id,
-          offeredCtc: 5000000,
-        });
-      },
-      /Application .* not found/i,
-      "Org 2 cannot record placement for Org 1 application"
-    );
+      // 2A attempts to record placement on Org 1's application -> must reject
+      await assert.rejects(
+        async () => {
+          await recordPlacement({
+            orgId: org2.orgId,
+            roleId: role1Id,
+            candidateId: cand1Id,
+            applicationId: app1Id,
+            offeredCtc: 5000000,
+          });
+        },
+        /Application .* not found/i,
+        "Org 2 cannot record placement for Org 1 application",
+      );
 
-    // 2A attempts to update placement lifecycle on Org 1's application -> must reject
-    await assert.rejects(
-      async () => {
-        await updatePlacementLifecycle({
-          orgId: org2.orgId,
-          applicationId: app1Id,
-          joiningStatus: "reneged",
-        });
-      },
-      /Placement for application .* not found/i,
-      "Org 2 cannot alter placement lifecycle of Org 1 application"
-    );
-  });
+      // 2A attempts to update placement lifecycle on Org 1's application -> must reject
+      await assert.rejects(
+        async () => {
+          await updatePlacementLifecycle({
+            orgId: org2.orgId,
+            applicationId: app1Id,
+            joiningStatus: "reneged",
+          });
+        },
+        /Placement for application .* not found/i,
+        "Org 2 cannot alter placement lifecycle of Org 1 application",
+      );
+    },
+  );
 
   // =========================================================================
   // SUBTEST 3: Talent Pool, Search, and Analytics Isolation
@@ -464,8 +463,14 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
     });
     assert.ok(backup1.roles.some((r) => r.id === role1Id));
     assert.ok(backup1.candidates.some((c) => c.id === cand1Id));
-    assert.ok(!backup1.roles.some((r) => r.id === role2Id), "Org 1 backup must not contain Org 2 roles");
-    assert.ok(!backup1.candidates.some((c) => c.id === cand2Id), "Org 1 backup must not contain Org 2 candidates");
+    assert.ok(
+      !backup1.roles.some((r) => r.id === role2Id),
+      "Org 1 backup must not contain Org 2 roles",
+    );
+    assert.ok(
+      !backup1.candidates.some((c) => c.id === cand2Id),
+      "Org 1 backup must not contain Org 2 candidates",
+    );
 
     // Recruiter 2A creates backup for Org 2
     const backup2 = await createWorkspaceBackup({
@@ -474,8 +479,14 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
     });
     assert.ok(backup2.roles.some((r) => r.id === role2Id));
     assert.ok(backup2.candidates.some((c) => c.id === cand2Id));
-    assert.ok(!backup2.roles.some((r) => r.id === role1Id), "Org 2 backup must not contain Org 1 roles");
-    assert.ok(!backup2.candidates.some((c) => c.id === cand1Id), "Org 2 backup must not contain Org 1 candidates");
+    assert.ok(
+      !backup2.roles.some((r) => r.id === role1Id),
+      "Org 2 backup must not contain Org 1 roles",
+    );
+    assert.ok(
+      !backup2.candidates.some((c) => c.id === cand1Id),
+      "Org 2 backup must not contain Org 1 candidates",
+    );
 
     // Malicious restore attack: Recruiter 2A attempts to restore a backup that injects Org 1's role ID
     const maliciousPayload = {
@@ -521,7 +532,7 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
         });
       },
       /Restore rejected: backup contains role IDs belonging to another organization/i,
-      "Cross-tenant restore overwrite must be rejected"
+      "Cross-tenant restore overwrite must be rejected",
     );
   });
 
@@ -585,7 +596,7 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
         await loadPublicShareView("invalid_random_token_12345");
       },
       /This share link is invalid or has expired/i,
-      "Invalid share token must be rejected"
+      "Invalid share token must be rejected",
     );
 
     // Expired token throws error
@@ -605,7 +616,7 @@ test("Multi-Tenant & Multi-Recruiter Isolation Suite", async (t) => {
         await loadPublicShareView(expiredToken);
       },
       /This share link has expired/i,
-      "Expired share token must be rejected"
+      "Expired share token must be rejected",
     );
   });
 });

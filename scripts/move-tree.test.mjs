@@ -85,11 +85,46 @@ test("findSpecs: quotes, template literals, prose and glob patterns", () => {
 
 // --- renderSpec: the author's form is the contract --------------------------
 test("renderSpec preserves alias vs relative and the presence of an extension", () => {
-  assert.equal(renderSpec("@/lib/recruiting/ai.server", "src/lib/recruiting/ai.server.ts", "src/features/ai/server/ai.server.ts", "src/routes/app"), "@/features/ai/server/ai.server");
-  assert.equal(renderSpec("@/lib/db.ts", "src/lib/db.ts", "src/platform/db.ts", "."), "@/platform/db.ts");
-  assert.equal(renderSpec("./api", "src/lib/recruiting/api.ts", "src/features/recruiting/api/api.ts", "src/features/recruiting/api"), "./api");
-  assert.equal(renderSpec("../observability/observability.server", "src/lib/observability/observability.server.ts", "src/features/pipeline/server/queue.server.ts", "src/platform/observability"), "../../features/pipeline/server/queue.server");
-  assert.equal(renderSpec("@/lib/recruiting/harness/index", "src/lib/recruiting/harness/index.ts", "src/features/eval/harness/index.ts", "x"), "@/features/eval/harness/index");
+  assert.equal(
+    renderSpec(
+      "@/lib/recruiting/ai.server",
+      "src/lib/recruiting/ai.server.ts",
+      "src/features/ai/server/ai.server.ts",
+      "src/routes/app",
+    ),
+    "@/features/ai/server/ai.server",
+  );
+  assert.equal(
+    renderSpec("@/lib/db.ts", "src/lib/db.ts", "src/platform/db.ts", "."),
+    "@/platform/db.ts",
+  );
+  assert.equal(
+    renderSpec(
+      "./api",
+      "src/lib/recruiting/api.ts",
+      "src/features/recruiting/api/api.ts",
+      "src/features/recruiting/api",
+    ),
+    "./api",
+  );
+  assert.equal(
+    renderSpec(
+      "../observability/observability.server",
+      "src/lib/observability/observability.server.ts",
+      "src/features/pipeline/server/queue.server.ts",
+      "src/platform/observability",
+    ),
+    "../../features/pipeline/server/queue.server",
+  );
+  assert.equal(
+    renderSpec(
+      "@/lib/recruiting/harness/index",
+      "src/lib/recruiting/harness/index.ts",
+      "src/features/eval/harness/index.ts",
+      "x",
+    ),
+    "@/features/eval/harness/index",
+  );
 });
 
 // --- compileTable: directory semantics and the four refusals ---------------
@@ -105,7 +140,11 @@ test("compileTable: file->dir keeps basename, dir->dir nests, file->file honours
     mapOf([
       { to: "src/shared/utils.ts", from: ["src/lib/utils.ts"], batch: 4 },
       { to: "src/platform", from: ["src/lib/auth"], batch: 4 },
-      { to: "src/shared/components", from: ["src/components/ui", "src/components/app-shell.tsx"], batch: 5 },
+      {
+        to: "src/shared/components",
+        from: ["src/components/ui", "src/components/app-shell.tsx"],
+        batch: 5,
+      },
     ]),
     view,
   );
@@ -119,19 +158,36 @@ test("compileTable: file->dir keeps basename, dir->dir nests, file->file honours
 test("compileTable refuses: double claim, colliding targets, self map, missing source", () => {
   const view = memView({ "src/a/x.ts": "", "src/b/y.ts": "", "src/z/z.ts": "" });
   const cases = [
-    [mapOf([{ to: "src/a1", from: ["src/a/x.ts"] }, { to: "src/a2", from: ["src/a/x.ts"] }]), "claimed twice"],
-    [mapOf([{ to: "src/a1", from: ["src/a/x.ts"] }, { to: "src/a1/x.ts", from: ["src/b/y.ts"] }]), "would be written by both"],
+    [
+      mapOf([
+        { to: "src/a1", from: ["src/a/x.ts"] },
+        { to: "src/a2", from: ["src/a/x.ts"] },
+      ]),
+      "claimed twice",
+    ],
+    [
+      mapOf([
+        { to: "src/a1", from: ["src/a/x.ts"] },
+        { to: "src/a1/x.ts", from: ["src/b/y.ts"] },
+      ]),
+      "would be written by both",
+    ],
     [mapOf([{ to: "src/a", from: ["src/a/x.ts"], batch: undefined }]), "maps to itself"],
     [mapOf([{ to: "src/a1", from: ["src/nope/x.ts"] }]), "exists on neither path"],
   ];
   for (const [map, needle] of cases) {
     const { errors } = compileTable(map, view);
-    assert.ok(errors.some((e) => e.includes(needle)), `expected '${needle}' in ${JSON.stringify(errors)}`);
+    assert.ok(
+      errors.some((e) => e.includes(needle)),
+      `expected '${needle}' in ${JSON.stringify(errors)}`,
+    );
   }
 });
 
 // --- the rewrite itself -----------------------------------------------------
-const aiMove = [{ to: "src/features/ai/server", from: ["src/lib/recruiting/ai.server.ts"], batch: 6 }];
+const aiMove = [
+  { to: "src/features/ai/server", from: ["src/lib/recruiting/ai.server.ts"], batch: 6 },
+];
 
 test("regime: alias import in a page route, relative import inside the moved folder, ssrLoadModule", () => {
   const view = memView({
@@ -142,7 +198,10 @@ test("regime: alias import in a page route, relative import inside the moved fol
   });
   const map = mapOf([...aiMove, { to: "src/platform", from: ["src/lib/db.ts"], batch: 4 }]);
   const { edits } = planRewrites(map, view, { looseFiles: ["vite.config.ts"] });
-  assert.match(edits.get("src/routes/app/index.tsx").text, /from "@\/features\/ai\/server\/ai\.server"/);
+  assert.match(
+    edits.get("src/routes/app/index.tsx").text,
+    /from "@\/features\/ai\/server\/ai\.server"/,
+  );
   assert.match(edits.get("vite.config.ts").text, /'\/src\/features\/ai\/server\/ai\.server\.ts'/);
   // The moved file's own alias to a file that moves in the same batch.
   assert.match(edits.get("src/lib/recruiting/ai.server.ts").text, /from "@\/platform\/db"/);
@@ -155,7 +214,11 @@ test("between-batches trap: a moving file keeps a relative import into a folder 
   });
   const { edits } = planRewrites(mapOf(aiMove), view);
   const next = edits.get("src/lib/recruiting/ai.server.ts").text;
-  assert.match(next, /from "@\/lib\/recruiting\/org\.server"/, "canonicalised, not left at a broken depth");
+  assert.match(
+    next,
+    /from "@\/lib\/recruiting\/org\.server"/,
+    "canonicalised, not left at a broken depth",
+  );
   const changes = edits.get("src/lib/recruiting/ai.server.ts").changes;
   assert.equal(changes[0].canonicalised, true);
   // And the canonical form is what the later batch then rewrites for real.
@@ -164,7 +227,9 @@ test("between-batches trap: a moving file keeps a relative import into a folder 
     "src/lib/recruiting/org.server.ts": `export const o = 1;`,
   });
   const second = planRewrites(
-    mapOf([{ to: "src/features/people/server", from: ["src/lib/recruiting/org.server.ts"], batch: 8 }]),
+    mapOf([
+      { to: "src/features/people/server", from: ["src/lib/recruiting/org.server.ts"], batch: 8 },
+    ]),
     after,
   );
   assert.deepEqual(second.errors, []);
@@ -191,7 +256,8 @@ test("idempotence: rewriting a rewritten file again changes nothing", () => {
   // And the canonical specifiers it left behind still resolve from the new home.
   const r = makeResolver(moved);
   for (const { spec } of findSpecs(moved.read("src/features/ai/server/ai.server.ts")))
-    if (spec.startsWith("@/")) assert.ok(r(spec, "src/features/ai/server"), `${spec} still resolves`);
+    if (spec.startsWith("@/"))
+      assert.ok(r(spec, "src/features/ai/server"), `${spec} still resolves`);
 });
 
 test("a prose mention of a moving folder is not treated as a barrel import", () => {

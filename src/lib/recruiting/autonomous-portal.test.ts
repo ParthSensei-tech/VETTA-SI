@@ -219,8 +219,15 @@ test("ATS Webhook Relay: Ingests Workday/Taleo applicant, runs multi-stage retri
 
   assert.equal(ingestion.ok, true);
   assert.equal(ingestion.candidateName, "Sanjay Singhania");
-  assert.ok(ingestion.score >= 70, `Score (${ingestion.score}) should reflect strong Go and Kafka match`);
-  assert.equal(ingestion.checkpointCreated, true, "Should automatically create HITL gate checkpoint");
+  assert.ok(
+    ingestion.score >= 70,
+    `Score (${ingestion.score}) should reflect strong Go and Kafka match`,
+  );
+  assert.equal(
+    ingestion.checkpointCreated,
+    true,
+    "Should automatically create HITL gate checkpoint",
+  );
 
   // Verify that application exists in database with source = 'ats_workday'
   const [appRow] = await sql`

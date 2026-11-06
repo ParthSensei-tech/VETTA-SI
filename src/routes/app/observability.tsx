@@ -146,7 +146,8 @@ function ObservabilityPage() {
             </Badge>
           </div>
           <p className="text-sm text-muted">
-            Errors, latency percentiles, per-task model cost, queue health, failed jobs, and alerting.
+            Errors, latency percentiles, per-task model cost, queue health, failed jobs, and
+            alerting.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -154,7 +155,10 @@ function ObservabilityPage() {
             variant="outline"
             size="sm"
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={cn("gap-1.5 text-xs", autoRefresh && "text-emerald-500 border-emerald-500/30")}
+            className={cn(
+              "gap-1.5 text-xs",
+              autoRefresh && "text-emerald-500 border-emerald-500/30",
+            )}
           >
             <Clock className="size-3.5" />
             {autoRefresh ? "Auto-refresh: On (8s)" : "Auto-refresh: Off"}
@@ -227,18 +231,14 @@ function ObservabilityPage() {
               <span>Errors (15m)</span>
               <ShieldAlert className="size-3.5 text-muted" />
             </CardDescription>
-            <CardTitle className="text-2xl font-bold">
-              {data?.errors.total ?? 0}
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">{data?.errors.total ?? 0}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center gap-1.5 text-xs text-muted">
               <span
                 className={cn(
                   "font-semibold",
-                  (data?.errors.ratePercent ?? 0) > 5
-                    ? "text-red-500"
-                    : "text-emerald-500",
+                  (data?.errors.ratePercent ?? 0) > 5 ? "text-red-500" : "text-emerald-500",
                 )}
               >
                 {data?.errors.ratePercent ?? 0}%
@@ -255,9 +255,7 @@ function ObservabilityPage() {
               <span>Latency (P95)</span>
               <ArrowUpDown className="size-3.5 text-muted" />
             </CardDescription>
-            <CardTitle className="text-2xl font-bold">
-              {data?.latency.p95Ms ?? 0}ms
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">{data?.latency.p95Ms ?? 0}ms</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center gap-1.5 text-xs text-muted">
@@ -285,7 +283,8 @@ function ObservabilityPage() {
           <CardContent className="p-4 pt-0">
             <div className="flex items-center gap-1.5 text-xs text-muted flex-wrap">
               <span className="text-emerald-500 font-semibold">
-                +${(data?.modelCosts.savingsUsd ?? 0).toFixed(2)} ({formatCostInr(data?.modelCosts.savingsInr ?? 0)})
+                +${(data?.modelCosts.savingsUsd ?? 0).toFixed(2)} (
+                {formatCostInr(data?.modelCosts.savingsInr ?? 0)})
               </span>
               <span>saved (local)</span>
             </div>
@@ -300,9 +299,7 @@ function ObservabilityPage() {
               <Clock className="size-3.5 text-muted" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold">
-              {data?.queueHealth.oldestAgeMs
-                ? formatDuration(data.queueHealth.oldestAgeMs)
-                : "0s"}
+              {data?.queueHealth.oldestAgeMs ? formatDuration(data.queueHealth.oldestAgeMs) : "0s"}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
@@ -323,20 +320,14 @@ function ObservabilityPage() {
               <AlertTriangle className="size-3.5 text-muted" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold">
-              <span
-                className={cn(
-                  (data?.queueHealth.failedCount ?? 0) > 0 && "text-red-500",
-                )}
-              >
+              <span className={cn((data?.queueHealth.failedCount ?? 0) > 0 && "text-red-500")}>
                 {data?.queueHealth.failedCount ?? 0}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center gap-1.5 text-xs text-muted">
-              <span className="font-semibold text-fg">
-                {data?.queueHealth.pendingCount ?? 0}
-              </span>
+              <span className="font-semibold text-fg">{data?.queueHealth.pendingCount ?? 0}</span>
               <span>pending in queue</span>
             </div>
           </CardContent>
@@ -360,9 +351,7 @@ function ObservabilityPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-xs text-muted">
-              {data?.alertRules.length ?? 0} rules evaluated
-            </div>
+            <div className="text-xs text-muted">{data?.alertRules.length ?? 0} rules evaluated</div>
           </CardContent>
         </Card>
       </div>
@@ -538,7 +527,9 @@ function ObservabilityPage() {
 
             <Card className="border-border bg-surface/30">
               <CardHeader className="pb-2">
-                <CardDescription className="text-xs">Total Spend (USD / Cents / Rupees)</CardDescription>
+                <CardDescription className="text-xs">
+                  Total Spend (USD / Cents / Rupees)
+                </CardDescription>
                 <CardTitle className="text-2xl font-bold font-mono text-emerald-500 flex items-baseline gap-2 flex-wrap">
                   <span>${(data?.modelCosts.totalCostUsd ?? 0).toFixed(4)}</span>
                   <span className="text-base text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -550,7 +541,9 @@ function ObservabilityPage() {
                 <span>{formatCostCents(data?.modelCosts.totalCostCents ?? 0)}</span>
                 <span>•</span>
                 <span>{formatCostInr(data?.modelCosts.totalCostInr ?? 0)}</span>
-                <span className="text-[10px] text-muted opacity-80">(side by side multi-currency)</span>
+                <span className="text-[10px] text-muted opacity-80">
+                  (side by side multi-currency)
+                </span>
               </CardContent>
             </Card>
 
@@ -565,7 +558,8 @@ function ObservabilityPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-xs text-muted">
-                Versus equivalent commercial rates (${(data?.modelCosts.savingsUsd ?? 0).toFixed(2)} • {formatCostInr(data?.modelCosts.savingsInr ?? 0)})
+                Versus equivalent commercial rates (${(data?.modelCosts.savingsUsd ?? 0).toFixed(2)}{" "}
+                • {formatCostInr(data?.modelCosts.savingsInr ?? 0)})
               </CardContent>
             </Card>
           </div>
@@ -576,12 +570,15 @@ function ObservabilityPage() {
               <CardHeader>
                 <CardTitle className="text-base">Cost by Recruiting Task</CardTitle>
                 <CardDescription>
-                  Token usage and compute cost per business capability standing in USD, Cents, and INR.
+                  Token usage and compute cost per business capability standing in USD, Cents, and
+                  INR.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {Object.keys(data?.modelCosts.byTask ?? {}).length === 0 ? (
-                  <div className="py-6 text-center text-xs text-muted">No model tasks recorded yet.</div>
+                  <div className="py-6 text-center text-xs text-muted">
+                    No model tasks recorded yet.
+                  </div>
                 ) : (
                   Object.entries(data?.modelCosts.byTask ?? {}).map(([task, stats]) => (
                     <div
@@ -604,7 +601,8 @@ function ObservabilityPage() {
                           </span>
                         </div>
                         <div className="text-muted text-[10px]">
-                          {formatCostCents(stats.costCents)} • {formatCostInr(stats.costInr ?? stats.costUsd * USD_TO_INR_RATE)}
+                          {formatCostCents(stats.costCents)} •{" "}
+                          {formatCostInr(stats.costInr ?? stats.costUsd * USD_TO_INR_RATE)}
                         </div>
                       </div>
                     </div>
@@ -618,12 +616,15 @@ function ObservabilityPage() {
               <CardHeader>
                 <CardTitle className="text-base">Cost by Model Provider</CardTitle>
                 <CardDescription>
-                  Distribution across Groq, Gemini, OpenAI, Ollama, xAI, and Local with multi-currency breakdown.
+                  Distribution across Groq, Gemini, OpenAI, Ollama, xAI, and Local with
+                  multi-currency breakdown.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {Object.keys(data?.modelCosts.byProvider ?? {}).length === 0 ? (
-                  <div className="py-6 text-center text-xs text-muted">No provider calls recorded yet.</div>
+                  <div className="py-6 text-center text-xs text-muted">
+                    No provider calls recorded yet.
+                  </div>
                 ) : (
                   Object.entries(data?.modelCosts.byProvider ?? {}).map(([provider, stats]) => (
                     <div
@@ -683,7 +684,7 @@ function ObservabilityPage() {
                   variant="outline"
                   className={cn(
                     "font-mono",
-                    (router?.degradedToday ?? 0) > 0 ? "text-amber-500" : "text-muted"
+                    (router?.degradedToday ?? 0) > 0 ? "text-amber-500" : "text-muted",
                   )}
                 >
                   {router?.degradedToday ?? 0} degraded routes

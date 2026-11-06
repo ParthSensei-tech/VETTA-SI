@@ -55,7 +55,12 @@ export function SendToClientDialog({
       await copyText(res.share.shareUrl);
       toast.success("Client page is live — link copied");
       if (res.loginUrl) {
-        redirectToLoginIfRequired({ ok: false, data: null, loginRequired: true, loginUrl: res.loginUrl });
+        redirectToLoginIfRequired({
+          ok: false,
+          data: null,
+          loginRequired: true,
+          loginUrl: res.loginUrl,
+        });
       }
       if (res.emailed) toast.message("Sent via Gmail");
       else if (email && !res.emailed) {
@@ -71,8 +76,9 @@ export function SendToClientDialog({
         <DialogHeader>
           <DialogTitle>Send to client</DialogTitle>
           <DialogDescription>
-            This creates a shareable page with the client card{includeSlate ? " and the ranked slate" : ""}. Status
-            changes only after the link exists.
+            This creates a shareable page with the client card
+            {includeSlate ? " and the ranked slate" : ""}. Status changes only after the link
+            exists.
           </DialogDescription>
         </DialogHeader>
         {shareUrl && !mut.isPending ? (
@@ -97,9 +103,7 @@ export function SendToClientDialog({
               </Button>
               {email ? (
                 <Button variant="secondary" asChild>
-                  <a href={mailtoUrl(email, approval.title, ensureAbsoluteUrl(shareUrl))}>
-                    Email
-                  </a>
+                  <a href={mailtoUrl(email, approval.title, ensureAbsoluteUrl(shareUrl))}>Email</a>
                 </Button>
               ) : null}
             </div>
@@ -118,11 +122,20 @@ export function SendToClientDialog({
             </label>
             <label className="flex flex-col gap-1.5">
               <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="founders@…" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="founders@…"
+              />
             </label>
             <label className="flex flex-col gap-1.5">
               <Label>Cover note</Label>
-              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-24" />
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="min-h-24"
+              />
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input

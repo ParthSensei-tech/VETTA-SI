@@ -75,7 +75,11 @@ function viewFromRow(row: ShareRow): ShareView {
   });
 }
 
-async function trySendGmail(to: string, subject: string, body: string): Promise<{
+async function trySendGmail(
+  to: string,
+  subject: string,
+  body: string,
+): Promise<{
   emailed: boolean;
   emailError: string | null;
   loginUrl: string | null;
@@ -90,14 +94,20 @@ async function trySendGmail(to: string, subject: string, body: string): Promise<
     let loginUrl: string | null = null;
     let lastError: string | null = null;
     for (const attempt of attempts) {
-      const result = await callTool(attempt.tool, attempt.args, { connectorType: ConnectorType.Gmail });
+      const result = await callTool(attempt.tool, attempt.args, {
+        connectorType: ConnectorType.Gmail,
+      });
       if (result.ok) return { emailed: true, emailError: null, loginUrl: null };
       if (result.loginRequired && result.loginUrl) loginUrl = result.loginUrl;
       lastError = result.errorMessage ?? lastError;
     }
     return { emailed: false, emailError: lastError, loginUrl };
   } catch (e) {
-    return { emailed: false, emailError: e instanceof Error ? e.message : "Email connector unavailable", loginUrl: null };
+    return {
+      emailed: false,
+      emailError: e instanceof Error ? e.message : "Email connector unavailable",
+      loginUrl: null,
+    };
   }
 }
 
@@ -114,12 +124,18 @@ async function snapshotRole(
   userId: string,
   roleId: string,
   applicationIds: string[] | null,
-): Promise<{ view: Omit<ShareView, "id" | "token" | "exportedAt" | "recipientName" | "recipientEmail">; roleTitle: string }> {
+): Promise<{
+  view: Omit<ShareView, "id" | "token" | "exportedAt" | "recipientName" | "recipientEmail">;
+  roleTitle: string;
+}> {
   const { role, applications } = await loadRoleWorkspaceForUser(userId, roleId);
   const wanted = applicationIds ? new Set(applicationIds) : null;
   const picked = applications.filter((a) => {
     if (wanted) return wanted.has(a.id);
-    return ["shortlisted", "screening", "ready", "approved", "sent"].includes(a.pipelineStatus) || a.rankScore != null;
+    return (
+      ["shortlisted", "screening", "ready", "approved", "sent"].includes(a.pipelineStatus) ||
+      a.rankScore != null
+    );
   });
   const ordered = (wanted ? picked : picked.filter((a) => a.rankScore != null)).sort(
     (a, b) => (b.rankScore ?? -1) - (a.rankScore ?? -1),
@@ -134,7 +150,9 @@ async function snapshotRole(
     try {
       const { ensureUserOrg } = await import("./org.server");
       orgId = (await ensureUserOrg(userId)).orgId;
-    } catch { orgId = null; }
+    } catch {
+      orgId = null;
+    }
     const place = ids.map((_, i) => `$${i + 2}`).join(", ");
     const rows = orgId
       ? await sql.query<{ application_id: string; payload_json: string }>(
@@ -162,7 +180,9 @@ async function snapshotRole(
     return {
       applicationId: a.id,
       candidateName: a.candidate.fullName,
-      headline: card?.headline || [a.candidate.currentTitle, a.candidate.currentCompany].filter(Boolean).join(" · "),
+      headline:
+        card?.headline ||
+        [a.candidate.currentTitle, a.candidate.currentCompany].filter(Boolean).join(" · "),
       currentTitle: a.candidate.currentTitle,
       currentCompany: a.candidate.currentCompany,
       location: a.candidate.location,
@@ -248,7 +268,9 @@ async function persistShare(args: {
 
 export async function loadPublicShareView(token: string): Promise<ShareView> {
   const sql = await getSql();
-  const rows = await sql<ShareRow & { expires_at: unknown; revoked_at: unknown; org_id: string | null }>`
+  const rows = await sql<
+    ShareRow & { expires_at: unknown; revoked_at: unknown; org_id: string | null }
+  >`
     select * from client_shares where token = ${token} limit 1`;
   const row = rows[0];
   if (!row) throw new Error("This share link is invalid or has expired.");
@@ -265,7 +287,9 @@ export async function loadPublicShareView(token: string): Promise<ShareView> {
     const { stripShareCandidates } = await import("./privacy.ts");
     const ids = view.candidates.map((c) => c.applicationId).filter(Boolean);
     if (ids.length > 0) {
-      const allowed = new Set(await filterShareApplicationIds({ orgId: row.org_id, applicationIds: ids }));
+      const allowed = new Set(
+        await filterShareApplicationIds({ orgId: row.org_id, applicationIds: ids }),
+      );
       const blocked = new Set(ids.filter((id) => !allowed.has(id)));
       if (blocked.size > 0) {
         const { kept } = stripShareCandidates(view.candidates, blocked);
@@ -346,7 +370,11 @@ export const exportRoleSlate = createServerFn({ method: "POST" })
     let emailError: string | null = null;
     let loginUrl: string | null = null;
     if (data.sendEmail && recipientEmail) {
-      const sent = await trySendGmail(recipientEmail, subject, `${body}\n\n${notionMarkdown.slice(0, 4000)}`);
+      const sent = await trySendGmail(
+        recipientEmail,
+        subject,
+        `${body}\n\n${notionMarkdown.slice(0, 4000)}`,
+      );
       emailed = sent.emailed;
       emailError = sent.emailError;
       loginUrl = sent.loginUrl;
@@ -363,7 +391,9 @@ export const exportRoleSlate = createServerFn({ method: "POST" })
       pdfBase64: toBase64(pdf),
       pdfFilename: xlsx.filename.replace(/\.xlsx$/i, ".pdf"),
       notionMarkdown,
-      mailto: recipientEmail ? mailtoUrl(recipientEmail, subject, body) : mailtoUrl("", subject, body),
+      mailto: recipientEmail
+        ? mailtoUrl(recipientEmail, subject, body)
+        : mailtoUrl("", subject, body),
       emailed,
       emailError,
       loginUrl,
@@ -448,23 +478,24 @@ export const sendPackToClient = createServerFn({ method: "POST" })
     const { shareToNotionMarkdown } = await import("./sheet");
     const url = makeShareUrl(shareRow.token);
 
-    const approval: Approval = row.status === "sent"
-      ? await (async () => {
-          const rows = await sql<{
-            id: string;
-            application_id: string;
-            role_id: string;
-            artifact_type: string;
-            title: string;
-            payload_json: string;
-            status: string;
-            reviewer_note: string;
-            decided_at: unknown;
-            created_at: unknown;
-            role_title: string;
-            company_name: string;
-            candidate_name: string;
-          }>`
+    const approval: Approval =
+      row.status === "sent"
+        ? await (async () => {
+            const rows = await sql<{
+              id: string;
+              application_id: string;
+              role_id: string;
+              artifact_type: string;
+              title: string;
+              payload_json: string;
+              status: string;
+              reviewer_note: string;
+              decided_at: unknown;
+              created_at: unknown;
+              role_title: string;
+              company_name: string;
+              candidate_name: string;
+            }>`
             select ap.*, r.title as role_title, r.company_name, c.full_name as candidate_name
             from approvals ap
             join roles r on r.id = ap.role_id
@@ -472,37 +503,37 @@ export const sendPackToClient = createServerFn({ method: "POST" })
             join candidates c on c.id = a.candidate_id
             where ap.id = ${row.id} and (ap.org_id = ${org.orgId} or (ap.org_id is null and ap.user_id = ${context.userId}))
             limit 1`;
-          const r = rows[0]!;
-          return {
-            id: r.id,
-            applicationId: r.application_id,
-            roleId: r.role_id,
-            roleTitle: r.role_title,
-            companyName: r.company_name,
-            candidateName: r.candidate_name,
-            artifactType: r.artifact_type as Approval["artifactType"],
-            title: r.title,
-            payload: parseJson<ClientCard>(r.payload_json, {
-              candidate_name: r.candidate_name,
-              headline: "",
-              fit_label: "",
-              summary: "",
-              highlights: [],
-              watchouts: [],
-              interview_probes: [],
-              location: "",
-              availability: "",
-            }),
-            status: r.status as Approval["status"],
-            reviewerNote: r.reviewer_note,
-            decidedAt: r.decided_at ? iso(r.decided_at) : null,
-            createdAt: iso(r.created_at),
-            shareUrl: url,
-          };
-        })()
-      : await decideApproval({
-          data: { approvalId: data.approvalId, decision: "sent", reviewerNote: message },
-        });
+            const r = rows[0]!;
+            return {
+              id: r.id,
+              applicationId: r.application_id,
+              roleId: r.role_id,
+              roleTitle: r.role_title,
+              companyName: r.company_name,
+              candidateName: r.candidate_name,
+              artifactType: r.artifact_type as Approval["artifactType"],
+              title: r.title,
+              payload: parseJson<ClientCard>(r.payload_json, {
+                candidate_name: r.candidate_name,
+                headline: "",
+                fit_label: "",
+                summary: "",
+                highlights: [],
+                watchouts: [],
+                interview_probes: [],
+                location: "",
+                availability: "",
+              }),
+              status: r.status as Approval["status"],
+              reviewerNote: r.reviewer_note,
+              decidedAt: r.decided_at ? iso(r.decided_at) : null,
+              createdAt: iso(r.created_at),
+              shareUrl: url,
+            };
+          })()
+        : await decideApproval({
+            data: { approvalId: data.approvalId, decision: "sent", reviewerNote: message },
+          });
     approval.shareUrl = url;
 
     const view = viewFromRow(shareRow);
@@ -535,18 +566,20 @@ export const sendPackToClient = createServerFn({ method: "POST" })
     }
 
     const candPhone = snap.view.candidates[0]
-      ? (
+      ? ((
           await sql<{ phone: string }>`
             select c.phone from applications a
             join candidates c on c.id = a.candidate_id
             where a.id = ${row.application_id} limit 1`
-        )[0]?.phone ?? ""
+        )[0]?.phone ?? "")
       : "";
 
     return {
       approval,
       share: mapRecord(shareRow, url),
-      mailto: recipientEmail ? mailtoUrl(recipientEmail, subject, body) : mailtoUrl("", subject, body),
+      mailto: recipientEmail
+        ? mailtoUrl(recipientEmail, subject, body)
+        : mailtoUrl("", subject, body),
       whatsappUrl: recipientEmail ? null : whatsappUrl(candPhone, `${subject}\n${url}`),
       emailed,
       emailError,

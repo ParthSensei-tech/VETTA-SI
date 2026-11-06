@@ -12,7 +12,11 @@ const SheetOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-bg/70", className)} {...props} />
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn("fixed inset-0 z-50 bg-bg/70", className)}
+    {...props}
+  />
 ));
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
@@ -30,7 +34,8 @@ const SheetContent = React.forwardRef<
         "fixed z-50 flex flex-col bg-surface shadow-[var(--shadow-border),var(--shadow-lift)]",
         side === "right" && "inset-y-0 right-0 h-full w-full max-w-xl border-l border-border",
         side === "left" && "inset-y-0 left-0 h-full w-full max-w-sm border-r border-border",
-        side === "bottom" && "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-2xl border-t border-border",
+        side === "bottom" &&
+          "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-2xl border-t border-border",
         className,
       )}
       {...props}
@@ -49,9 +54,15 @@ function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return <div className={cn("border-b border-border px-6 py-5 pr-12", className)} {...props} />;
 }
 
-function SheetTitle({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+function SheetTitle({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
-    <DialogPrimitive.Title className={cn("font-display text-2xl font-medium", className)} {...props} />
+    <DialogPrimitive.Title
+      className={cn("font-display text-2xl font-medium", className)}
+      {...props}
+    />
   );
 }
 

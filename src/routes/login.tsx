@@ -64,10 +64,13 @@ function Login() {
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted">
             Ranked slates for Seed to Series B teams in India — engineering, product, GTM, people,
-            finance. AI evaluates and ranks candidates against calibrated rubrics. You still own the send.
+            finance. AI evaluates and ranks candidates against calibrated rubrics. You still own the
+            send.
           </p>
         </div>
-        <p className="text-xs text-subtle">Seed–Series B recruiting · every function · human-gated</p>
+        <p className="text-xs text-subtle">
+          Seed–Series B recruiting · every function · human-gated
+        </p>
       </section>
 
       <section className="relative flex flex-col justify-center px-6 py-12 sm:px-12">
@@ -79,7 +82,9 @@ function Login() {
           <span className="font-display text-lg">Vetta</span>
         </Link>
         <h1 className="font-display text-3xl tracking-tight">Sign in</h1>
-        <p className="mt-2 text-sm text-muted">Your workspace is private. Candidates never see this side.</p>
+        <p className="mt-2 text-sm text-muted">
+          Your workspace is private. Candidates never see this side.
+        </p>
 
         {authEnabled ? (
           <div className="mt-8 flex max-w-sm flex-col gap-3">
@@ -103,7 +108,11 @@ function Login() {
               {mode === "up" ? (
                 <label className="flex flex-col gap-1.5">
                   <Label>Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
+                  />
                 </label>
               ) : null}
               <label className="flex flex-col gap-1.5">

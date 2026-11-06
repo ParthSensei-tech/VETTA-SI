@@ -135,7 +135,7 @@ test("Two-Tower Hybrid Retrieval & Vocabulary Mismatch Benchmark Suite", async (
     const semanticList = [
       { id: "cand_D", score: 0.95 }, // zero lexical match
       { id: "cand_B", score: 0.85 }, // match in both
-      { id: "cand_A", score: 0.70 },
+      { id: "cand_A", score: 0.7 },
     ];
 
     const fused = reciprocalRankFusion(lexicalList, semanticList, { k: 60 });
@@ -147,7 +147,7 @@ test("Two-Tower Hybrid Retrieval & Vocabulary Mismatch Benchmark Suite", async (
     // rrf = 1/61 + 1/63 = 0.01639 + 0.01587 = 0.032266 -> cand_A rank 1
     assert.equal(fused[0]!.id, "cand_A");
     assert.equal(fused[1]!.id, "cand_B");
-    
+
     // cand_D (zero lexical match) should still achieve a high score from semantic rank 1
     const candD = fused.find((f) => f.id === "cand_D");
     assert.ok(candD);
@@ -167,9 +167,7 @@ test("Two-Tower Hybrid Retrieval & Vocabulary Mismatch Benchmark Suite", async (
     assert.equal(r2, 0.5);
     assert.equal(r4, 1.0);
 
-    const mrr = meanReciprocalRank([
-      { relevantIds: relevant, retrievedIds: retrieved },
-    ]);
+    const mrr = meanReciprocalRank([{ relevantIds: relevant, retrievedIds: retrieved }]);
     assert.equal(mrr, 0.5); // First hit at rank 2 -> 1/2
 
     const ndcg = ndcgAtK({ cand_1: 2, cand_2: 1 }, retrieved, 5);
@@ -289,7 +287,9 @@ test("Two-Tower Hybrid Retrieval & Vocabulary Mismatch Benchmark Suite", async (
     console.log(
       `| ${"Metric".padEnd(32)} | ${"Lexical-Only".padEnd(12)} | ${"Semantic-Only".padEnd(14)} | ${"Hybrid (RRF)".padEnd(12)} |`,
     );
-    console.log("|----------------------------------|--------------|----------------|--------------|");
+    console.log(
+      "|----------------------------------|--------------|----------------|--------------|",
+    );
     console.log(
       `| ${"Recall@1".padEnd(32)} | ${(lexicalMetrics.recallAt1 * 100).toFixed(1).padStart(11)}% | ${(semanticMetrics.recallAt1 * 100).toFixed(1).padStart(13)}% | ${(hybridMetrics.recallAt1 * 100).toFixed(1).padStart(11)}% |`,
     );

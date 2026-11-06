@@ -203,9 +203,15 @@ export function CandidatePanel({
               {candidate.currentTitle}
               {candidate.currentCompany ? ` · ${candidate.currentCompany}` : ""}
             </p>
-            <h2 className="font-display text-3xl font-medium tracking-tight">{candidate.fullName}</h2>
+            <h2 className="font-display text-3xl font-medium tracking-tight">
+              {candidate.fullName}
+            </h2>
             <p className="mt-1 text-sm text-muted">
-              {[candidate.location, candidate.email, candidate.yearsExperience != null ? `${candidate.yearsExperience} yrs` : null]
+              {[
+                candidate.location,
+                candidate.email,
+                candidate.yearsExperience != null ? `${candidate.yearsExperience} yrs` : null,
+              ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
@@ -231,7 +237,12 @@ export function CandidatePanel({
               {m.label}
             </Button>
           ))}
-          <Button size="sm" variant="outline" disabled={rerankMut.isPending} onClick={() => rerankMut.mutate()}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={rerankMut.isPending}
+            onClick={() => rerankMut.mutate()}
+          >
             {rerankMut.isPending ? "Ranking…" : "Re-rank"}
           </Button>
         </div>
@@ -243,7 +254,8 @@ export function CandidatePanel({
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h3 className="font-display text-xl">Ranking</h3>
               <p className="text-sm text-muted">
-                {FIT_LABEL[rank.level]} · <span className="font-mono tabular-nums">{rank.score}</span>
+                {FIT_LABEL[rank.level]} ·{" "}
+                <span className="font-mono tabular-nums">{rank.score}</span>
               </p>
             </div>
             <ProvenanceDetail
@@ -258,12 +270,14 @@ export function CandidatePanel({
                 <p className="text-sm leading-relaxed text-muted">{rank.explain.hi}</p>
                 {rank.explain.pShortlist != null ? (
                   <p className="text-xs text-subtle">
-                    Calibrated shortlist chance {rank.explain.pShortlist}% · {rank.explain.samples} decisions
+                    Calibrated shortlist chance {rank.explain.pShortlist}% · {rank.explain.samples}{" "}
+                    decisions
                     {rank.explain.brier != null ? ` · error ${rank.explain.brier}` : ""}
                   </p>
                 ) : (
                   <p className="text-xs text-subtle">
-                    Probability unlocks after {12 - Math.min(12, rank.explain.samples)} more shortlist or reject calls.
+                    Probability unlocks after {12 - Math.min(12, rank.explain.samples)} more
+                    shortlist or reject calls.
                   </p>
                 )}
               </div>
@@ -299,7 +313,9 @@ export function CandidatePanel({
 
           {rank.match?.dimensions && rank.match.dimensions.length > 0 ? (
             <div>
-              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">Match dimensions</h4>
+              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">
+                Match dimensions
+              </h4>
               <ul className="flex flex-col gap-2">
                 {rank.match.dimensions.map((d) => (
                   <li key={d.id} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs">
@@ -314,7 +330,9 @@ export function CandidatePanel({
                           style={{ width: `${Math.max(4, Math.min(100, d.score))}%` }}
                         />
                       </div>
-                      {d.note ? <p className="mt-0.5 truncate text-[11px] text-subtle">{d.note}</p> : null}
+                      {d.note ? (
+                        <p className="mt-0.5 truncate text-[11px] text-subtle">{d.note}</p>
+                      ) : null}
                     </div>
                   </li>
                 ))}
@@ -331,7 +349,9 @@ export function CandidatePanel({
 
           {rank.stack_match.length > 0 ? (
             <div>
-              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">Skills</h4>
+              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">
+                Skills
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {rank.stack_match.map((s) => (
                   <span
@@ -351,17 +371,26 @@ export function CandidatePanel({
           ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
-            <ListBlock title="Evidence" items={rank.evidence.map((e) => `${e.claim}${e.quote ? ` — “${e.quote}”` : ""}`)} />
+            <ListBlock
+              title="Evidence"
+              items={rank.evidence.map((e) => `${e.claim}${e.quote ? ` — “${e.quote}”` : ""}`)}
+            />
             <ListBlock title="Gaps" items={rank.gaps} />
             <ListBlock title="Risks" items={rank.risks} />
             <div className="rounded-2xl border border-border p-4">
-              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">India context</h4>
+              <h4 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">
+                India context
+              </h4>
               <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
                 <Row k="Location" v={rank.india.location_fit.replace("_", " ")} />
                 <Row k="Early-stage" v={rank.india.early_stage_fit} />
                 <Row
                   k="Notice"
-                  v={rank.india.notice_period_days != null ? `${rank.india.notice_period_days} days` : "Unknown"}
+                  v={
+                    rank.india.notice_period_days != null
+                      ? `${rank.india.notice_period_days} days`
+                      : "Unknown"
+                  }
                 />
                 <Row
                   k="CTC"
@@ -372,7 +401,9 @@ export function CandidatePanel({
                   }
                 />
               </dl>
-              {rank.india.notes ? <p className="mt-3 text-sm text-muted">{rank.india.notes}</p> : null}
+              {rank.india.notes ? (
+                <p className="mt-3 text-sm text-muted">{rank.india.notes}</p>
+              ) : null}
             </div>
           </div>
         </section>
@@ -382,7 +413,12 @@ export function CandidatePanel({
             Not ranked yet. Rank now scores this resume against the JD. Uses configured AI providers
             (Groq, Gemini, Ollama, OpenAI, xAI) with automatic fallback to local evidence ranking.
           </p>
-          <Button className="mt-3" size="sm" disabled={rerankMut.isPending} onClick={() => rerankMut.mutate()}>
+          <Button
+            className="mt-3"
+            size="sm"
+            disabled={rerankMut.isPending}
+            onClick={() => rerankMut.mutate()}
+          >
             {rerankMut.isPending ? "Ranking…" : "Rank now"}
           </Button>
         </div>
@@ -394,20 +430,36 @@ export function CandidatePanel({
             <h3 className="font-display text-xl">Async screen</h3>
             {screen ? (
               <p className="mt-1 text-xs text-muted">
-                {screenDone ? "Completed" : screenStarted ? "In progress" : screen.openedAt ? "Opened" : "Not opened"} ·
-                completion is the metric
+                {screenDone
+                  ? "Completed"
+                  : screenStarted
+                    ? "In progress"
+                    : screen.openedAt
+                      ? "Opened"
+                      : "Not opened"}{" "}
+                · completion is the metric
                 {screen.lastRemindedAt ? ` · reminded` : ""}
               </p>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             {!screen ? (
-              <Button size="sm" variant="secondary" disabled={screenMut.isPending} onClick={() => screenMut.mutate()}>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={screenMut.isPending}
+                onClick={() => screenMut.mutate()}
+              >
                 {screenMut.isPending ? "Drafting…" : "Generate questions"}
               </Button>
             ) : (
               <>
-                <Button size="sm" variant="secondary" disabled={inviteMut.isPending} onClick={() => inviteMut.mutate()}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={inviteMut.isPending}
+                  onClick={() => inviteMut.mutate()}
+                >
                   Copy screen link
                 </Button>
                 <Button
@@ -436,7 +488,9 @@ export function CandidatePanel({
               <div className="flex max-h-80 flex-col gap-2 overflow-auto rounded-2xl border border-border p-4">
                 {screen.transcript.map((t) => (
                   <p key={t.id} className="text-sm leading-relaxed">
-                    <span className="text-xs text-subtle">{t.role === "agent" ? "Vetta" : "Candidate"} · </span>
+                    <span className="text-xs text-subtle">
+                      {t.role === "agent" ? "Vetta" : "Candidate"} ·{" "}
+                    </span>
                     {t.text}
                   </p>
                 ))}
@@ -445,7 +499,8 @@ export function CandidatePanel({
             {screen.questions.map((q, i) => (
               <div key={q.id} className="rounded-2xl border border-border p-4">
                 <p className="text-xs text-muted">
-                  {String(i + 1).padStart(2, "0")} · {q.time_minutes} min · {KNOWLEDGE_LABEL[q.kind]} · {q.intent}
+                  {String(i + 1).padStart(2, "0")} · {q.time_minutes} min ·{" "}
+                  {KNOWLEDGE_LABEL[q.kind]} · {q.intent}
                 </p>
                 <p className="mt-1 text-sm leading-relaxed">{q.prompt}</p>
                 {q.follow_ups[0] ? (
@@ -469,7 +524,9 @@ export function CandidatePanel({
                 <p className="text-sm font-medium">
                   {screen.evaluation.verdict}
                   {screen.evaluation.score != null ? (
-                    <span className="ml-2 font-mono tabular-nums text-muted">{screen.evaluation.score}</span>
+                    <span className="ml-2 font-mono tabular-nums text-muted">
+                      {screen.evaluation.score}
+                    </span>
                   ) : null}
                 </p>
                 <p className="mt-2 text-sm text-muted">{screen.evaluation.notes}</p>
@@ -478,8 +535,8 @@ export function CandidatePanel({
           </div>
         ) : (
           <p className="text-sm text-muted">
-            Generate a written screen: practical work, basics, common sense, and follow-ups. Candidates get a
-            mobile conversation — you can still paste answers here.
+            Generate a written screen: practical work, basics, common sense, and follow-ups.
+            Candidates get a mobile conversation — you can still paste answers here.
           </p>
         )}
       </section>
@@ -488,7 +545,12 @@ export function CandidatePanel({
         <Label>Private recruiter notes</Label>
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-24" />
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" size="sm" disabled={notesMut.isPending} onClick={() => notesMut.mutate()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={notesMut.isPending}
+            onClick={() => notesMut.mutate()}
+          >
             Save notes
           </Button>
           <Button size="sm" disabled={packMut.isPending || !rank} onClick={() => packMut.mutate()}>

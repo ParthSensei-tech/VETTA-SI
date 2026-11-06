@@ -5,11 +5,7 @@ function newId(): string {
 }
 
 export type RoleAssignmentType =
-  | "lead_recruiter"
-  | "recruiter"
-  | "hiring_manager"
-  | "interviewer"
-  | "sourcer";
+  "lead_recruiter" | "recruiter" | "hiring_manager" | "interviewer" | "sourcer";
 
 export type RoleAssignmentRecord = {
   id: string;

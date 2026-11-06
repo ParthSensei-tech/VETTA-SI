@@ -139,12 +139,7 @@ export function draftRubricFromRoleFields(role: {
   }
 
   for (const n of role.niceToHaves.slice(0, 2)) {
-    push(
-      n.slice(0, 80),
-      "low",
-      "nice",
-      `Nice-to-have: ${n}. Treat as a plus, not a hard filter.`,
-    );
+    push(n.slice(0, 80), "low", "nice", `Nice-to-have: ${n}. Treat as a plus, not a hard filter.`);
   }
 
   if (role.companyStage === "seed" || role.companyStage === "series_a") {
@@ -209,21 +204,21 @@ export async function generateRubricDraft(opts: {
   hardConstraints = heuristic.hardConstraints;
 
   if (!opts.heuristicOnly) {
-  try {
-    const { completeWithRouter } = await import("./providers.server");
-    const result = await completeWithRouter({
-      task: "rubric_draft",
-      orgId,
-      system: `You draft hiring rubrics for Seed–Series B roles in India.
+    try {
+      const { completeWithRouter } = await import("./providers.server");
+      const result = await completeWithRouter({
+        task: "rubric_draft",
+        orgId,
+        system: `You draft hiring rubrics for Seed–Series B roles in India.
 Return JSON only: { "criteria": [{ "name", "weight": "high"|"medium"|"low", "kind": "must"|"nice", "strongEvidence" }], "hardConstraints": { "city", "noticeMaxDays", "compMinLpa", "compMaxLpa", "strictFilter" } }.
 Rules: 5–8 criteria from the JD. No protected attributes (gender, age, caste, religion, marital status). No pedigree-only bars (IIT-only, FAANG-only). strongEvidence must be plain language a founder can check on a resume. Hard constraints are city, notice ceiling, comp band only — they filter/flag, they are not score dimensions.`,
-      maxTokens: 1800,
-      // Worth waiting for, but only up to a point: `heuristic` above is already a usable draft, so
-      // an arm that cannot fit this budget is refused rather than left spinning.
-      context: "bulk",
-      deadlineMs: 60_000,
-      maxAttemptsPerProvider: 2,
-      user: `Draft a rubric for:
+        maxTokens: 1800,
+        // Worth waiting for, but only up to a point: `heuristic` above is already a usable draft, so
+        // an arm that cannot fit this budget is refused rather than left spinning.
+        context: "bulk",
+        deadlineMs: 60_000,
+        maxAttemptsPerProvider: 2,
+        user: `Draft a rubric for:
 Title: ${fields.title}
 Stage: ${fields.companyStage}
 Location: ${fields.location}
@@ -233,72 +228,74 @@ Must-haves: ${fields.mustHaves.join("; ")}
 Nice-to-haves: ${fields.niceToHaves.join("; ")}
 JD:
 ${fields.jdText.slice(0, 6000)}`,
-    });
-    if (result.ok && !result.routedLocal) {
-      const text = result.text;
-      // A rubric draft really spent tokens, so it belongs in the cost ledger — before the
-      // parse is known to be usable, since the spend already happened either way.
-      void (async () => {
-        try {
-          const { recordModelCost } = await import("../observability/observability.server.ts");
-          await recordModelCost({
-            userId: opts.userId ?? null,
-            taskType: "rubric_draft",
-            provider: result.provider,
-            model: result.model,
-            promptText: fields.jdText.slice(0, 6000),
-            completionText: text,
-            durationMs: result.durationMs,
-            success: true,
-            roleId: opts.roleId,
-            orgId,
-            meta: { router: routeTelemetry(result.route, result.attempts) },
-          });
-        } catch { /* best-effort telemetry — never block the draft */ }
-      })();
-      const start = text.indexOf("{");
-      const end = text.lastIndexOf("}");
-      const raw = start >= 0 && end > start ? text.slice(start, end + 1) : text;
-      const parsed = parseJson<{
-        criteria?: Array<{
-          name?: string;
-          weight?: string;
-          kind?: string;
-          strongEvidence?: string;
-        }>;
-        hardConstraints?: Partial<HardConstraints>;
-      }>(raw, {});
-      if (parsed.criteria && parsed.criteria.length >= 4) {
-        criteria = parsed.criteria.slice(0, 8).map((c) => ({
-          id: newId(),
-          name: String(c.name || "Criterion").slice(0, 120),
-          weight: (["high", "medium", "low"].includes(String(c.weight))
-            ? c.weight
-            : "medium") as CriterionWeight,
-          kind: (c.kind === "nice" ? "nice" : "must") as CriterionKind,
-          strongEvidence: String(c.strongEvidence || "Evidence on the resume").slice(0, 400),
-        }));
-        hardConstraints = {
-          ...DEFAULT_HARD_CONSTRAINTS,
-          ...parsed.hardConstraints,
-          city: parsed.hardConstraints?.city ?? fields.location,
-        };
-        source = "llm";
+      });
+      if (result.ok && !result.routedLocal) {
+        const text = result.text;
+        // A rubric draft really spent tokens, so it belongs in the cost ledger — before the
+        // parse is known to be usable, since the spend already happened either way.
+        void (async () => {
+          try {
+            const { recordModelCost } = await import("../observability/observability.server.ts");
+            await recordModelCost({
+              userId: opts.userId ?? null,
+              taskType: "rubric_draft",
+              provider: result.provider,
+              model: result.model,
+              promptText: fields.jdText.slice(0, 6000),
+              completionText: text,
+              durationMs: result.durationMs,
+              success: true,
+              roleId: opts.roleId,
+              orgId,
+              meta: { router: routeTelemetry(result.route, result.attempts) },
+            });
+          } catch {
+            /* best-effort telemetry — never block the draft */
+          }
+        })();
+        const start = text.indexOf("{");
+        const end = text.lastIndexOf("}");
+        const raw = start >= 0 && end > start ? text.slice(start, end + 1) : text;
+        const parsed = parseJson<{
+          criteria?: Array<{
+            name?: string;
+            weight?: string;
+            kind?: string;
+            strongEvidence?: string;
+          }>;
+          hardConstraints?: Partial<HardConstraints>;
+        }>(raw, {});
+        if (parsed.criteria && parsed.criteria.length >= 4) {
+          criteria = parsed.criteria.slice(0, 8).map((c) => ({
+            id: newId(),
+            name: String(c.name || "Criterion").slice(0, 120),
+            weight: (["high", "medium", "low"].includes(String(c.weight))
+              ? c.weight
+              : "medium") as CriterionWeight,
+            kind: (c.kind === "nice" ? "nice" : "must") as CriterionKind,
+            strongEvidence: String(c.strongEvidence || "Evidence on the resume").slice(0, 400),
+          }));
+          hardConstraints = {
+            ...DEFAULT_HARD_CONSTRAINTS,
+            ...parsed.hardConstraints,
+            city: parsed.hardConstraints?.city ?? fields.location,
+          };
+          source = "llm";
+        } else {
+          const d = draftRubricFromRoleFields(fields);
+          criteria = d.criteria;
+          hardConstraints = d.hardConstraints;
+        }
       } else {
         const d = draftRubricFromRoleFields(fields);
         criteria = d.criteria;
         hardConstraints = d.hardConstraints;
       }
-    } else {
+    } catch {
       const d = draftRubricFromRoleFields(fields);
       criteria = d.criteria;
       hardConstraints = d.hardConstraints;
     }
-  } catch {
-    const d = draftRubricFromRoleFields(fields);
-    criteria = d.criteria;
-    hardConstraints = d.hardConstraints;
-  }
   } // end if !heuristicOnly
 
   // Guardrails: drop blocked criteria
@@ -336,7 +333,10 @@ ${fields.jdText.slice(0, 6000)}`,
   return mapVersion(rows[0] as Parameters<typeof mapVersion>[0]);
 }
 
-export async function loadEditableRubric(userId: string, roleId: string): Promise<RubricVersion | null> {
+export async function loadEditableRubric(
+  userId: string,
+  roleId: string,
+): Promise<RubricVersion | null> {
   await loadRoleOwned(userId, roleId);
   const sql = await getSql();
   const rows = await sql`
@@ -395,7 +395,11 @@ export async function persistRubricEdits(opts: {
   const scored = Number(hasScored[0]?.n ?? 0) > 0;
   const cur = current[0];
   const mustNewVersion =
-    !cur || cur.status === "locked" || cur.status === "active" || scored || cur.status === "superseded";
+    !cur ||
+    cur.status === "locked" ||
+    cur.status === "active" ||
+    scored ||
+    cur.status === "superseded";
 
   let rubricId: string;
   let version: number;
@@ -454,7 +458,12 @@ export async function persistRubricEdits(opts: {
     void (async () => {
       try {
         const { deepenRoleTopN } = await import("./deepen.server");
-        await deepenRoleTopN({ userId: opts.userId, roleId: opts.roleId, topN: 25, forceStale: true });
+        await deepenRoleTopN({
+          userId: opts.userId,
+          roleId: opts.roleId,
+          topN: 25,
+          forceStale: true,
+        });
       } catch (e) {
         console.error("[rubric-rerank]", e);
       }
@@ -469,10 +478,7 @@ export async function persistRubricEdits(opts: {
 }
 
 /** Lock active rubric when a client shortlist is stamped (approved/sent). */
-export async function lockRubricForRole(opts: {
-  userId: string;
-  roleId: string;
-}): Promise<void> {
+export async function lockRubricForRole(opts: { userId: string; roleId: string }): Promise<void> {
   const sql = await getSql();
   await sql`
     update rubric_versions set status = 'locked', locked_at = now()

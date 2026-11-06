@@ -228,7 +228,9 @@ test("Malformed Files: corrupt DOCX bytes throws descriptive error", async () =>
     },
     (err: Error) => {
       assert.ok(
-        err.message.includes("Corrupted") || err.message.includes("DOCX") || err.message.includes("zip"),
+        err.message.includes("Corrupted") ||
+          err.message.includes("DOCX") ||
+          err.message.includes("zip"),
         `Expected corrupted DOCX error message, got: ${err.message}`,
       );
       return true;
@@ -342,7 +344,8 @@ test("Provider Outages: parseAndRank falls back to deterministic local rule engi
       stack: ["Python", "Docker", "AWS", "PostgreSQL"],
       mustHaves: ["Python", "AWS", "PostgreSQL"],
       niceToHaves: ["Kubernetes", "Redis"],
-      jdText: "Looking for Senior Python Developer with Docker, AWS and PostgreSQL experience. Notice period under 30 days.",
+      jdText:
+        "Looking for Senior Python Developer with Docker, AWS and PostgreSQL experience. Notice period under 30 days.",
     },
     mode: "fast",
   });
@@ -351,7 +354,10 @@ test("Provider Outages: parseAndRank falls back to deterministic local rule engi
   if (!outcome.ok) throw new Error("Expected outcome to be ok");
   assert.equal(outcome.engine, "local");
   assert.equal(outcome.provenance?.isLocal, true);
-  assert.ok(outcome.rank.score >= 50, "Calibrated rule matching must produce positive score for matching candidate");
+  assert.ok(
+    outcome.rank.score >= 50,
+    "Calibrated rule matching must produce positive score for matching candidate",
+  );
   assert.equal(outcome.profile.full_name, "Priya Sharma");
 });
 
@@ -459,7 +465,11 @@ test("Restore: restoreWorkspaceBackup restores roles, rubrics, candidates and ap
 
   const finalApps = await sql<{ count: number }>`
     select count(*) as count from applications where role_id = ${roleId} and user_id = ${userId}`;
-  assert.equal(Number(finalApps[0]?.count), 1, "Second restore must be idempotent without duplicates");
+  assert.equal(
+    Number(finalApps[0]?.count),
+    1,
+    "Second restore must be idempotent without duplicates",
+  );
 });
 
 // =========================================================================
@@ -468,7 +478,12 @@ test("Restore: restoreWorkspaceBackup restores roles, rubrics, candidates and ap
 //    writing the evidence that decides the next timeout.
 // =========================================================================
 
-const PROVIDER_KEY_NAMES = ["GROQ_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY"] as const;
+const PROVIDER_KEY_NAMES = [
+  "GROQ_API_KEY",
+  "GEMINI_API_KEY",
+  "OPENAI_API_KEY",
+  "XAI_API_KEY",
+] as const;
 
 type FakeProvider = {
   ok: boolean;
@@ -499,7 +514,11 @@ function armedByProjectCode(): boolean {
 async function withFakeProvider<T extends FakeProvider>(
   opts: { hang?: boolean; keys?: Partial<Record<(typeof PROVIDER_KEY_NAMES)[number], string>> },
   body: () => Promise<T>,
-): Promise<{ result: T; timerDelays: number[]; requests: Array<{ url: string; maxTokens: number | undefined }> }> {
+): Promise<{
+  result: T;
+  timerDelays: number[];
+  requests: Array<{ url: string; maxTokens: number | undefined }>;
+}> {
   const g = globalThis as typeof globalThis & {
     __vettaCircuits__?: Map<string, unknown>;
     __vettaOllamaUp__?: { at: number; up: boolean };
@@ -526,7 +545,10 @@ async function withFakeProvider<T extends FakeProvider>(
     return savedSetTimeout(fn, ms, ...rest);
   }) as unknown as typeof setTimeout;
 
-  globalThis.fetch = (async (input: unknown, init?: { signal?: AbortSignal; body?: string | unknown }) => {
+  globalThis.fetch = (async (
+    input: unknown,
+    init?: { signal?: AbortSignal; body?: string | unknown },
+  ) => {
     const url = String(input);
     let maxTokens: number | undefined;
     try {
@@ -543,7 +565,8 @@ async function withFakeProvider<T extends FakeProvider>(
       return new Promise<Response>((_resolve, reject) => {
         const signal = init?.signal;
         if (signal?.aborted) reject(new Error("The operation was aborted."));
-        else signal?.addEventListener("abort", () => reject(new Error("The operation was aborted.")));
+        else
+          signal?.addEventListener("abort", () => reject(new Error("The operation was aborted.")));
       });
     }
     return new Response(
@@ -583,7 +606,11 @@ test("Timeout: completeWithRouter arms the budget the route chose, not the 14 s 
       }),
   );
 
-  assert.equal(result.ok, true, `the routed arm should answer: ${"error" in result ? result.error : ""}`);
+  assert.equal(
+    result.ok,
+    true,
+    `the routed arm should answer: ${"error" in result ? result.error : ""}`,
+  );
   assert.ok(result.route, "the decision travels with the result");
   assert.equal(result.route!.timeoutMs, 9_000, "the route turns its own headroom into a budget");
   assert.ok(timerDelays.includes(9_000), "and the runner arms exactly that");
@@ -618,9 +645,15 @@ test("Timeout: the caller's deadline bounds the whole retry queue, not one attem
   assert.ok(armed[0]! <= 1_500 && armed[0]! > 1_400, `budget ${armed[0]}ms, inside the deadline`);
   assert.ok(!timerDelays.includes(14_000), "the old constant is nowhere in this call");
   assert.equal(result.attempts, 1, "a second arm behind an exhausted deadline is not a retry plan");
-  assert.ok(/attempt budget|deadline is spent/.test(result.error ?? ""), "and the error says which");
+  assert.ok(
+    /attempt budget|deadline is spent/.test(result.error ?? ""),
+    "and the error says which",
+  );
   assert.ok(Date.now() - started < 6_000, "the whole call stays near the caller's tolerance");
-  assert.ok(Date.now() - started >= 1_400, "it really waited its budget instead of returning early");
+  assert.ok(
+    Date.now() - started >= 1_400,
+    "it really waited its budget instead of returning early",
+  );
 });
 
 test("Timeout: the ladder keeps its frozen 14 s so the benchmark A/B still means something", async () => {
@@ -646,9 +679,32 @@ test("Censored history: an attempt we killed never counts against the arm's reli
   await sql`delete from model_cost_logs where provider = ${"groq"} and model = ${model}`;
 
   // Two served calls and one genuine provider failure — then two attempts the router itself aborted.
-  await recordModelCost({ taskType: task, provider: "groq", model, durationMs: 500, success: true, promptTokens: 800, completionTokens: 300 });
-  await recordModelCost({ taskType: task, provider: "groq", model, durationMs: 700, success: true, promptTokens: 800, completionTokens: 300 });
-  await recordModelCost({ taskType: task, provider: "groq", model, durationMs: 900, success: false, error: "Groq 500" });
+  await recordModelCost({
+    taskType: task,
+    provider: "groq",
+    model,
+    durationMs: 500,
+    success: true,
+    promptTokens: 800,
+    completionTokens: 300,
+  });
+  await recordModelCost({
+    taskType: task,
+    provider: "groq",
+    model,
+    durationMs: 700,
+    success: true,
+    promptTokens: 800,
+    completionTokens: 300,
+  });
+  await recordModelCost({
+    taskType: task,
+    provider: "groq",
+    model,
+    durationMs: 900,
+    success: false,
+    error: "Groq 500",
+  });
   for (const killedMs of [90_000, 120_000]) {
     await recordModelCost({
       taskType: task,
@@ -667,8 +723,16 @@ test("Censored history: an attempt we killed never counts against the arm's reli
   assert.equal(h!.samples, 5);
   assert.equal(h!.successRate, 2 / 3, "the killed attempts leave the judged set");
   assert.equal(h!.abortedSamples, 2);
-  assert.equal(h!.abortedElapsedMaxMs, 120_000, "but their elapsed time survives as slowness evidence");
-  assert.equal(h!.p50DurationMs, 600, "the median still describes only calls that actually answered");
+  assert.equal(
+    h!.abortedElapsedMaxMs,
+    120_000,
+    "but their elapsed time survives as slowness evidence",
+  );
+  assert.equal(
+    h!.p50DurationMs,
+    600,
+    "the median still describes only calls that actually answered",
+  );
 
   await sql`delete from model_cost_logs where provider = ${"groq"} and model = ${model}`;
 });

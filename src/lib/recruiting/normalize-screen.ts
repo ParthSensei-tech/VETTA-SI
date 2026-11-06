@@ -7,8 +7,18 @@ export function normalizeKind(raw: unknown, fallback: KnowledgeKind = "practical
   return KINDS.includes(raw as KnowledgeKind) ? (raw as KnowledgeKind) : fallback;
 }
 
-export function normalizeQuestion(raw: Partial<ScreenQuestion> | ScreenQuestion, index: number): ScreenQuestion {
-  const kindCycle: KnowledgeKind[] = ["practical", "basic", "common", "practical", "basic", "common"];
+export function normalizeQuestion(
+  raw: Partial<ScreenQuestion> | ScreenQuestion,
+  index: number,
+): ScreenQuestion {
+  const kindCycle: KnowledgeKind[] = [
+    "practical",
+    "basic",
+    "common",
+    "practical",
+    "basic",
+    "common",
+  ];
   const followUps = Array.isArray(raw.follow_ups)
     ? raw.follow_ups
         .slice(0, 2)
@@ -30,12 +40,16 @@ export function normalizeQuestion(raw: Partial<ScreenQuestion> | ScreenQuestion,
 }
 
 export function normalizeQuestions(raw: unknown): ScreenQuestion[] {
-  const list = Array.isArray(raw) ? raw : parseJson<ScreenQuestion[]>(typeof raw === "string" ? raw : "[]", []);
+  const list = Array.isArray(raw)
+    ? raw
+    : parseJson<ScreenQuestion[]>(typeof raw === "string" ? raw : "[]", []);
   return list.map((q, i) => normalizeQuestion(q, i)).filter((q) => q.prompt);
 }
 
 export function normalizeTranscript(raw: unknown): ScreenTurn[] {
-  const list = Array.isArray(raw) ? raw : parseJson<ScreenTurn[]>(typeof raw === "string" ? raw : "[]", []);
+  const list = Array.isArray(raw)
+    ? raw
+    : parseJson<ScreenTurn[]>(typeof raw === "string" ? raw : "[]", []);
   return list.map((t, i) => ({
     id: String(t.id || `t${i + 1}`),
     question_id: String(t.question_id || ""),
@@ -44,12 +58,17 @@ export function normalizeTranscript(raw: unknown): ScreenTurn[] {
     is_followup: Boolean(t.is_followup),
     kind: t.kind === "system" ? "system" : normalizeKind(t.kind, "practical"),
     created_at: String(t.created_at || new Date().toISOString()),
-    channel: t.channel === "voice" || t.channel === "whatsapp" || t.channel === "text" ? t.channel : undefined,
+    channel:
+      t.channel === "voice" || t.channel === "whatsapp" || t.channel === "text"
+        ? t.channel
+        : undefined,
     lang: t.lang ? String(t.lang) : null,
   }));
 }
 
-export function answersFromTranscript(transcript: ScreenTurn[]): { question_id: string; answer: string }[] {
+export function answersFromTranscript(
+  transcript: ScreenTurn[],
+): { question_id: string; answer: string }[] {
   const map = new Map<string, string[]>();
   for (const turn of transcript) {
     if (turn.role !== "candidate" || !turn.question_id) continue;
@@ -81,11 +100,16 @@ export function shouldFollowUp(answer: string, alreadyFollowed: boolean): boolea
   if (alreadyFollowed) return false;
   const t = answer.trim();
   if (t.length < 140) return true;
-  const concrete = /\d|because|trade-?off|for example|e\.g\.|we |I |postgres|queue|latency|schema|on-call|prod/i.test(t);
+  const concrete =
+    /\d|because|trade-?off|for example|e\.g\.|we |I |postgres|queue|latency|schema|on-call|prod/i.test(
+      t,
+    );
   return !concrete;
 }
 
-export function newTurn(partial: Omit<ScreenTurn, "id" | "created_at"> & { id?: string }): ScreenTurn {
+export function newTurn(
+  partial: Omit<ScreenTurn, "id" | "created_at"> & { id?: string },
+): ScreenTurn {
   return {
     id: partial.id || crypto.randomUUID(),
     question_id: partial.question_id,
@@ -114,14 +138,22 @@ export type FollowUpDecision = {
   followUp: ScreenFollowUp | null;
 };
 
-export function decideNext(questions: ScreenQuestion[], transcript: ScreenTurn[]): FollowUpDecision {
+export function decideNext(
+  questions: ScreenQuestion[],
+  transcript: ScreenTurn[],
+): FollowUpDecision {
   const lastCandidate = [...transcript].reverse().find((t) => t.role === "candidate");
   if (lastCandidate) {
     const q = questions.find((item) => item.id === lastCandidate.question_id);
     const alreadyFollowed = transcript.some(
       (t) => t.role === "agent" && t.is_followup && t.question_id === lastCandidate.question_id,
     );
-    if (q && !lastCandidate.is_followup && shouldFollowUp(lastCandidate.text, alreadyFollowed) && q.follow_ups[0]) {
+    if (
+      q &&
+      !lastCandidate.is_followup &&
+      shouldFollowUp(lastCandidate.text, alreadyFollowed) &&
+      q.follow_ups[0]
+    ) {
       return { kind: "followup", question: q, followUp: q.follow_ups[0] };
     }
   }

@@ -18,7 +18,6 @@ import { getActiveEmbeddingModel } from "./embedding-queue.server.ts";
 import { matchCandidateToRole } from "./match-engine.ts";
 import type { FitLevel, PipelineStatus } from "./types.ts";
 
-
 // -----------------------------------------------------------------------------
 // 1. Types & Data Structures
 // -----------------------------------------------------------------------------
@@ -124,10 +123,34 @@ export function extractCandidateProfile(input: {
 
   // Extract common tech keywords
   const techKeywords = [
-    "react", "next.js", "vue", "angular", "typescript", "javascript", "python",
-    "golang", "java", "spring", "c++", "rust", "kubernetes", "docker", "aws",
-    "gcp", "azure", "terraform", "helm", "postgres", "redis", "kafka", "graphql",
-    "pytorch", "tensorflow", "ci/cd", "microservices", "distributed systems",
+    "react",
+    "next.js",
+    "vue",
+    "angular",
+    "typescript",
+    "javascript",
+    "python",
+    "golang",
+    "java",
+    "spring",
+    "c++",
+    "rust",
+    "kubernetes",
+    "docker",
+    "aws",
+    "gcp",
+    "azure",
+    "terraform",
+    "helm",
+    "postgres",
+    "redis",
+    "kafka",
+    "graphql",
+    "pytorch",
+    "tensorflow",
+    "ci/cd",
+    "microservices",
+    "distributed systems",
   ];
   const lowerResume = resume.toLowerCase();
   for (const kw of techKeywords) {
@@ -548,9 +571,7 @@ export async function executeDedicatedHybridSearch(
 
       const dimensions = rank.match?.dimensions || [];
       const getDimScore = (key: string): number => {
-        const found = dimensions.find((d) =>
-          ((d.id || d.label || "").toLowerCase()).includes(key),
-        );
+        const found = dimensions.find((d) => (d.id || d.label || "").toLowerCase().includes(key));
         return found ? Math.round(found.score) : Math.round(rank.score);
       };
 
@@ -679,7 +700,7 @@ export async function recordSearchOutcomeFeedback(input: {
     values (
       ${id}, ${input.orgId}, ${input.query}, ${input.roleId ?? null}, ${input.candidateId},
       ${input.retrievalMode}, ${input.rrfRank ?? null}, ${input.crossEncoderScore ?? null},
-      ${input.outcomeStage}, ${input.feedbackNotes || ''}, now()
+      ${input.outcomeStage}, ${input.feedbackNotes || ""}, now()
     )`;
 }
 

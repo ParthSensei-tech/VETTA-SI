@@ -55,9 +55,16 @@ export function ExportSlateDialog({
       downloadBase64(res.pdfFilename, "application/pdf", res.pdfBase64);
       await copyText(res.share.shareUrl);
       toast.success("Sheet, PDF, and a shareable page are ready");
-      if (res.loginUrl) redirectToLoginIfRequired({ ok: false, data: null, loginRequired: true, loginUrl: res.loginUrl });
+      if (res.loginUrl)
+        redirectToLoginIfRequired({
+          ok: false,
+          data: null,
+          loginRequired: true,
+          loginUrl: res.loginUrl,
+        });
       if (res.emailed) toast.message("Emailed via Gmail");
-      else if (res.emailError && email) toast.message("Link copied — Gmail not connected", { description: res.emailError });
+      else if (res.emailError && email)
+        toast.message("Link copied — Gmail not connected", { description: res.emailError });
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
@@ -68,8 +75,8 @@ export function ExportSlateDialog({
         <DialogHeader>
           <DialogTitle>Export the slate</DialogTitle>
           <DialogDescription>
-            One click builds a Google-Sheet workbook, a Notion-style page, and a PDF. Send produces a live
-            link — not just a status change.
+            One click builds a Google-Sheet workbook, a Notion-style page, and a PDF. Send produces
+            a live link — not just a status change.
           </DialogDescription>
         </DialogHeader>
         {resultUrl ? (
@@ -104,7 +111,11 @@ export function ExportSlateDialog({
           >
             <label className="flex flex-col gap-1.5">
               <Label>Client name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Hiring manager" />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Hiring manager"
+              />
             </label>
             <label className="flex flex-col gap-1.5">
               <Label>Client email</Label>

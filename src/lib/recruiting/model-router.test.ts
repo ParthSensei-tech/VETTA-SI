@@ -11,7 +11,9 @@ import test from "node:test";
 import { decideRoute, routeTelemetry, type ArmHistory } from "./model-router.ts";
 import { MODEL_ARMS, armLatencyPriorMs, type ModelCandidate } from "./model-registry.ts";
 
-const arm = (over: Partial<ModelCandidate> & { id: string; provider: ModelCandidate["provider"] }): ModelCandidate => ({
+const arm = (
+  over: Partial<ModelCandidate> & { id: string; provider: ModelCandidate["provider"] },
+): ModelCandidate => ({
   declaredModel: over.provider,
   kind: "paid",
   isFree: false,
@@ -58,7 +60,11 @@ test("router: a low-stakes task goes to the free keyless arm, not a paid one", (
   assert.equal(d.estimatedCostCents, 0);
   assert.ok(d.reasons.some((r) => r.includes("free")));
   // An embedding model genuinely cannot write a follow-up question.
-  assert.ok(d.rejected.some((r) => r.armId === "xenova:multilingual-e5-small" && r.reason === "task_not_declared"));
+  assert.ok(
+    d.rejected.some(
+      (r) => r.armId === "xenova:multilingual-e5-small" && r.reason === "task_not_declared",
+    ),
+  );
 });
 
 test("router: token shape comes from the task profile, never from the caller", () => {
@@ -70,7 +76,11 @@ test("router: token shape comes from the task profile, never from the caller", (
   });
   // follow_up profile: outputCeiling 220, inputClipChars 1800.
   assert.equal(d.maxTokens, 220, "the profile caps, it never raises");
-  assert.equal(d.expectedPromptTokens, Math.ceil(1800 / 3.8), "cost is estimated on the clipped prompt");
+  assert.equal(
+    d.expectedPromptTokens,
+    Math.ceil(1800 / 3.8),
+    "cost is estimated on the clipped prompt",
+  );
 });
 
 // --------------------------------------------------------------------------------------------
@@ -149,7 +159,9 @@ test("router: no credential means no cloud arm is even offered", () => {
     requestedMaxTokens: 300,
     env: {},
   });
-  const cloud = d.ranked.filter((r) => ["groq", "gemini", "openai", "xai"].includes(r.armId.split(":")[0]));
+  const cloud = d.ranked.filter((r) =>
+    ["groq", "gemini", "openai", "xai"].includes(r.armId.split(":")[0]),
+  );
   assert.deepEqual(cloud, [], "only keyless arms may compete");
   assert.ok(d.chosen?.id.startsWith("local:") || d.chosen?.id.startsWith("ollama:"));
 });
@@ -163,7 +175,11 @@ test("router: an open circuit removes that provider from the choice", () => {
     env: ALL_KEYS,
     isProviderOpen: (provider) => provider !== "groq",
   });
-  assert.ok(withoutGroq.rejected.some((r) => r.armId === "groq:openai/gpt-oss-20b" && r.reason === "circuit_open"));
+  assert.ok(
+    withoutGroq.rejected.some(
+      (r) => r.armId === "groq:openai/gpt-oss-20b" && r.reason === "circuit_open",
+    ),
+  );
   assert.equal(withoutGroq.chosen?.id, "openai:gpt-4o-mini");
   assert.notEqual(withoutGroq.chosen?.id, withGroq, "the breaker actually changes the route");
 });
@@ -217,7 +233,10 @@ test("router: the arm that bills the owner's quota is skipped unless this call o
     env: ALL_KEYS,
     allowOwnerQuota: true,
   });
-  assert.ok(on.ranked.some((r) => r.armId === "xai:grok-4.5"), "opt-in makes it compete");
+  assert.ok(
+    on.ranked.some((r) => r.armId === "xai:grok-4.5"),
+    "opt-in makes it compete",
+  );
   // Even when eligible it is the dearest and slowest arm, so cost + speed still rule.
   assert.notEqual(on.chosen?.id, "xai:grok-4.5");
 });
@@ -326,7 +345,14 @@ test("router: the same inputs always produce the same route", () => {
 });
 
 test("router: ranked is score-ordered and the winner is never the dearest eligible arm", () => {
-  for (const task of ["rank", "evaluate", "screen_generate", "follow_up", "client_card", "rubric_draft"] as const) {
+  for (const task of [
+    "rank",
+    "evaluate",
+    "screen_generate",
+    "follow_up",
+    "client_card",
+    "rubric_draft",
+  ] as const) {
     const d = decideRoute({
       task,
       promptText: RANK_PROMPT,
@@ -338,7 +364,11 @@ test("router: ranked is score-ordered and the winner is never the dearest eligib
       ),
     });
     const scores = d.ranked.map((r) => r.score);
-    assert.deepEqual(scores, [...scores].sort((a, b) => a - b), `${task}: ranked must be ascending`);
+    assert.deepEqual(
+      scores,
+      [...scores].sort((a, b) => a - b),
+      `${task}: ranked must be ascending`,
+    );
     assert.equal(d.ranked[0]?.armId, d.chosen?.id, `${task}: the top row is what gets called`);
     const dearest = Math.max(...d.ranked.map((r) => r.costCents));
     if (d.ranked.length > 1 && dearest > 0) {
@@ -354,7 +384,14 @@ test("router: cost and speed each move the choice on their own", () => {
   // Two arms that can both do the job, differing in exactly one dimension at a time, so a
   // passing route proves the score really minimises money and time rather than priors by luck.
   const freeArm = (speedClassMs: number) =>
-    arm({ id: "ollama:cheap", provider: "ollama", kind: "keyless_local", isFree: true, requiresHost: true, speedClassMs });
+    arm({
+      id: "ollama:cheap",
+      provider: "ollama",
+      kind: "keyless_local",
+      isFree: true,
+      requiresHost: true,
+      speedClassMs,
+    });
   const paidArm = arm({
     id: "groq:paid",
     provider: "groq",
@@ -377,7 +414,13 @@ test("router: cost and speed each move the choice on their own", () => {
 });
 
 test("router: an arm that fails in reality loses even when it is free and fast", () => {
-  const free = arm({ id: "ollama:cheap", provider: "ollama", kind: "keyless_local", isFree: true, speedClassMs: 600 });
+  const free = arm({
+    id: "ollama:cheap",
+    provider: "ollama",
+    kind: "keyless_local",
+    isFree: true,
+    speedClassMs: 600,
+  });
   const paid = arm({
     id: "groq:paid",
     provider: "groq",
@@ -522,7 +565,10 @@ test("clock: a caller that states no deadline keeps the candidate set it always 
   const d = clockRoute({});
   assert.deepEqual(d.rejected, [], "no arm is excluded on the clock silently");
   assert.equal(d.armBudgets.length, 0, "and none is judged against an invented budget");
-  assert.ok(d.timeoutMs >= 14_000 && d.timeoutMs <= 16_000, "the interactive default still bounds it");
+  assert.ok(
+    d.timeoutMs >= 14_000 && d.timeoutMs <= 16_000,
+    "the interactive default still bounds it",
+  );
 });
 
 test("clock: the ledger records the budget that was actually allowed", () => {
@@ -539,7 +585,13 @@ test("clock: the ledger records the budget that was actually allowed", () => {
 // --------------------------------------------------------------------------------------------
 
 test("history: an arm whose calls keep getting killed is estimated by its aborts, not its luck", () => {
-  const cold = arm({ id: "ollama:never", provider: "ollama", kind: "keyless_local", isFree: true, speedClassMs: 9_000 });
+  const cold = arm({
+    id: "ollama:never",
+    provider: "ollama",
+    kind: "keyless_local",
+    isFree: true,
+    speedClassMs: 9_000,
+  });
   const killed = arm({ ...cold, id: "ollama:killed" });
   const killedHistory: ArmHistory = {
     armId: "ollama:killed",
@@ -584,7 +636,11 @@ test("history: an arm's own aborts raise its attempt budget to the context cap",
       },
     ],
   });
-  assert.equal(d.timeoutMs, 16_000, "censored evidence, capped by what an interactive caller allows");
+  assert.equal(
+    d.timeoutMs,
+    16_000,
+    "censored evidence, capped by what an interactive caller allows",
+  );
 });
 
 test("registry: the CPU prior sees the answer size the speed class cannot", () => {

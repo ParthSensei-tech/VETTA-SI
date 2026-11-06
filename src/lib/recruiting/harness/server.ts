@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
 import { getSql } from "@/lib/db";
 import { iso, parseJson } from "@/lib/utils";
-import { RANK_SYSTEM, STRICT_RANK_SYSTEM, hashPrompt, type RankMeta, type RankRoleInput } from "../ai.server";
+import {
+  RANK_SYSTEM,
+  STRICT_RANK_SYSTEM,
+  hashPrompt,
+  type RankMeta,
+  type RankRoleInput,
+} from "../ai.server";
 import { calibrateRank, calibrationFromPrompt, rankLocally } from "../local-rank";
 import type {
   EvalCase,
@@ -81,13 +87,16 @@ export async function ensureHarness(userId: string): Promise<HarnessSettings> {
       updated_at = now()`;
 
   await seedGoldIfEmpty(userId);
-  const row = await sql<SettingsRow>`select * from harness_settings where user_id = ${userId} limit 1`;
+  const row =
+    await sql<SettingsRow>`select * from harness_settings where user_id = ${userId} limit 1`;
   return mapSettings(row[0]!);
 }
 
 async function seedGoldIfEmpty(userId: string) {
   const sql = await getSql();
-  const count = await sql<{ n: number }>`select count(*) as n from eval_cases where user_id = ${userId} and source = 'gold'`;
+  const count = await sql<{
+    n: number;
+  }>`select count(*) as n from eval_cases where user_id = ${userId} and source = 'gold'`;
   if (asNum(count[0]?.n) > 0) return;
   for (const c of GOLD_EVAL_CASES) {
     await sql`
@@ -115,7 +124,10 @@ function mapSettings(row: SettingsRow): HarnessSettings {
   };
 }
 
-export async function loadPromptBody(userId: string, which: "production" | "candidate"): Promise<{ id: string; body: string; hash: string } | null> {
+export async function loadPromptBody(
+  userId: string,
+  which: "production" | "candidate",
+): Promise<{ id: string; body: string; hash: string } | null> {
   const sql = await getSql();
   const settings = await ensureHarness(userId);
   const id = which === "production" ? settings.productionPromptId : settings.candidatePromptId;
@@ -158,7 +170,8 @@ export type LiveRankContext = {
 export async function recordLiveRank(ctx: LiveRankContext): Promise<void> {
   const sql = await getSql();
   await ensureHarness(ctx.userId);
-  const settings = await sql<SettingsRow>`select * from harness_settings where user_id = ${ctx.userId} limit 1`;
+  const settings =
+    await sql<SettingsRow>`select * from harness_settings where user_id = ${ctx.userId} limit 1`;
   const shadowOn = settings[0] ? asBool(settings[0].shadow_enabled) : true;
   const prodPrompt = await loadPromptBody(ctx.userId, "production");
 
@@ -435,7 +448,7 @@ export async function runEvalSet(opts: {
       compared_to_run_id = ${null},
       status = ${"completed"},
       notes = ${gate.reason},
-      engine = ${opts.engine === "live" ? scored[0]?.engine ?? "live" : "local"}
+      engine = ${opts.engine === "live" ? (scored[0]?.engine ?? "live") : "local"}
     where id = ${runId} and user_id = ${opts.userId}`;
 
   // The router only trades quality for cost on a critical task once an eval has proven the cheap
@@ -457,7 +470,7 @@ export async function runEvalSet(opts: {
 
   return {
     id: runId,
-    engine: opts.engine === "live" ? scored[0]?.engine ?? "live" : "local",
+    engine: opts.engine === "live" ? (scored[0]?.engine ?? "live") : "local",
     kind: opts.kind,
     promptHash: prompt.hash,
     labeledCount: totals.labeled,
@@ -474,20 +487,18 @@ export async function runEvalSet(opts: {
     gateReason: gate.reason,
     notes: gate.reason,
     createdAt: new Date().toISOString(),
-    cases: scored.map(
-      (s): EvalRunCase => ({
-        caseId: s.caseId,
-        title: s.title,
-        humanLabel: s.human,
-        predictedLevel: s.predicted,
-        predictedScore: s.score,
-        agree: s.agree,
-        falseShortlist: s.falseShortlist,
-        falseReject: s.falseReject,
-        latencyMs: s.latencyMs,
-        engine: s.engine,
-      }),
-    ),
+    cases: scored.map((s): EvalRunCase => ({
+      caseId: s.caseId,
+      title: s.title,
+      humanLabel: s.human,
+      predictedLevel: s.predicted,
+      predictedScore: s.score,
+      agree: s.agree,
+      falseShortlist: s.falseShortlist,
+      falseReject: s.falseReject,
+      latencyMs: s.latencyMs,
+      engine: s.engine,
+    })),
   };
 }
 
@@ -501,7 +512,9 @@ export async function promoteCandidatePrompt(userId: string): Promise<HarnessSet
     where user_id = ${userId} and prompt_version_id = ${settings.candidatePromptId} and status = 'completed'
     order by created_at desc limit 1`;
   if (!latest[0] || !asBool(latest[0].gate_passed)) {
-    throw new Error("Regression gate blocked this prompt. Run eval on the candidate and pass the gate first.");
+    throw new Error(
+      "Regression gate blocked this prompt. Run eval on the candidate and pass the gate first.",
+    );
   }
 
   if (settings.productionPromptId) {
@@ -527,7 +540,11 @@ export async function promoteCandidatePrompt(userId: string): Promise<HarnessSet
   return ensureHarness(userId);
 }
 
-export async function saveCandidatePrompt(userId: string, body: string, name?: string): Promise<PromptVersion> {
+export async function saveCandidatePrompt(
+  userId: string,
+  body: string,
+  name?: string,
+): Promise<PromptVersion> {
   const sql = await getSql();
   const settings = await ensureHarness(userId);
   const trimmed = body.trim();
@@ -675,7 +692,10 @@ export async function loadHarnessSnapshot(userId: string): Promise<HarnessSnapsh
     from eval_run_cases
     where user_id = ${userId}
     order by created_at desc`;
-  const predByCase = new Map<string, { case_id: string; predicted_level: string; agree: boolean | string }>();
+  const predByCase = new Map<
+    string,
+    { case_id: string; predicted_level: string; agree: boolean | string }
+  >();
   for (const row of lastPred) {
     if (!predByCase.has(row.case_id)) predByCase.set(row.case_id, row);
   }
@@ -777,57 +797,51 @@ export async function loadHarnessSnapshot(userId: string): Promise<HarnessSnapsh
         lastAgree: pred ? asBool(pred.agree) : null,
       };
     }),
-    runs: runRows.map(
-      (r): EvalRun => ({
-        id: r.id,
-        engine: r.engine,
-        kind: r.kind === "candidate" ? "candidate" : "production",
-        promptHash: r.prompt_hash,
-        labeledCount: asNum(r.labeled_count),
-        agreeCount: asNum(r.agree_count),
-        falseShortlist: asNum(r.false_shortlist),
-        falseReject: asNum(r.false_reject),
-        agreementPct: asNum(r.agreement_pct),
-        adjacentPct: asNum(r.adjacent_pct),
-        falseShortlistRate: asNum(r.false_shortlist_rate),
-        falseRejectRate: asNum(r.false_reject_rate),
-        p50LatencyMs: r.p50_latency_ms == null ? null : asNum(r.p50_latency_ms),
-        p95LatencyMs: r.p95_latency_ms == null ? null : asNum(r.p95_latency_ms),
-        gatePassed: r.gate_passed == null ? null : asBool(r.gate_passed),
-        gateReason: r.gate_reason,
-        notes: r.notes,
-        createdAt: iso(r.created_at),
-      }),
-    ),
-    traces: traceRows.map(
-      (t): RankTrace => ({
-        id: t.id,
-        applicationId: t.application_id,
-        mode: t.mode === "shadow" ? "shadow" : t.mode === "eval" ? "eval" : "production",
-        engine: t.engine,
-        model: t.model,
-        promptHash: t.prompt_hash,
-        jdHash: t.jd_hash,
-        resumeHash: t.resume_hash,
-        score: t.score == null ? null : asNum(t.score),
-        level: t.level,
-        fallback: asBool(t.fallback),
-        latencyMs: t.latency_ms == null ? null : asNum(t.latency_ms),
-        createdAt: iso(t.created_at),
-      }),
-    ),
-    shadows: shadowRows.map(
-      (s): ShadowComparison => ({
-        id: s.id,
-        applicationId: s.application_id,
-        productionLevel: s.production_level,
-        shadowLevel: s.shadow_level,
-        productionScore: s.production_score == null ? null : asNum(s.production_score),
-        shadowScore: s.shadow_score == null ? null : asNum(s.shadow_score),
-        disagreed: asBool(s.disagreed),
-        createdAt: iso(s.created_at),
-      }),
-    ),
+    runs: runRows.map((r): EvalRun => ({
+      id: r.id,
+      engine: r.engine,
+      kind: r.kind === "candidate" ? "candidate" : "production",
+      promptHash: r.prompt_hash,
+      labeledCount: asNum(r.labeled_count),
+      agreeCount: asNum(r.agree_count),
+      falseShortlist: asNum(r.false_shortlist),
+      falseReject: asNum(r.false_reject),
+      agreementPct: asNum(r.agreement_pct),
+      adjacentPct: asNum(r.adjacent_pct),
+      falseShortlistRate: asNum(r.false_shortlist_rate),
+      falseRejectRate: asNum(r.false_reject_rate),
+      p50LatencyMs: r.p50_latency_ms == null ? null : asNum(r.p50_latency_ms),
+      p95LatencyMs: r.p95_latency_ms == null ? null : asNum(r.p95_latency_ms),
+      gatePassed: r.gate_passed == null ? null : asBool(r.gate_passed),
+      gateReason: r.gate_reason,
+      notes: r.notes,
+      createdAt: iso(r.created_at),
+    })),
+    traces: traceRows.map((t): RankTrace => ({
+      id: t.id,
+      applicationId: t.application_id,
+      mode: t.mode === "shadow" ? "shadow" : t.mode === "eval" ? "eval" : "production",
+      engine: t.engine,
+      model: t.model,
+      promptHash: t.prompt_hash,
+      jdHash: t.jd_hash,
+      resumeHash: t.resume_hash,
+      score: t.score == null ? null : asNum(t.score),
+      level: t.level,
+      fallback: asBool(t.fallback),
+      latencyMs: t.latency_ms == null ? null : asNum(t.latency_ms),
+      createdAt: iso(t.created_at),
+    })),
+    shadows: shadowRows.map((s): ShadowComparison => ({
+      id: s.id,
+      applicationId: s.application_id,
+      productionLevel: s.production_level,
+      shadowLevel: s.shadow_level,
+      productionScore: s.production_score == null ? null : asNum(s.production_score),
+      shadowScore: s.shadow_score == null ? null : asNum(s.shadow_score),
+      disagreed: asBool(s.disagreed),
+      createdAt: iso(s.created_at),
+    })),
     labels: labelRows.map((l) => ({
       id: l.id,
       applicationId: l.application_id,
@@ -844,7 +858,11 @@ export async function loadHarnessSnapshot(userId: string): Promise<HarnessSnapsh
     })),
     stats: {
       labeled: labelRows.length,
-      traces: asNum((await sql<{ n: number }>`select count(*) as n from rank_traces where user_id = ${userId}`)[0]?.n),
+      traces: asNum(
+        (
+          await sql<{ n: number }>`select count(*) as n from rank_traces where user_id = ${userId}`
+        )[0]?.n,
+      ),
       shadowDisagreements,
       lastAgreementPct: lastRun?.agreement_pct == null ? null : asNum(lastRun.agreement_pct),
       lastGatePassed: lastRun?.gate_passed == null ? null : asBool(lastRun.gate_passed),

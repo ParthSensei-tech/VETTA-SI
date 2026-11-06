@@ -87,7 +87,11 @@ export async function trainOutcome(input: {
   }
 }
 
-export async function forecastOutcome(rank: RankResult, orgId?: string | null, screenScore?: number | null): Promise<OutcomeForecast> {
+export async function forecastOutcome(
+  rank: RankResult,
+  orgId?: string | null,
+  screenScore?: number | null,
+): Promise<OutcomeForecast> {
   const heads = await headsForOrg(orgId || SHARED);
   return forecastFromHeads(heads, featuresFromRank(rank, screenScore ?? null));
 }

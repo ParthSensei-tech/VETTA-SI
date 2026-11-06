@@ -37,7 +37,8 @@ test("calculateModelCost computes correct costs for OpenAI models in USD, Cents,
 });
 
 test("calculateModelCost uses token estimation fallbacks when token counts are missing or zero", () => {
-  const promptText = "Analyze this candidate profile for Senior Infrastructure Architect role with Kubernetes experience.";
+  const promptText =
+    "Analyze this candidate profile for Senior Infrastructure Architect role with Kubernetes experience.";
   const completionText = '{"fit": "high", "score": 92}';
 
   const cost = calculateModelCost({

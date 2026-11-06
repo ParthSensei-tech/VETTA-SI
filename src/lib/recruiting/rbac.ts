@@ -4,13 +4,7 @@
  */
 
 export type OrgRole =
-  | "owner"
-  | "admin"
-  | "lead_recruiter"
-  | "recruiter"
-  | "hiring_manager"
-  | "interviewer"
-  | "sourcer";
+  "owner" | "admin" | "lead_recruiter" | "recruiter" | "hiring_manager" | "interviewer" | "sourcer";
 
 export type OrgPermission =
   | "org:manage"

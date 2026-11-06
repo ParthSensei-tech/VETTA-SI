@@ -7,7 +7,10 @@ const MAX_ZIP_ENTRIES = 200;
 const MIN_RESUME_CHARS = 40;
 
 export function clipResume(text: string): string {
-  const cleaned = text.replaceAll("\u0000", "").replace(/[ \t]+\n/g, "\n").trim();
+  const cleaned = text
+    .replaceAll("\u0000", "")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
   if (cleaned.length <= MAX_CHARS) return cleaned;
   return `${cleaned.slice(0, MAX_CHARS)}\n\n[truncated]`;
 }
@@ -123,7 +126,10 @@ function parseCsv(text: string): string[][] {
 }
 
 function normalizeHeader(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
 }
 
 const NAME_HEADERS = new Set(["name", "full_name", "candidate", "candidate_name", "applicant"]);
@@ -150,11 +156,15 @@ function pickHeader(headers: string[], set: Set<string>): number {
   return headers.findIndex((h) => set.has(h));
 }
 
-function rowsToResumes(filename: string, rows: string[][]): Array<{ filename: string; resumeText: string }> {
+function rowsToResumes(
+  filename: string,
+  rows: string[][],
+): Array<{ filename: string; resumeText: string }> {
   if (rows.length === 0) return [];
   const headerRow = rows[0]!.map(normalizeHeader);
-  const hasHeader = headerRow.some((h) =>
-    NAME_HEADERS.has(h) || EMAIL_HEADERS.has(h) || RESUME_HEADERS.has(h) || TITLE_HEADERS.has(h),
+  const hasHeader = headerRow.some(
+    (h) =>
+      NAME_HEADERS.has(h) || EMAIL_HEADERS.has(h) || RESUME_HEADERS.has(h) || TITLE_HEADERS.has(h),
   );
   const headers = hasHeader ? headerRow : headerRow.map((_, i) => `col_${i + 1}`);
   const body = hasHeader ? rows.slice(1) : rows;
@@ -198,7 +208,11 @@ function rowsToResumes(filename: string, rows: string[][]): Array<{ filename: st
     const resumeText = clipResume(parts.join("\n"));
     if (resumeText.length < MIN_RESUME_CHARS) return;
     const label = name || email || `row-${index + 1}`;
-    const safe = label.replace(/[^\w.\- ]+/g, "").trim().slice(0, 60) || `row-${index + 1}`;
+    const safe =
+      label
+        .replace(/[^\w.\- ]+/g, "")
+        .trim()
+        .slice(0, 60) || `row-${index + 1}`;
     out.push({ filename: `${basename(filename)} · ${safe}`, resumeText });
   });
   return out;
@@ -227,7 +241,8 @@ async function extractXlsx(bytes: Uint8Array): Promise<string[][]> {
 
 function cellText(value: unknown): string {
   if (value == null) return "";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    return String(value);
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   if (typeof value === "object") {
     const v = value as {

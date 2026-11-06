@@ -36,7 +36,9 @@ export const getEvalRun = createServerFn({ method: "GET" })
 export const saveHarnessPrompt = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: unknown) =>
-    z.object({ body: z.string().min(40).max(20000), name: z.string().max(80).optional() }).parse(input),
+    z
+      .object({ body: z.string().min(40).max(20000), name: z.string().max(80).optional() })
+      .parse(input),
   )
   .handler(async ({ context, data }): Promise<PromptVersion> => {
     const { saveCandidatePrompt } = await import("./server");
@@ -57,4 +59,3 @@ export const setHarnessShadow = createServerFn({ method: "POST" })
     const { setShadowEnabled } = await import("./server");
     return setShadowEnabled(context.userId, data.enabled);
   });
-

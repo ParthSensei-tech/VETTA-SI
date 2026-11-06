@@ -249,7 +249,9 @@ function HarnessPage() {
                           {r.kind} · {r.engine}
                         </td>
                         <td className="px-4 py-3 font-mono tabular-nums">{r.agreementPct}%</td>
-                        <td className="px-4 py-3 font-mono tabular-nums">{r.falseShortlistRate}%</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">
+                          {r.falseShortlistRate}%
+                        </td>
                         <td className="px-4 py-3 font-mono tabular-nums">
                           {r.p50LatencyMs != null ? `${r.p50LatencyMs}ms` : "—"}
                         </td>
@@ -267,8 +269,8 @@ function HarnessPage() {
 
         <TabsContent value="eval">
           <p className="mb-4 max-w-2xl text-sm text-muted">
-            Frozen JDs, resumes, and human labels. Labels from the desk (“Was this right?”) land here
-            too. The set does not change when a model does.
+            Frozen JDs, resumes, and human labels. Labels from the desk (“Was this right?”) land
+            here too. The set does not change when a model does.
           </p>
           <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="w-full min-w-[720px] text-left text-sm">
@@ -303,7 +305,9 @@ function HarnessPage() {
                         <span className="text-subtle">Not scored</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted">{c.source === "gold" ? "Gold" : "Label"}</td>
+                    <td className="px-4 py-3 text-muted">
+                      {c.source === "gold" ? "Gold" : "Label"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -330,7 +334,12 @@ function HarnessPage() {
               onChange={(e) => setPromptBody(e.target.value)}
             />
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" disabled={saveMut.isPending} onClick={() => saveMut.mutate()}>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={saveMut.isPending}
+                onClick={() => saveMut.mutate()}
+              >
                 Save candidate
               </Button>
               <Button
@@ -346,8 +355,8 @@ function HarnessPage() {
               </Button>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-muted">
-              Promote is blocked unless the latest candidate eval clears agreement floor, false-shortlist
-              cap, and does not drop versus production.
+              Promote is blocked unless the latest candidate eval clears agreement floor,
+              false-shortlist cap, and does not drop versus production.
             </p>
           </div>
         </TabsContent>
@@ -406,7 +415,10 @@ function HarnessPage() {
             ) : (
               <ul className="divide-y divide-border rounded-2xl border border-border">
                 {data.labels.map((l) => (
-                  <li key={l.id} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 text-sm">
+                  <li
+                    key={l.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 text-sm"
+                  >
                     <span>
                       Human {FIT_LABEL[l.humanLabel]}
                       {l.predictedLevel ? ` vs model ${l.predictedLevel.replace("_", " ")}` : ""}
@@ -425,8 +437,9 @@ function HarnessPage() {
       </Tabs>
 
       <p className="text-xs text-subtle">
-        Live ranking uses configured AI providers (Groq, Gemini, Ollama, OpenAI, xAI) with automatic fallback
-        to local evidence ranking. Eval runs on the local scorer unless you explicitly score the candidate against the live model.
+        Live ranking uses configured AI providers (Groq, Gemini, Ollama, OpenAI, xAI) with automatic
+        fallback to local evidence ranking. Eval runs on the local scorer unless you explicitly
+        score the candidate against the live model.
       </p>
     </div>
   );
@@ -446,7 +459,12 @@ function Stat({
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
       <p className="text-xs tracking-wide text-muted uppercase">{label}</p>
-      <p className={cn("mt-2 font-display text-3xl tabular-nums tracking-tight", warn && "text-danger")}>
+      <p
+        className={cn(
+          "mt-2 font-display text-3xl tabular-nums tracking-tight",
+          warn && "text-danger",
+        )}
+      >
         {value}
       </p>
       <p className="mt-2 text-xs leading-relaxed text-muted">{hint}</p>
@@ -484,7 +502,10 @@ function RunCases({ run }: { run: EvalRun }) {
       <p className="text-sm text-muted">{run.gateReason}</p>
       <ul className="divide-y divide-border rounded-xl border border-border">
         {run.cases?.map((c) => (
-          <li key={c.caseId} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2 text-sm">
+          <li
+            key={c.caseId}
+            className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2 text-sm"
+          >
             <span className="max-w-[18rem]">{c.title}</span>
             <span className={cn("text-xs", c.agree ? "text-success" : "text-danger")}>
               {FIT_LABEL[c.humanLabel as FitLevel]} → {FIT_LABEL[c.predictedLevel as FitLevel]}

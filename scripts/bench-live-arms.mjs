@@ -26,7 +26,9 @@ const flag = (name, dflt) => {
 const opts = {
   reps: Math.max(1, Number(flag("reps", 3))),
   slate: Math.max(6, Number(flag("slate", 12))),
-  context: ["interactive", "bulk", "background"].includes(flag("context", "")) ? flag("context", "background") : "background",
+  context: ["interactive", "bulk", "background"].includes(flag("context", ""))
+    ? flag("context", "background")
+    : "background",
   deadlineMs: Math.max(1_000, Number(flag("arm-deadline-ms", 240_000))),
   deepenApps: Math.max(0, Number(flag("deepen-apps", 0))),
   allowOwnerQuota: argv.includes("--allow-owner-quota"),
@@ -38,10 +40,15 @@ console.log(
 );
 
 const P = await import("../src/lib/recruiting/benchmark/phases.ts");
-const ctx = await P.setupBench({ slateSize: Math.max(opts.slate, opts.deepenApps) + 6, orgCoversTraining: false });
+const ctx = await P.setupBench({
+  slateSize: Math.max(opts.slate, opts.deepenApps) + 6,
+  orgCoversTraining: false,
+});
 if (opts.deepenApps) {
   // The deepen walk is sequential on purpose: that is what a shortlist review does.
-  console.log(`  ranking ${opts.deepenApps} more resumes one after another, through whichever arm wins...`);
+  console.log(
+    `  ranking ${opts.deepenApps} more resumes one after another, through whichever arm wins...`,
+  );
 }
 
 const L7 = await P.phaseLiveArms(ctx, {
@@ -94,7 +101,9 @@ if (L7.armsMeasured.length) {
   for (const m of L7.armsMeasured) {
     console.log(`  ${m.provider}:`);
     if (!m.ledger.length) {
-      console.log("    no rank rows — every attempt fell back to the local arm before this one served");
+      console.log(
+        "    no rank rows — every attempt fell back to the local arm before this one served",
+      );
       continue;
     }
     for (const h of m.ledger) {
@@ -119,7 +128,8 @@ if (L7.armsMeasured.length) {
   }
 
   // The payoff: the same route decision, re-planned now that this machine's numbers are in the ledger.
-  const { planRoute, clearRouterBeliefs } = await import("../src/lib/recruiting/model-router.server.ts");
+  const { planRoute, clearRouterBeliefs } =
+    await import("../src/lib/recruiting/model-router.server.ts");
   // `planRoute` reuses a one-second-old history window; the reps above just wrote a fresher one.
   clearRouterBeliefs();
   console.log("\nwhat the next rank call will actually be given (planned from the rows above):");
@@ -142,7 +152,9 @@ if (L7.armsMeasured.length) {
           (clock.length ? `excluded on the clock: ${clock.join(", ")}` : ""),
       );
     } catch (e) {
-      console.log(`  ${pad(site.label, 24)}route plan failed: ${e instanceof Error ? e.message : e}`);
+      console.log(
+        `  ${pad(site.label, 24)}route plan failed: ${e instanceof Error ? e.message : e}`,
+      );
     }
   }
 } else {

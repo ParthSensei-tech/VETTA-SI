@@ -13,12 +13,14 @@ export type InjectionScanResult = {
 const INJECTION_PATTERNS: Array<{ id: string; regex: RegExp; weight: number }> = [
   {
     id: "instruction_override",
-    regex: /(?:ignore|disregard|forget|override|bypass|cancel)\s+(?:all\s+)?(?:previous|prior|above|former|system)\s+(?:instructions|prompts|rules|directives|commands)/i,
+    regex:
+      /(?:ignore|disregard|forget|override|bypass|cancel)\s+(?:all\s+)?(?:previous|prior|above|former|system)\s+(?:instructions|prompts|rules|directives|commands)/i,
     weight: 3,
   },
   {
     id: "system_directive_spoofing",
-    regex: /(?:system\s*(?:prompt|directive|override|command|message|instruction)|developer\s*mode|dan\s*mode|jailbreak|unrestricted\s*mode)/i,
+    regex:
+      /(?:system\s*(?:prompt|directive|override|command|message|instruction)|developer\s*mode|dan\s*mode|jailbreak|unrestricted\s*mode)/i,
     weight: 3,
   },
   {
@@ -28,27 +30,32 @@ const INJECTION_PATTERNS: Array<{ id: string; regex: RegExp; weight: number }> =
   },
   {
     id: "score_forcing",
-    regex: /(?:output|return|give|assign|rate)\s+(?:me\s+)?(?:a\s+)?(?:score\s+of\s+)?(?:100|9[6-9]|perfect|strong_yes)/i,
+    regex:
+      /(?:output|return|give|assign|rate)\s+(?:me\s+)?(?:a\s+)?(?:score\s+of\s+)?(?:100|9[6-9]|perfect|strong_yes)/i,
     weight: 2,
   },
   {
     id: "shortlist_forcing",
-    regex: /(?:you\s+(?:must|should)|always)\s+(?:rank|rate|mark|shortlist|recommend)\s+(?:this\s+candidate|me)\s+as\s+(?:100|strong_yes|top|highest|perfect)/i,
+    regex:
+      /(?:you\s+(?:must|should)|always)\s+(?:rank|rate|mark|shortlist|recommend)\s+(?:this\s+candidate|me)\s+as\s+(?:100|strong_yes|top|highest|perfect)/i,
     weight: 2,
   },
   {
     id: "prompt_leakage",
-    regex: /(?:print|reveal|repeat|leak|display|show|dump)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|hidden\s+rules|rubric\s+weights)/i,
+    regex:
+      /(?:print|reveal|repeat|leak|display|show|dump)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|hidden\s+rules|rubric\s+weights)/i,
     weight: 2,
   },
   {
     id: "markdown_json_injection",
-    regex: /```(?:json)?\s*\{[\s\S]*?"score"\s*:\s*(?:100|9[6-9])[\s\S]*?"level"\s*:\s*"strong_yes"[\s\S]*?```/i,
+    regex:
+      /```(?:json)?\s*\{[\s\S]*?"score"\s*:\s*(?:100|9[6-9])[\s\S]*?"level"\s*:\s*"strong_yes"[\s\S]*?```/i,
     weight: 2,
   },
   {
     id: "assistant_impersonation",
-    regex: /^(?:Assistant|System|AI\s+Evaluator|Vetta):\s*(?:Understood|Here\s+is\s+the\s+rank|Candidate\s+is\s+perfect)/im,
+    regex:
+      /^(?:Assistant|System|AI\s+Evaluator|Vetta):\s*(?:Understood|Here\s+is\s+the\s+rank|Candidate\s+is\s+perfect)/im,
     weight: 2,
   },
   {
@@ -284,10 +291,7 @@ export function calibrateGroundingScore(opts: {
 /**
  * Verifies that skills marked as "strong" or "partial" match actual mentions in the resume.
  */
-export function verifyStackMatch(
-  stackMatch: StackMatch[],
-  resumeText: string,
-): StackMatch[] {
+export function verifyStackMatch(stackMatch: StackMatch[], resumeText: string): StackMatch[] {
   const normResume = normalizeForMatch(resumeText);
   return stackMatch.map((sm) => {
     const normSkill = normalizeForMatch(sm.skill);

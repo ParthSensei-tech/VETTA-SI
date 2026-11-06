@@ -11,11 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { scanCriterionText, validateCriteria } from "@/lib/recruiting/rubric-guardrails";
-import {
-  generateRoleRubric,
-  getActiveRubric,
-  saveRubricEdits,
-} from "@/lib/recruiting/rubric-api";
+import { generateRoleRubric, getActiveRubric, saveRubricEdits } from "@/lib/recruiting/rubric-api";
 import type {
   CriterionKind,
   CriterionWeight,
@@ -123,7 +119,9 @@ export function RubricEditor({ roleId }: { roleId: string }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs tracking-[0.18em] text-muted uppercase">Match rubric</p>
-          <h2 className="mt-1 font-display text-2xl tracking-tight">What “fit” means for this seat</h2>
+          <h2 className="mt-1 font-display text-2xl tracking-tight">
+            What “fit” means for this seat
+          </h2>
           <p className="mt-2 max-w-xl text-sm text-muted">
             We draft 5–8 criteria from the job. You edit the wording — you don’t build from a blank
             page. City, notice, and pay are hard constraints (filter or flag), not part of the score
@@ -132,22 +130,24 @@ export function RubricEditor({ roleId }: { roleId: string }) {
           {versionMeta ? (
             <p className="mt-2 text-xs text-subtle">
               Version {versionMeta.version}
-              {versionMeta.status === "locked" ? " · locked (shortlist stamped)" : ` · ${versionMeta.status}`}
+              {versionMeta.status === "locked"
+                ? " · locked (shortlist stamped)"
+                : ` · ${versionMeta.status}`}
               {versionMeta.source ? ` · ${versionMeta.source}` : ""}
             </p>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" disabled={genMut.isPending} onClick={() => genMut.mutate()}>
-            {genMut.isPending ? "Drafting…" : criteria.length ? "Re-draft from JD" : "Draft from JD"}
+            {genMut.isPending
+              ? "Drafting…"
+              : criteria.length
+                ? "Re-draft from JD"
+                : "Draft from JD"}
           </Button>
           {criteria.length > 0 ? (
             <Button disabled={saveMut.isPending || !guard.ok} onClick={() => saveMut.mutate()}>
-              {saveMut.isPending
-                ? "Saving…"
-                : locked
-                  ? "Save as new version"
-                  : "Confirm rubric"}
+              {saveMut.isPending ? "Saving…" : locked ? "Save as new version" : "Confirm rubric"}
             </Button>
           ) : null}
         </div>
@@ -225,7 +225,9 @@ export function RubricEditor({ roleId }: { roleId: string }) {
                             onClick={() => updateCriterion(c.id, { weight: w })}
                             className={cn(
                               "rounded-lg px-3 py-1.5 text-xs capitalize",
-                              c.weight === w ? "bg-accent text-accent-fg" : "bg-elevated text-muted",
+                              c.weight === w
+                                ? "bg-accent text-accent-fg"
+                                : "bg-elevated text-muted",
                             )}
                           >
                             {w}
@@ -361,8 +363,8 @@ export function RubricEditor({ roleId }: { roleId: string }) {
             </p>
           ) : (
             <p className="text-xs text-subtle">
-              After candidates are scored, edits create a new version and re-rank. Old shortlists keep
-              the version they were scored on.
+              After candidates are scored, edits create a new version and re-rank. Old shortlists
+              keep the version they were scored on.
             </p>
           )}
         </div>

@@ -47,13 +47,15 @@ export const saveRubricEdits = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ context, data }): Promise<{ rubric: RubricVersion; rerankTriggered: boolean }> => {
-    const { persistRubricEdits } = await import("./rubric-version.server");
-    return persistRubricEdits({
-      userId: context.userId,
-      roleId: data.roleId,
-      criteria: data.criteria,
-      hardConstraints: data.hardConstraints,
-      activate: data.activate,
-    });
-  });
+  .handler(
+    async ({ context, data }): Promise<{ rubric: RubricVersion; rerankTriggered: boolean }> => {
+      const { persistRubricEdits } = await import("./rubric-version.server");
+      return persistRubricEdits({
+        userId: context.userId,
+        roleId: data.roleId,
+        criteria: data.criteria,
+        hardConstraints: data.hardConstraints,
+        activate: data.activate,
+      });
+    },
+  );

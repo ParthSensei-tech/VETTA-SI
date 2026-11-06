@@ -127,7 +127,9 @@ test("Statistical Formulas: computeMean, computeMedian, computeP90 and formattin
   assert.equal(formatDays(0.5), "12 hrs");
   assert.equal(formatDays(4.2), "4.2 days");
   assert.equal(formatPercentage(84.321), "84.3%");
-  assert.ok(formatRupees(1500000).includes("15,00,000") || formatRupees(1500000).includes("1,500,000"));
+  assert.ok(
+    formatRupees(1500000).includes("15,00,000") || formatRupees(1500000).includes("1,500,000"),
+  );
   assert.ok(formatUsd(25000).includes("25,000"));
 });
 

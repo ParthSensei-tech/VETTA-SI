@@ -108,8 +108,15 @@ function yearsFrom(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function portalStage(pipeline: string, hasQuestions: boolean, screenStatus: string | null): PortalStage {
-  if (screenStatus === "evaluated" || ["ready", "approved", "sent", "rejected", "hold"].includes(pipeline)) {
+function portalStage(
+  pipeline: string,
+  hasQuestions: boolean,
+  screenStatus: string | null,
+): PortalStage {
+  if (
+    screenStatus === "evaluated" ||
+    ["ready", "approved", "sent", "rejected", "hold"].includes(pipeline)
+  ) {
     return "complete";
   }
   if (hasQuestions || pipeline === "screening") return "screening";
@@ -176,16 +183,26 @@ async function loadPortalBundle(applicationId: string): Promise<PortalApplicatio
   const row = rows[0];
   if (!row) throw new Error("Application not found");
 
-  const screens = await sql<{ questions_json: string; answers_json: string; status: string; transcript_json?: string; invite_token?: string | null }>`
+  const screens = await sql<{
+    questions_json: string;
+    answers_json: string;
+    status: string;
+    transcript_json?: string;
+    invite_token?: string | null;
+  }>`
     select questions_json, answers_json, status, coalesce(transcript_json, '[]') as transcript_json, invite_token from screens
     where application_id = ${applicationId}
     order by created_at desc limit 1`;
   const screen = screens[0] ?? null;
   const questions = screen ? normalizeQuestions(screen.questions_json) : [];
   const answers = screen ? parseJson<ScreenAnswer[]>(screen.answers_json, []) : [];
-  const transcript = screen ? normalizeTranscript((screen as { transcript_json?: string }).transcript_json ?? "[]") : [];
+  const transcript = screen
+    ? normalizeTranscript((screen as { transcript_json?: string }).transcript_json ?? "[]")
+    : [];
   const last = lastAgentTurn(transcript);
-  const asked = new Set(transcript.filter((t) => t.role === "candidate" && !t.is_followup).map((t) => t.question_id)).size;
+  const asked = new Set(
+    transcript.filter((t) => t.role === "candidate" && !t.is_followup).map((t) => t.question_id),
+  ).size;
 
   return {
     id: row.id,
@@ -212,7 +229,8 @@ async function loadPortalBundle(applicationId: string): Promise<PortalApplicatio
     phone: row.phone,
     stage: portalStage(row.pipeline_status, questions.length > 0, screen?.status ?? null),
     questions: questions.length ? questions : null,
-    answersSubmitted: answers.some((a) => a.answer.trim().length > 0) || screen?.status === "evaluated",
+    answersSubmitted:
+      answers.some((a) => a.answer.trim().length > 0) || screen?.status === "evaluated",
     transcript,
     currentQuestionId: last?.question_id ?? questions[0]?.id ?? null,
     awaitingFollowUp: Boolean(last?.is_followup),
@@ -271,12 +289,14 @@ async function ensureScreen(args: {
   });
 }
 
-export const listOpenJobs = createServerFn({ method: "GET" }).handler(async (): Promise<PublicJob[]> => {
-  const sql = await getSql();
-  const rows = await sql<RoleRow>`
+export const listOpenJobs = createServerFn({ method: "GET" }).handler(
+  async (): Promise<PublicJob[]> => {
+    const sql = await getSql();
+    const rows = await sql<RoleRow>`
     select * from roles where status = 'open' order by updated_at desc limit 80`;
-  return rows.map(mapPublicJob);
-});
+    return rows.map(mapPublicJob);
+  },
+);
 
 export const getPublicJob = createServerFn({ method: "GET" })
   .validator((input: unknown) => idSchema.parse(input))
@@ -466,4 +486,3 @@ export const getPortalApplication = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PortalApplication> => {
     return loadPortalBundle(data.applicationId);
   });
-

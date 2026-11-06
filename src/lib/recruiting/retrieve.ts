@@ -135,7 +135,7 @@ export function reciprocalRankFusion(
 
     const lexNorm = lexicalUnit(entry.lexScore);
     const semNorm = entry.semRank !== null ? Math.max(0, Math.min(1, (entry.semScore + 1) / 2)) : 0;
-    
+
     // Calibrated blended score between 0 and 1
     let blendedScore = 0;
     if (entry.lexRank !== null && entry.semRank !== null) {

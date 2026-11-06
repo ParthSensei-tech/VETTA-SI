@@ -150,72 +150,79 @@ export const appendIngestItems = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ context, data }): Promise<{ added: number; failed: number; errors: string[] }> => {
-    const { decodeBase64, parseUploadToResumes } = await import("./parse.server");
-    const { ensureQueueWorker, processQueueSlice, refreshBatchStats } = await import("./queue.server");
-    const batch = await loadOwnedBatch(context.userId, data.batchId);
-    if (batch.status === "cancelled" || batch.status === "completed" || batch.status === "failed") {
-      throw new Error("This batch is already closed");
-    }
-    const sql = await getSql();
-    const existing = await sql<{ n: number | string }>`
-      select count(*) as n from ingest_jobs where batch_id = ${data.batchId}`;
-    let used = asNumber(existing[0]?.n);
-    const errors: string[] = [];
-    let added = 0;
-    let failed = 0;
-
-    for (const item of data.items) {
-      if (used >= MAX_JOBS_PER_BATCH) {
-        errors.push("Batch is full (200 resumes). Start another drop for the rest.");
-        break;
+  .handler(
+    async ({ context, data }): Promise<{ added: number; failed: number; errors: string[] }> => {
+      const { decodeBase64, parseUploadToResumes } = await import("./parse.server");
+      const { ensureQueueWorker, processQueueSlice, refreshBatchStats } =
+        await import("./queue.server");
+      const batch = await loadOwnedBatch(context.userId, data.batchId);
+      if (
+        batch.status === "cancelled" ||
+        batch.status === "completed" ||
+        batch.status === "failed"
+      ) {
+        throw new Error("This batch is already closed");
       }
-      try {
-        let resumes: Array<{ filename: string; resumeText: string }> = [];
-        if (item.resumeText && item.resumeText.trim().length >= 40) {
-          resumes = [{ filename: item.filename, resumeText: item.resumeText.trim() }];
-        } else if (item.contentBase64) {
-          const bytes = decodeBase64(item.contentBase64);
-          resumes = await parseUploadToResumes(item.filename, bytes);
-        } else {
-          throw new Error("Missing file contents");
+      const sql = await getSql();
+      const existing = await sql<{ n: number | string }>`
+      select count(*) as n from ingest_jobs where batch_id = ${data.batchId}`;
+      let used = asNumber(existing[0]?.n);
+      const errors: string[] = [];
+      let added = 0;
+      let failed = 0;
+
+      for (const item of data.items) {
+        if (used >= MAX_JOBS_PER_BATCH) {
+          errors.push("Batch is full (200 resumes). Start another drop for the rest.");
+          break;
         }
-        if (resumes.length === 0) throw new Error(`No resumes found in ${item.filename}`);
-        const room = MAX_JOBS_PER_BATCH - used;
-        const slice = resumes.slice(0, room);
-        for (const resume of slice) {
-          const id = newId();
-          await sql`
+        try {
+          let resumes: Array<{ filename: string; resumeText: string }> = [];
+          if (item.resumeText && item.resumeText.trim().length >= 40) {
+            resumes = [{ filename: item.filename, resumeText: item.resumeText.trim() }];
+          } else if (item.contentBase64) {
+            const bytes = decodeBase64(item.contentBase64);
+            resumes = await parseUploadToResumes(item.filename, bytes);
+          } else {
+            throw new Error("Missing file contents");
+          }
+          if (resumes.length === 0) throw new Error(`No resumes found in ${item.filename}`);
+          const room = MAX_JOBS_PER_BATCH - used;
+          const slice = resumes.slice(0, room);
+          for (const resume of slice) {
+            const id = newId();
+            await sql`
             insert into ingest_jobs (
               id, user_id, batch_id, role_id, filename, resume_text, status
             ) values (
               ${id}, ${context.userId}, ${data.batchId}, ${batch.role_id}, ${resume.filename},
               ${resume.resumeText}, 'queued'
             )`;
-          added += 1;
-          used += 1;
-        }
-      } catch (err) {
-        failed += 1;
-        const message = err instanceof Error ? err.message : `Could not parse ${item.filename}`;
-        errors.push(message);
-        const id = newId();
-        await sql`
+            added += 1;
+            used += 1;
+          }
+        } catch (err) {
+          failed += 1;
+          const message = err instanceof Error ? err.message : `Could not parse ${item.filename}`;
+          errors.push(message);
+          const id = newId();
+          await sql`
           insert into ingest_jobs (
             id, user_id, batch_id, role_id, filename, resume_text, status, error
           ) values (
             ${id}, ${context.userId}, ${data.batchId}, ${batch.role_id}, ${item.filename},
             '', 'failed', ${message}
           )`;
-        used += 1;
+          used += 1;
+        }
       }
-    }
 
-    await refreshBatchStats(data.batchId);
-    ensureQueueWorker();
-    void processQueueSlice({ userId: context.userId, maxJobs: 1, budgetMs: 8_000 });
-    return { added, failed, errors: errors.slice(0, 8) };
-  });
+      await refreshBatchStats(data.batchId);
+      ensureQueueWorker();
+      void processQueueSlice({ userId: context.userId, maxJobs: 1, budgetMs: 8_000 });
+      return { added, failed, errors: errors.slice(0, 8) };
+    },
+  );
 
 export const listIngestBatches = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
@@ -275,7 +282,10 @@ export const cancelIngestBatch = createServerFn({ method: "POST" })
       set status = 'cancelled', completed_at = coalesce(completed_at, now()), updated_at = now()
       where id = ${data.batchId} and (org_id = ${org.orgId} or (org_id is null and user_id = ${context.userId}))`;
     await refreshBatchStats(data.batchId);
-    return mapBatch(await loadOwnedBatch(context.userId, data.batchId), await loadJobs(context.userId, data.batchId));
+    return mapBatch(
+      await loadOwnedBatch(context.userId, data.batchId),
+      await loadJobs(context.userId, data.batchId),
+    );
   });
 
 export const tickMyQueue = createServerFn({ method: "POST" })

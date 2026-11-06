@@ -112,8 +112,14 @@ export type ObservabilitySummary = {
     totalCostInr: number;
     totalTokens: number;
     totalCalls: number;
-    byTask: Record<string, { costCents: number; costUsd: number; costInr: number; tokens: number; count: number }>;
-    byProvider: Record<string, { costCents: number; costUsd: number; costInr: number; tokens: number; count: number }>;
+    byTask: Record<
+      string,
+      { costCents: number; costUsd: number; costInr: number; tokens: number; count: number }
+    >;
+    byProvider: Record<
+      string,
+      { costCents: number; costUsd: number; costInr: number; tokens: number; count: number }
+    >;
     savingsUsd: number; // calculated from local/free model usage vs gpt-4o rates
     savingsInr: number;
   };

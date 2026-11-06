@@ -224,14 +224,22 @@ test("retryFailedJobs blocks un-scoped execution and strictly confines retries t
   assert.equal(retriedA, 2, "Tenant A successfully retried only its 2 failed jobs");
 
   // Verify Tenant A's jobs are queued
-  const statusA1 = await sql<{ status: string }>`select status from ingest_jobs where id = ${jobA1}`;
-  const statusA2 = await sql<{ status: string }>`select status from ingest_jobs where id = ${jobA2}`;
+  const statusA1 = await sql<{
+    status: string;
+  }>`select status from ingest_jobs where id = ${jobA1}`;
+  const statusA2 = await sql<{
+    status: string;
+  }>`select status from ingest_jobs where id = ${jobA2}`;
   assert.equal(statusA1[0]?.status, "queued");
   assert.equal(statusA2[0]?.status, "queued");
 
   // Verify Tenant B's jobs are STILL failed (ZERO cross-tenant bleed)
-  const statusB1 = await sql<{ status: string }>`select status from ingest_jobs where id = ${jobB1}`;
-  const statusB2 = await sql<{ status: string }>`select status from ingest_jobs where id = ${jobB2}`;
+  const statusB1 = await sql<{
+    status: string;
+  }>`select status from ingest_jobs where id = ${jobB1}`;
+  const statusB2 = await sql<{
+    status: string;
+  }>`select status from ingest_jobs where id = ${jobB2}`;
   assert.equal(statusB1[0]?.status, "failed");
   assert.equal(statusB2[0]?.status, "failed");
 

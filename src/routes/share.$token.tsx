@@ -37,7 +37,9 @@ function SharePage() {
             <p className="mt-3 text-sm text-muted">
               {data.location} · {data.workMode} · {data.candidates.length} on the slate
             </p>
-            {data.message ? <p className="mt-5 max-w-2xl text-sm leading-relaxed">{data.message}</p> : null}
+            {data.message ? (
+              <p className="mt-5 max-w-2xl text-sm leading-relaxed">{data.message}</p>
+            ) : null}
             <div className="mt-6 flex flex-wrap gap-2 print:hidden">
               <Button type="button" onClick={() => window.print()}>
                 Save PDF
@@ -82,7 +84,9 @@ function SharePage() {
                 <tbody>
                   {data.candidates.map((c, i) => (
                     <tr key={c.applicationId} className="border-t border-border">
-                      <td className="px-4 py-3 font-mono text-xs tabular-nums">{String(i + 1).padStart(2, "0")}</td>
+                      <td className="px-4 py-3 font-mono text-xs tabular-nums">
+                        {String(i + 1).padStart(2, "0")}
+                      </td>
                       <td className="px-4 py-3">
                         <p>{c.candidateName}</p>
                         <p className="text-xs text-muted">{c.headline}</p>
@@ -113,7 +117,9 @@ function SharePage() {
             ))}
           </section>
 
-          <p className="text-xs text-subtle">Prepared in Vetta. A human stamped this before it left the desk.</p>
+          <p className="text-xs text-subtle">
+            Prepared in Vetta. A human stamped this before it left the desk.
+          </p>
         </article>
       )}
     </CandidatePortalShell>

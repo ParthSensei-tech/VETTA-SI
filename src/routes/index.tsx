@@ -18,7 +18,10 @@ function Home() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <VettaWordmark />
         <div className="flex items-center gap-1 sm:gap-3">
-          <Link to="/jobs" className="hidden text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline">
+          <Link
+            to="/jobs"
+            className="hidden text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline"
+          >
             Open roles
           </Link>
           <ThemeToggle className="size-11 min-w-11 px-0 sm:min-w-0 sm:px-3" />
@@ -29,16 +32,18 @@ function Home() {
       <main className="mx-auto max-w-6xl px-5 pb-24">
         <section className="vetta-enter grid gap-12 pt-10 pb-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="text-xs tracking-[0.22em] text-muted uppercase">Seed — Series B · India</p>
+            <p className="text-xs tracking-[0.22em] text-muted uppercase">
+              Seed — Series B · India
+            </p>
             <h1 className="mt-4 font-display text-[clamp(2.6rem,6vw,5.2rem)] leading-[0.95] tracking-tight">
               Resume in.
               <br />
               Ranked slate out.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted">
-              AI-native technical recruiting for early-stage teams. Vetta ranks every resume against the
-              role — skill, ownership, notice, city — not pedigree theatre. Nothing is client-facing until
-              a human stamps it.
+              AI-native technical recruiting for early-stage teams. Vetta ranks every resume against
+              the role — skill, ownership, notice, city — not pedigree theatre. Nothing is
+              client-facing until a human stamps it.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
@@ -52,7 +57,10 @@ function Home() {
               </Button>
             </div>
             <p className="mt-4">
-              <a href="#how" className="text-sm text-muted transition-colors duration-150 hover:text-fg">
+              <a
+                href="#how"
+                className="text-sm text-muted transition-colors duration-150 hover:text-fg"
+              >
                 How it works
               </a>
             </p>
@@ -66,7 +74,11 @@ function Home() {
             <ol className="flex flex-col gap-2">
               {[
                 { n: "01", title: "Ranked against the JD", meta: "Score locked · evidence quoted" },
-                { n: "02", title: "Async screen evaluated", meta: "Written answers · no live call" },
+                {
+                  n: "02",
+                  title: "Async screen evaluated",
+                  meta: "Written answers · no live call",
+                },
                 { n: "03", title: "Client pack drafted", meta: "Waiting on your stamp" },
               ].map((row) => (
                 <li
@@ -81,11 +93,16 @@ function Home() {
                 </li>
               ))}
             </ol>
-            <p className="mt-4 text-xs text-subtle">Illustration of the gate — your workspace starts empty.</p>
+            <p className="mt-4 text-xs text-subtle">
+              Illustration of the gate — your workspace starts empty.
+            </p>
           </aside>
         </section>
 
-        <section id="how" className="grid gap-px overflow-hidden rounded-2xl bg-border md:grid-cols-3">
+        <section
+          id="how"
+          className="grid gap-px overflow-hidden rounded-2xl bg-border md:grid-cols-3"
+        >
           {[
             {
               n: "01",
@@ -115,19 +132,19 @@ function Home() {
           <div>
             <h2 className="font-display text-3xl tracking-tight">Built for the first TA hire.</h2>
             <p className="mt-4 text-sm leading-relaxed text-muted">
-              Founding CTOs and recruiters at Seed to Series B companies do not need an ATS. They need a
-              ranked shortlist they can defend, a written screen that does not eat a calendar, and a hard
-              gate so a half-baked note never lands in a founder’s inbox.
+              Founding CTOs and recruiters at Seed to Series B companies do not need an ATS. They
+              need a ranked shortlist they can defend, a written screen that does not eat a
+              calendar, and a hard gate so a half-baked note never lands in a founder’s inbox.
             </p>
           </div>
           <ul className="flex flex-col gap-4 text-sm leading-relaxed text-muted">
             <li>
-              <span className="text-fg">Skill first.</span> Pedigree is a weak prior. The model is instructed
-              not to theatre IIT or FAANG.
+              <span className="text-fg">Skill first.</span> Pedigree is a weak prior. The model is
+              instructed not to theatre IIT or FAANG.
             </li>
             <li>
-              <span className="text-fg">India-native.</span> Notice periods, LPA bands, Bengaluru / Hyd /
-              Pune / remote-India, ESOP literacy.
+              <span className="text-fg">India-native.</span> Notice periods, LPA bands, Bengaluru /
+              Hyd / Pune / remote-India, ESOP literacy.
             </li>
             <li>
               <span className="text-fg">Human-gated.</span> Approvals are a first-class queue, not a

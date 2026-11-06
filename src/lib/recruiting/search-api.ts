@@ -8,7 +8,12 @@ import { z } from "zod";
 import { authMiddleware } from "../auth/middleware.ts";
 import { getSql } from "../db.ts";
 import type { PipelineStatus, TalentRow } from "./types.ts";
-import { candidateDocument, cosine, mergeRetrievalScore, reciprocalRankFusion } from "./retrieve.ts";
+import {
+  candidateDocument,
+  cosine,
+  mergeRetrievalScore,
+  reciprocalRankFusion,
+} from "./retrieve.ts";
 
 type Hit = {
   id: string;
@@ -122,11 +127,19 @@ export async function executeTalentSearch(opts: {
   if (q.length >= 2 && requestedMode !== "lexical") {
     try {
       const { embedTexts } = await import("./embed-text.server.ts");
-      const { getActiveEmbeddingModel, enqueueCandidatesBulk } = await import("./embedding-queue.server.ts");
+      const { getActiveEmbeddingModel, enqueueCandidatesBulk } =
+        await import("./embedding-queue.server.ts");
       model = await getActiveEmbeddingModel(opts.orgId);
 
       // Opportunistically backfill missing embeddings for candidates matching filters
-      const missing = await sql<{ id: string; resume_text: string; full_name: string; current_title: string; current_company: string; location: string }>`
+      const missing = await sql<{
+        id: string;
+        resume_text: string;
+        full_name: string;
+        current_title: string;
+        current_company: string;
+        location: string;
+      }>`
         select c.id, c.resume_text, c.full_name, c.current_title, c.current_company, c.location
         from candidates c
         left join candidate_embeddings e on e.candidate_id = c.id and e.model = ${model}
@@ -338,26 +351,31 @@ export const searchTalent = createServerFn({ method: "POST" })
       })
       .parse(input ?? {}),
   )
-  .handler(async ({ context, data }): Promise<{
-    rows: TalentRow[];
-    mode: "fts+e5" | "fts";
-    model: string | null;
-    metrics?: {
-      lexicalHits: number;
-      semanticHits: number;
-      fusionHits: number;
-      retrievalMode: "hybrid" | "lexical" | "semantic";
-    };
-  }> => {
-    const { ensureUserOrg } = await import("./org.server.ts");
-    const org = await ensureUserOrg(context.userId);
-    return executeTalentSearch({
-      userId: context.userId,
-      orgId: org.orgId,
-      q: data.q,
-      location: data.location,
-      noticeMaxDays: data.noticeMaxDays,
-      ctcMaxLakh: data.ctcMaxLakh,
-      mode: data.mode,
-    });
-  });
+  .handler(
+    async ({
+      context,
+      data,
+    }): Promise<{
+      rows: TalentRow[];
+      mode: "fts+e5" | "fts";
+      model: string | null;
+      metrics?: {
+        lexicalHits: number;
+        semanticHits: number;
+        fusionHits: number;
+        retrievalMode: "hybrid" | "lexical" | "semantic";
+      };
+    }> => {
+      const { ensureUserOrg } = await import("./org.server.ts");
+      const org = await ensureUserOrg(context.userId);
+      return executeTalentSearch({
+        userId: context.userId,
+        orgId: org.orgId,
+        q: data.q,
+        location: data.location,
+        noticeMaxDays: data.noticeMaxDays,
+        ctcMaxLakh: data.ctcMaxLakh,
+        mode: data.mode,
+      });
+    },
+  );

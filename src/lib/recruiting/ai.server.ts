@@ -56,7 +56,7 @@ export function isAiConfigured(): boolean {
     process.env.GOOGLE_API_KEY?.trim() ||
     process.env.OPENAI_API_KEY?.trim() ||
     process.env.XAI_API_KEY?.trim() ||
-    ollamaForced()
+    ollamaForced(),
   );
 }
 
@@ -90,10 +90,18 @@ export type AiDescription = {
 export function describeAi(): AiDescription {
   const base = { available: true, routing: "per_task", arms: MODEL_ARMS.length } as const;
   if (process.env.GROQ_API_KEY?.trim()) {
-    return { ...base, engine: "groq", model: process.env.GROQ_MODEL?.trim() || "llama-3.3-70b-versatile" };
+    return {
+      ...base,
+      engine: "groq",
+      model: process.env.GROQ_MODEL?.trim() || "llama-3.3-70b-versatile",
+    };
   }
   if (process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()) {
-    return { ...base, engine: "gemini", model: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash" };
+    return {
+      ...base,
+      engine: "gemini",
+      model: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+    };
   }
   if (process.env.OPENAI_API_KEY?.trim()) {
     return { ...base, engine: "openai", model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini" };
@@ -106,7 +114,6 @@ export function describeAi(): AiDescription {
   }
   return { ...base, engine: "local", model: "evidence" };
 }
-
 
 async function complete(args: {
   system: string;
@@ -174,7 +181,9 @@ async function complete(args: {
           orgId: args.disclosure?.orgId,
           meta: entry.meta,
         });
-      } catch { /* best-effort telemetry — never block the main path */ }
+      } catch {
+        /* best-effort telemetry — never block the main path */
+      }
     })();
   };
   // One decision, then one call: the router has already weighed every arm — keyless, free-tier
@@ -369,7 +378,9 @@ export async function parseAndRank(input: {
     try {
       const { computeRubricHash } = await import("./hash.ts");
       rubricHash = computeRubricHash(criteria, hardConstraints ?? undefined);
-    } catch { /* best-effort telemetry — never block the main path */ }
+    } catch {
+      /* best-effort telemetry — never block the main path */
+    }
   }
 
   if (input.userId && !input.bypassCache) {
@@ -510,7 +521,9 @@ export async function parseAndRank(input: {
           roleId: input.roleId,
           orgId: input.orgId,
         });
-      } catch { /* best-effort telemetry — never block the main path */ }
+      } catch {
+        /* best-effort telemetry — never block the main path */
+      }
     })();
     return {
       ok: true,
@@ -647,10 +660,14 @@ ${wrappedResume}`,
           applicationId: input.applicationId,
           roleId: input.roleId,
           orgId: input.orgId,
-          meta: { router: routeTelemetry(result.route, result.attempts, { timedOut: result.timedOut }) },
+          meta: {
+            router: routeTelemetry(result.route, result.attempts, { timedOut: result.timedOut }),
+          },
         });
       }
-    } catch { /* best-effort telemetry — never block the main path */ }
+    } catch {
+      /* best-effort telemetry — never block the main path */
+    }
   })();
 
   if (result.ok && !result.routedLocal && input.orgId && input.candidateId) {
@@ -672,7 +689,10 @@ ${wrappedResume}`,
   const routerChoseLocal = result.ok && result.routedLocal;
   if (routerChoseLocal || !result.ok) {
     const localRaw = rankLocally({ ...input, weights, hardConstraints, criteria });
-    const local = { ...localRaw, rank: calibrateRank(localRaw.rank, calibrationFromPrompt(systemPrompt)) };
+    const local = {
+      ...localRaw,
+      rank: calibrateRank(localRaw.rank, calibrationFromPrompt(systemPrompt)),
+    };
     // The router picking the in-process engine is a decision, not a failure: only a network arm
     // that could not answer earns the `fallback` label the desk and the outcome model both read.
     const providerError = result.ok ? null : result.error;
@@ -756,7 +776,10 @@ ${wrappedResume}`,
   const validated = extractAndValidateJson(RankResponseSchema, result.text);
   if (!validated.ok) {
     const localRaw = rankLocally({ ...input, weights, hardConstraints, criteria });
-    const local = { ...localRaw, rank: calibrateRank(localRaw.rank, calibrationFromPrompt(systemPrompt)) };
+    const local = {
+      ...localRaw,
+      rank: calibrateRank(localRaw.rank, calibrationFromPrompt(systemPrompt)),
+    };
     const fallbackReason = `schema_validation_failed: ${validated.error}`;
     const localProvenance: RankProvenance = {
       engine: "local",
@@ -824,17 +847,20 @@ ${wrappedResume}`,
   const verifiedStack = verifyStackMatch(parsed.rank.stack_match, input.resumeText);
 
   // Calibrate score for ungrounded/hallucinated claims
-  const { score: calibratedScore, level: calibratedLevel, penalty: groundingPenalty } =
-    calibrateGroundingScore({
-      score: parsed.rank.score,
-      level: parsed.rank.level,
-      grounding,
-    });
+  const {
+    score: calibratedScore,
+    level: calibratedLevel,
+    penalty: groundingPenalty,
+  } = calibrateGroundingScore({
+    score: parsed.rank.score,
+    level: parsed.rank.level,
+    grounding,
+  });
 
   const risks = [...parsed.rank.risks];
   if (grounding.unverifiedQuotes.length > 0) {
     risks.push(
-      `Unverified evidence claims (${grounding.unverifiedQuotes.length}): cited quote not found verbatim in candidate resume.${groundingPenalty > 0 ? ` Grounding penalty applied: -${groundingPenalty} pts.` : ""}`
+      `Unverified evidence claims (${grounding.unverifiedQuotes.length}): cited quote not found verbatim in candidate resume.${groundingPenalty > 0 ? ` Grounding penalty applied: -${groundingPenalty} pts.` : ""}`,
     );
   }
   if (injectionScan.risk !== "clean") {
@@ -1037,15 +1063,30 @@ Return { "prompt": string } — one follow-up, max 40 words.`,
     },
   });
   if (!result.ok || result.routedLocal) {
-    return { ok: true, prompt: seeded || "Can you make that concrete — a system, a number, or a decision you actually made?" };
+    return {
+      ok: true,
+      prompt:
+        seeded ||
+        "Can you make that concrete — a system, a number, or a decision you actually made?",
+    };
   }
   const validated = extractAndValidateJson(ScreenFollowUpResponseSchema, result.text);
   if (!validated.ok) {
-    return { ok: true, prompt: seeded || "Can you make that concrete — a system, a number, or a decision you actually made?" };
+    return {
+      ok: true,
+      prompt:
+        seeded ||
+        "Can you make that concrete — a system, a number, or a decision you actually made?",
+    };
   }
   const prompt = validated.data.prompt.trim();
   if (prompt.length < 12) {
-    return { ok: true, prompt: seeded || "Can you make that concrete — a system, a number, or a decision you actually made?" };
+    return {
+      ok: true,
+      prompt:
+        seeded ||
+        "Can you make that concrete — a system, a number, or a decision you actually made?",
+    };
   }
   return { ok: true, prompt };
 }
@@ -1109,7 +1150,9 @@ ${input.questions
     ok: true,
     evaluation: {
       score:
-        typeof parsed.score === "number" ? Math.max(0, Math.min(100, Math.round(parsed.score))) : null,
+        typeof parsed.score === "number"
+          ? Math.max(0, Math.min(100, Math.round(parsed.score)))
+          : null,
       verdict: parsed.verdict || "Needs review",
       strengths: parsed.strengths.slice(0, 6),
       concerns: parsed.concerns.slice(0, 6),

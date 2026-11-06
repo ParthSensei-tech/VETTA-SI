@@ -15,7 +15,12 @@ function rank(score: number, notice: number | null): RankResult {
     score,
     level: "maybe",
     summary: "Backend engineer with startup delivery and a 60 day notice.",
-    evidence: [{ claim: "Shipped billing", quote: "Owned billing service from zero to one at a seed startup." }],
+    evidence: [
+      {
+        claim: "Shipped billing",
+        quote: "Owned billing service from zero to one at a seed startup.",
+      },
+    ],
     gaps: ["No on-call evidence"],
     risks: ["Notice period 60 days — plan overlap"],
     india: {

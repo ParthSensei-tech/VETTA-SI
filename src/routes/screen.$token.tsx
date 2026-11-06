@@ -46,7 +46,9 @@ function ScreenByToken() {
           {data.stage === "received" ? (
             <div className="rounded-2xl bg-surface p-5 shadow-[var(--shadow-border)]">
               <p className="font-display text-2xl">The desk is still drafting your questions.</p>
-              <p className="mt-2 text-sm text-muted">Refresh in a moment — this page updates when the screen is ready.</p>
+              <p className="mt-2 text-sm text-muted">
+                Refresh in a moment — this page updates when the screen is ready.
+              </p>
               <div className="vetta-shimmer mt-6 h-1.5 rounded-full bg-elevated" />
             </div>
           ) : (

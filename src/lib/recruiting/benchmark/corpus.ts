@@ -52,12 +52,40 @@ const SKILL_VARIANTS = [
 ];
 
 const FIRST_NAMES = [
-  "Aarav", "Diya", "Ishaan", "Meera", "Nikhil", "Pooja", "Rahul", "Sana",
-  "Tanvi", "Vikram", "Yash", "Zoya", "Aditya", "Bhavana", "Chirag", "Divya",
+  "Aarav",
+  "Diya",
+  "Ishaan",
+  "Meera",
+  "Nikhil",
+  "Pooja",
+  "Rahul",
+  "Sana",
+  "Tanvi",
+  "Vikram",
+  "Yash",
+  "Zoya",
+  "Aditya",
+  "Bhavana",
+  "Chirag",
+  "Divya",
 ];
 const LAST_NAMES = [
-  "Nair", "Sharma", "Iyer", "Gupta", "Menon", "Patel", "Reddy", "Bose",
-  "Kulkarni", "Chauhan", "Verma", "Pillai", "Joshi", "Rao", "Kaur", "Das",
+  "Nair",
+  "Sharma",
+  "Iyer",
+  "Gupta",
+  "Menon",
+  "Patel",
+  "Reddy",
+  "Bose",
+  "Kulkarni",
+  "Chauhan",
+  "Verma",
+  "Pillai",
+  "Joshi",
+  "Rao",
+  "Kaur",
+  "Das",
 ];
 
 const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
@@ -77,12 +105,17 @@ function pad(i: number, n: number): string {
  * details, varied India-specific signals the engine extracts (notice, CTC, city),
  * and a body salt that makes `hashResumeText` differ.
  */
-function materialize(g: GoldCase, i: number, roleId: string, variant: BenchResume["variant"]): BenchResume {
+function materialize(
+  g: GoldCase,
+  i: number,
+  roleId: string,
+  variant: BenchResume["variant"],
+): BenchResume {
   const s = salt(i, g.slug);
   const first = FIRST_NAMES[i % FIRST_NAMES.length];
   const last = LAST_NAMES[(i >> 4) % LAST_NAMES.length];
   const email = `bench-${s}@bench.invalid`;
-  const phone = `+91 98${pad((i * 7919) % 1000000000 % 100000000, 8).slice(0, 3)} ${pad(i % 100000, 5)}`;
+  const phone = `+91 98${pad(((i * 7919) % 1000000000) % 100000000, 8).slice(0, 3)} ${pad(i % 100000, 5)}`;
   const notice = [15, 30, 45, 60, 75, 90][i % 6];
   const current = 14 + (i % 21);
   const expected = current + 6 + (i % 9);
@@ -106,7 +139,10 @@ Benchmark record ${s}. Additional depth: ${skill}. Location: ${city}. Notice per
   if (variant === "huge_resume") {
     // Push to the ingest cap (batch.ts MAX_RESUME_CHARS = 40_000) to find the
     // worst-case regex/scan cost, not the average case.
-    const filler = `Led migration of ${skill} workloads; cut p99 latency and cost across a 6-engineer pod. `.repeat(4);
+    const filler =
+      `Led migration of ${skill} workloads; cut p99 latency and cost across a 6-engineer pod. `.repeat(
+        4,
+      );
     const blocks: string[] = [];
     let size = body.length;
     for (let k = 0; size < 39_000; k++) {

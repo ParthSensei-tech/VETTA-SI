@@ -93,7 +93,9 @@ export function shareToPdf(view: ShareView): Uint8Array {
     objects.push(
       `${pageObj} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${3 + pages.length * 2} 0 R >> >> /Contents ${contentObj} 0 R >> endobj`,
     );
-    objects.push(`${contentObj} 0 obj << /Length ${stream.length} >> stream\n${stream}\nendstream endobj`);
+    objects.push(
+      `${contentObj} 0 obj << /Length ${stream.length} >> stream\n${stream}\nendstream endobj`,
+    );
   });
   const fontId = 3 + pages.length * 2;
   objects.push(`${fontId} 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj`);

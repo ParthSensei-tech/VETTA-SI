@@ -57,7 +57,9 @@ function JobsIndex() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs text-muted">{job.companyName}</p>
-                    <h2 className="mt-1 font-display text-2xl leading-tight tracking-tight">{job.title}</h2>
+                    <h2 className="mt-1 font-display text-2xl leading-tight tracking-tight">
+                      {job.title}
+                    </h2>
                   </div>
                   <StageChip stage={job.companyStage} />
                 </div>
@@ -69,7 +71,10 @@ function JobsIndex() {
                 {job.stack.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
                     {job.stack.slice(0, 5).map((s) => (
-                      <span key={s} className="rounded-full bg-elevated px-2.5 py-1 text-xs text-muted">
+                      <span
+                        key={s}
+                        className="rounded-full bg-elevated px-2.5 py-1 text-xs text-muted"
+                      >
                         {s}
                       </span>
                     ))}

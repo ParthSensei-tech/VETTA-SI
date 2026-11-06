@@ -111,7 +111,12 @@ test("deletion names every store, and vendors cannot be told to forget a chat pr
   assert.equal(PRIVACY_STORES.length, 19);
   assert.equal(providerForgetResult("ollama").status, "local_only");
   assert.equal(providerForgetResult("groq").status, "no_delete_api");
-  assert.equal(PURPOSES.filter((p) => p.requiredOnApply).map((p) => p.id).join(), "recruitment_evaluation");
+  assert.equal(
+    PURPOSES.filter((p) => p.requiredOnApply)
+      .map((p) => p.id)
+      .join(),
+    "recruitment_evaluation",
+  );
   assert.match(purposeDenied("voice_prescreen"), /Voice/);
   assert.match(purposeDenied("client_disclosure"), /shared/);
   assert.match(purposeDenied("model_improvement"), /model learning/);
@@ -135,4 +140,3 @@ test("in-memory rank cache eviction purges specific resume hashes and clears com
   mem.clear();
   assert.equal(mem.size, 0);
 });
-

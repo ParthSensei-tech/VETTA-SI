@@ -329,7 +329,8 @@ export async function updatePlacementLifecycle(opts: {
   // If clawback occurred, recalculate gross margin
   if (clawback !== null && clawback > 0) {
     const netGrossFee = Math.max(0, Number(cur.gross_placement_fee) - clawback);
-    const newMarginAmount = netGrossFee - Number(cur.direct_sourcing_cost) - Number(cur.recruiter_commission);
+    const newMarginAmount =
+      netGrossFee - Number(cur.direct_sourcing_cost) - Number(cur.recruiter_commission);
     const newMarginPct = netGrossFee > 0 ? (newMarginAmount / netGrossFee) * 100 : 0;
 
     await sql`
@@ -403,9 +404,7 @@ export async function updatePlacementLifecycle(opts: {
  * Calculates time-to-shortlist, shortlist-to-interview, interview-to-offer,
  * offer acceptance, joining ratio, 90-day retention, repeat mandates, and gross margins.
  */
-export async function getFunnelAnalytics(
-  filter: AnalyticsFilter,
-): Promise<FunnelAnalyticsReport> {
+export async function getFunnelAnalytics(filter: AnalyticsFilter): Promise<FunnelAnalyticsReport> {
   const sql = await getSql();
 
   // 1. Build Filter Conditions for Stages and Placements
@@ -673,9 +672,7 @@ export async function getFunnelAnalytics(
   }
 
   const repeatMandateRate =
-    totalMandates > 0
-      ? Math.round((calculatedRepeatMandates / totalMandates) * 1000) / 10
-      : 0;
+    totalMandates > 0 ? Math.round((calculatedRepeatMandates / totalMandates) * 1000) / 10 : 0;
 
   const repeatClientsCount = [...clientMap.values()].filter((c) => c.isRepeat).length;
 

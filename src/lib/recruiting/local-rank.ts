@@ -22,7 +22,11 @@ import type {
 export type RankCalibration = "production" | "strict";
 
 export function calibrationFromPrompt(prompt: string): RankCalibration {
-  if (/conservative|strict|high bar|false[- ]shortlist|never shortlist without|prefer maybe/i.test(prompt)) {
+  if (
+    /conservative|strict|high bar|false[- ]shortlist|never shortlist without|prefer maybe/i.test(
+      prompt,
+    )
+  ) {
     return "strict";
   }
   return "production";
@@ -121,7 +125,10 @@ export function localEvaluate(input: {
   roleTitle: string;
   answers: Array<{ question: string; answer: string }>;
 }): ScreenEvaluation {
-  const joined = input.answers.map((a) => a.answer).join(" ").trim();
+  const joined = input.answers
+    .map((a) => a.answer)
+    .join(" ")
+    .trim();
   const thin = joined.length < 120;
   const score = thin ? 42 : Math.min(78, 52 + Math.floor(joined.length / 80));
   return {
@@ -163,4 +170,3 @@ export function localClientCard(input: {
     availability: indiaBits.join(" · ") || "See resume",
   };
 }
-

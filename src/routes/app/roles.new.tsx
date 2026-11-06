@@ -26,7 +26,8 @@ function NewRole() {
       <p className="text-xs tracking-[0.18em] text-muted uppercase">New role</p>
       <h1 className="mt-1 font-display text-4xl tracking-tight">Write the seat, not the slogan</h1>
       <p className="mt-2 mb-8 max-w-xl text-sm text-muted">
-        Ranking is only as good as this document. Name the work, the craft, and what “good” looks like at this stage.
+        Ranking is only as good as this document. Name the work, the craft, and what “good” looks
+        like at this stage.
       </p>
       <RoleForm submitLabel="Open role" pending={mut.isPending} onSubmit={(v) => mut.mutate(v)} />
     </div>

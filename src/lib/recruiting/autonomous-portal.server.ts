@@ -72,12 +72,47 @@ export class SkillTrie {
 export function buildTechTrie(extraSkills: string[] = []): SkillTrie {
   const trie = new SkillTrie();
   const defaultSkills = [
-    "react", "react.js", "react native", "next.js", "vue", "vue.js", "angular",
-    "typescript", "javascript", "node", "node.js", "python", "golang", "go",
-    "rust", "java", "spring boot", "c++", "c#", ".net", "postgresql", "postgres",
-    "mysql", "redis", "mongodb", "kafka", "apache kafka", "rabbitmq", "aws",
-    "gcp", "azure", "docker", "kubernetes", "k8s", "terraform", "graphql",
-    "rest api", "grpc", "ci/cd", "github actions", "distributed systems",
+    "react",
+    "react.js",
+    "react native",
+    "next.js",
+    "vue",
+    "vue.js",
+    "angular",
+    "typescript",
+    "javascript",
+    "node",
+    "node.js",
+    "python",
+    "golang",
+    "go",
+    "rust",
+    "java",
+    "spring boot",
+    "c++",
+    "c#",
+    ".net",
+    "postgresql",
+    "postgres",
+    "mysql",
+    "redis",
+    "mongodb",
+    "kafka",
+    "apache kafka",
+    "rabbitmq",
+    "aws",
+    "gcp",
+    "azure",
+    "docker",
+    "kubernetes",
+    "k8s",
+    "terraform",
+    "graphql",
+    "rest api",
+    "grpc",
+    "ci/cd",
+    "github actions",
+    "distributed systems",
   ];
 
   for (const s of [...defaultSkills, ...extraSkills]) {
@@ -106,26 +141,34 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
     id: "career_portal",
     title: "Branded Autonomous Career Portal",
     badge: "Recommended · 2 Min Setup",
-    description: "Launch a standalone, high-conversion career portal hosted on your custom slug with AI-assisted resume extraction and candidate intake.",
+    description:
+      "Launch a standalone, high-conversion career portal hosted on your custom slug with AI-assisted resume extraction and candidate intake.",
     tradeOffs: {
-      pros: ["Zero engineering required", "Direct candidate missing-info intake", "Live real-time match feedback"],
+      pros: [
+        "Zero engineering required",
+        "Direct candidate missing-info intake",
+        "Live real-time match feedback",
+      ],
       cons: ["Hosted on portal slug rather than your primary root domain"],
     },
     steps: [
       {
         stepNumber: 1,
         instruction: "Claim Your Company Subpath Slug",
-        detail: "Choose a memorable slug (e.g. acme or hypergrowth). Your live careers link will immediately be active at /portal/[slug].",
+        detail:
+          "Choose a memorable slug (e.g. acme or hypergrowth). Your live careers link will immediately be active at /portal/[slug].",
       },
       {
         stepNumber: 2,
         instruction: "Brand Your Portal",
-        detail: "Upload company logo and set brand primary color to ensure consistent candidate trust.",
+        detail:
+          "Upload company logo and set brand primary color to ensure consistent candidate trust.",
       },
       {
         stepNumber: 3,
         instruction: "Publish Open Roles",
-        detail: "Mark active roles as 'open'. Candidates can apply immediately with drag-and-drop resume upload.",
+        detail:
+          "Mark active roles as 'open'. Candidates can apply immediately with drag-and-drop resume upload.",
       },
     ],
     recommendedSettings: {
@@ -140,26 +183,34 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
     id: "embed_widget",
     title: "Embeddable Career Widget / iFrame",
     badge: "No-Code Embed",
-    description: "Drop a single responsive iframe or script snippet directly into your existing Webflow, Framer, WordPress, or React website.",
+    description:
+      "Drop a single responsive iframe or script snippet directly into your existing Webflow, Framer, WordPress, or React website.",
     tradeOffs: {
-      pros: ["Keeps traffic on your company website", "Auto-resizing & zero CSS clash", "Works on any CMS"],
+      pros: [
+        "Keeps traffic on your company website",
+        "Auto-resizing & zero CSS clash",
+        "Works on any CMS",
+      ],
       cons: ["Requires access to edit your company website HTML/CMS"],
     },
     steps: [
       {
         stepNumber: 1,
         instruction: "Copy the Embed Code Snippet",
-        detail: "Copy the provided iframe snippet with pre-configured responsive boundaries and secure sandbox attributes.",
+        detail:
+          "Copy the provided iframe snippet with pre-configured responsive boundaries and secure sandbox attributes.",
       },
       {
         stepNumber: 2,
         instruction: "Paste into Your Website's Careers Page",
-        detail: "Open your CMS (Webflow, WordPress, Squarespace) and paste the code into an HTML Embed block.",
+        detail:
+          "Open your CMS (Webflow, WordPress, Squarespace) and paste the code into an HTML Embed block.",
       },
       {
         stepNumber: 3,
         instruction: "Verify Responsive Mobile Layout",
-        detail: "Test on mobile and desktop. The widget dynamically adapts height to avoid awkward scrollbars.",
+        detail:
+          "Test on mobile and desktop. The widget dynamically adapts height to avoid awkward scrollbars.",
       },
     ],
     recommendedSettings: {
@@ -178,26 +229,34 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
     id: "ats_webhook",
     title: "Legacy ATS Webhook Relay (Workday, Taleo, Greenhouse, Lever)",
     badge: "Enterprise Upgrade",
-    description: "Keep your existing legacy ATS (Workday, Taleo, etc.) while routing incoming applicants through our agentic multi-stage retrieval and evidence grounding engine.",
+    description:
+      "Keep your existing legacy ATS (Workday, Taleo, etc.) while routing incoming applicants through our agentic multi-stage retrieval and evidence grounding engine.",
     tradeOffs: {
-      pros: ["No need to replace existing HR procurement contracts", "Eliminates keyword-parsing rejection errors", "Instant shortlist delivery to recruiter inbox"],
+      pros: [
+        "No need to replace existing HR procurement contracts",
+        "Eliminates keyword-parsing rejection errors",
+        "Instant shortlist delivery to recruiter inbox",
+      ],
       cons: ["Requires ATS Admin to add webhook URL and Secret"],
     },
     steps: [
       {
         stepNumber: 1,
         instruction: "Generate Webhook Secret",
-        detail: "Click 'Generate Webhook Key'. This HMAC secret ensures all relayed applicants are cryptographically verified.",
+        detail:
+          "Click 'Generate Webhook Key'. This HMAC secret ensures all relayed applicants are cryptographically verified.",
       },
       {
         stepNumber: 2,
         instruction: "Configure Webhook in Workday / Taleo",
-        detail: "Navigate to your ATS Admin Console > Integrations > Webhooks. Add Payload URL and select 'Application Created' event.",
+        detail:
+          "Navigate to your ATS Admin Console > Integrations > Webhooks. Add Payload URL and select 'Application Created' event.",
       },
       {
         stepNumber: 3,
         instruction: "Send Test Ping",
-        detail: "Click 'Verify Connection' to simulate an incoming candidate and confirm multi-stage retrieval scoring.",
+        detail:
+          "Click 'Verify Connection' to simulate an incoming candidate and confirm multi-stage retrieval scoring.",
       },
     ],
     recommendedSettings: {
@@ -216,9 +275,14 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
     id: "direct_drop",
     title: "Direct Autonomous Folder Drop / Forwarding",
     badge: "Freemium & Premium Active",
-    description: "Drop batches of resumes (PDF, DOCX) directly into the desk or forward recruiter emails to auto-parse and queue.",
+    description:
+      "Drop batches of resumes (PDF, DOCX) directly into the desk or forward recruiter emails to auto-parse and queue.",
     tradeOffs: {
-      pros: ["Instant manual drop without portal setup", "Full support in Freemium tier", "Parallel batch parsing in NightQueue"],
+      pros: [
+        "Instant manual drop without portal setup",
+        "Full support in Freemium tier",
+        "Parallel batch parsing in NightQueue",
+      ],
       cons: ["Requires manual file selection rather than candidate self-service"],
     },
     steps: [
@@ -230,12 +294,14 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
       {
         stepNumber: 2,
         instruction: "Drop Files or Paste Text",
-        detail: "Drag up to 50 resumes at once. The system parses names, contacts, and experience vectors automatically.",
+        detail:
+          "Drag up to 50 resumes at once. The system parses names, contacts, and experience vectors automatically.",
       },
       {
         stepNumber: 3,
         instruction: "Review High-Confidence Shortlists",
-        detail: "Watch real-time evidence-grounded scoring rank candidates into Strong Yes, Yes, Maybe, and No.",
+        detail:
+          "Watch real-time evidence-grounded scoring rank candidates into Strong Yes, Yes, Maybe, and No.",
       },
     ],
     recommendedSettings: {
@@ -271,8 +337,10 @@ export function generateInteractiveProbes(requirements: RequirementEvaluation[])
       probes.push({
         id: "probe_notice_period",
         field: "notice_period_days",
-        prompt: "What is your official or negotiable notice period (in days)? Can your notice period be bought out if an offer is extended?",
-        explanation: "Notice period was unstated on your CV. Early-stage startups prioritize swift start dates.",
+        prompt:
+          "What is your official or negotiable notice period (in days)? Can your notice period be bought out if an offer is extended?",
+        explanation:
+          "Notice period was unstated on your CV. Early-stage startups prioritize swift start dates.",
         required: true,
       });
     } else if (reqLower.includes("compensation") || reqLower.includes("ctc")) {
@@ -280,14 +348,16 @@ export function generateInteractiveProbes(requirements: RequirementEvaluation[])
         id: "probe_expected_ctc",
         field: "expected_ctc_lakh",
         prompt: "What is your expected annual compensation (fixed + variable in LPA)?",
-        explanation: "Compensation expectation was not specified on your CV. We verify alignment before scheduling interviews.",
+        explanation:
+          "Compensation expectation was not specified on your CV. We verify alignment before scheduling interviews.",
         required: true,
       });
     } else if (reqLower.includes("location") || reqLower.includes("city")) {
       probes.push({
         id: "probe_location_relocation",
         field: "location_fit",
-        prompt: "Are you currently based in the role's target city, or open to full relocation / in-office schedule?",
+        prompt:
+          "Are you currently based in the role's target city, or open to full relocation / in-office schedule?",
         explanation: "Role location requirement needs confirmation.",
         required: true,
       });
@@ -388,31 +458,50 @@ export async function loadHitlCheckpoints(opts: {
     id: String(r.id),
     orgId: String(r.orgId || r.org_id),
     roleId: String(r.roleId || r.role_id),
-    applicationId: r.applicationId || r.application_id ? String(r.applicationId || r.application_id) : null,
+    applicationId:
+      r.applicationId || r.application_id ? String(r.applicationId || r.application_id) : null,
     portalId: r.portalId || r.portal_id ? String(r.portalId || r.portal_id) : null,
     checkpointType: String(r.checkpointType || r.checkpoint_type) as HitlCheckpointType,
     status: String(r.status) as HitlDecisionStatus,
     candidateName: String(r.candidateName || r.candidate_name || "Applicant"),
     roleTitle: String(r.roleTitle || r.role_title || "Open Role"),
-    aiRecommendation: String(r.aiRecommendation || r.ai_recommendation) as HitlDecision["aiRecommendation"],
-    aiScore: typeof r.aiScore === "number" ? r.aiScore : typeof r.ai_score === "number" ? r.ai_score : null,
+    aiRecommendation: String(
+      r.aiRecommendation || r.ai_recommendation,
+    ) as HitlDecision["aiRecommendation"],
+    aiScore:
+      typeof r.aiScore === "number"
+        ? r.aiScore
+        : typeof r.ai_score === "number"
+          ? r.ai_score
+          : null,
     aiFitLevel: r.aiFitLevel || r.ai_fit_level ? String(r.aiFitLevel || r.ai_fit_level) : null,
     aiConfidence: Number(r.aiConfidence || r.ai_confidence || 0.8),
     evidenceSummary: String(r.evidenceSummary || r.evidence_summary || ""),
-    missingRequirements: parseJson<string[]>(String(r.missingRequirementsJson || r.missing_requirements_json || "[]"), []),
-    probeQuestions: parseJson<string[]>(String(r.probeQuestionsJson || r.probe_questions_json || "[]"), []),
-    candidateResponses: parseJson<Array<{ question: string; answer: string; submittedAt?: string }>>(
-      String(r.candidateResponsesJson || r.candidate_responses_json || "[]"),
+    missingRequirements: parseJson<string[]>(
+      String(r.missingRequirementsJson || r.missing_requirements_json || "[]"),
       [],
     ),
+    probeQuestions: parseJson<string[]>(
+      String(r.probeQuestionsJson || r.probe_questions_json || "[]"),
+      [],
+    ),
+    candidateResponses: parseJson<
+      Array<{ question: string; answer: string; submittedAt?: string }>
+    >(String(r.candidateResponsesJson || r.candidate_responses_json || "[]"), []),
     reviewerId: r.reviewerId || r.reviewer_id ? String(r.reviewerId || r.reviewer_id) : null,
-    reviewerDecision: r.reviewerDecision || r.reviewer_decision ? String(r.reviewerDecision || r.reviewer_decision) : null,
+    reviewerDecision:
+      r.reviewerDecision || r.reviewer_decision
+        ? String(r.reviewerDecision || r.reviewer_decision)
+        : null,
     reviewerNotes: String(r.reviewerNotes || r.reviewer_notes || ""),
     calibrationDelta: parseJson<Record<string, string | number | boolean | null>>(
       String(r.calibrationDeltaJson || r.calibration_delta_json || "{}"),
       {},
     ),
-    decidedAt: r.decidedAt || r.decided_at ? new Date(String(r.decidedAt || r.decided_at)).toISOString() : null,
+    decidedAt:
+      r.decidedAt || r.decided_at
+        ? new Date(String(r.decidedAt || r.decided_at)).toISOString()
+        : null,
     createdAt: new Date(String(r.createdAt || r.created_at)).toISOString(),
   }));
 }
@@ -488,7 +577,10 @@ export async function ensureAutonomousPortal(opts: {
 
   const id = randomUUID();
   const webhookSecret = `whsec_${randomUUID().replace(/-/g, "")}`;
-  const slug = opts.defaultSlug.toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 40);
+  const slug = opts.defaultSlug
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .slice(0, 40);
 
   await sql`
     insert into autonomous_portals (
@@ -532,15 +624,19 @@ export async function updateAutonomousPortal(
   const [existing] = await sql`select * from autonomous_portals where id = ${portalId} limit 1`;
   if (!existing) throw new Error("Portal not found");
 
-  const slug = updates.slug ? updates.slug.toLowerCase().replace(/[^a-z0-9_-]/g, "-") : existing.slug;
+  const slug = updates.slug
+    ? updates.slug.toLowerCase().replace(/[^a-z0-9_-]/g, "-")
+    : existing.slug;
   const name = updates.portalName ?? existing.portal_name ?? existing.portalName;
   const headline = updates.headline ?? existing.headline;
   const description = updates.description ?? existing.description;
   const tier = updates.tier ?? existing.tier ?? "premium";
   const hitlPolicy = updates.hitlPolicy ?? existing.hitl_policy ?? "strict";
   const threshold = updates.autoShortlistThreshold ?? existing.auto_shortlist_threshold ?? 78;
-  const requireRejection = updates.requireHumanRejection ?? existing.require_human_rejection ?? true;
-  const interactiveIntake = updates.interactiveIntakeEnabled ?? existing.interactive_intake_enabled ?? true;
+  const requireRejection =
+    updates.requireHumanRejection ?? existing.require_human_rejection ?? true;
+  const interactiveIntake =
+    updates.interactiveIntakeEnabled ?? existing.interactive_intake_enabled ?? true;
   const connectedAts = updates.connectedAts ?? existing.connected_ats ?? "none";
   const channels = updates.channels ? JSON.stringify(updates.channels) : existing.channels_json;
   const branding = updates.branding ? JSON.stringify(updates.branding) : existing.branding_json;
@@ -581,9 +677,12 @@ export function formatPortalRow(r: Record<string, unknown>): AutonomousPortal {
     autoShortlistThreshold: Number(r.autoShortlistThreshold || r.auto_shortlist_threshold || 78),
     requireHumanRejection: Boolean(r.requireHumanRejection ?? r.require_human_rejection ?? true),
     requireRubricApproval: Boolean(r.requireRubricApproval ?? r.require_rubric_approval ?? true),
-    interactiveIntakeEnabled: Boolean(r.interactiveIntakeEnabled ?? r.interactive_intake_enabled ?? true),
+    interactiveIntakeEnabled: Boolean(
+      r.interactiveIntakeEnabled ?? r.interactive_intake_enabled ?? true,
+    ),
     webhookSecret: String(r.webhookSecret || r.webhook_secret || ""),
-    connectedAts: ((r.connectedAts || r.connected_ats) as AutonomousPortal["connectedAts"]) || "none",
+    connectedAts:
+      ((r.connectedAts || r.connected_ats) as AutonomousPortal["connectedAts"]) || "none",
     channels: parseJson(String(r.channelsJson || r.channels_json || "{}"), {
       careerPortal: true,
       embedWidget: true,
@@ -641,7 +740,8 @@ export async function processAtsWebhookIngestion(opts: {
     const [fallbackRole] = await sql`
       select id from roles where org_id = ${portal.orgId} and status = 'open' order by created_at desc limit 1
     `;
-    if (!fallbackRole) throw new Error("No open role found in organization to match candidate against");
+    if (!fallbackRole)
+      throw new Error("No open role found in organization to match candidate against");
     roleId = String(fallbackRole.id);
   }
 

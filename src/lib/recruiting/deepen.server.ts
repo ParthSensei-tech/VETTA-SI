@@ -24,7 +24,10 @@ export async function deepenRoleTopN(opts: {
   const perRankDeadlineMs = opts.deadlineMs ?? 45_000;
   const loopDeadline =
     Date.now() +
-    Math.max(perRankDeadlineMs, opts.totalBudgetMs ?? (context === "background" ? 600_000 : 180_000));
+    Math.max(
+      perRankDeadlineMs,
+      opts.totalBudgetMs ?? (context === "background" ? 600_000 : 180_000),
+    );
   const sql = await getSql();
   const roles = await sql<{
     id: string;
@@ -98,7 +101,13 @@ export async function deepenRoleTopN(opts: {
   for (const row of rows) {
     const isStale = Boolean(row.is_stale);
     // Skip if already deepened with a non-local engine unless forceStale or candidate is flagged stale
-    if (!opts.forceStale && !isStale && row.rank_engine && row.rank_engine !== "local" && !row.rank_engine.includes("cache")) {
+    if (
+      !opts.forceStale &&
+      !isStale &&
+      row.rank_engine &&
+      row.rank_engine !== "local" &&
+      !row.rank_engine.includes("cache")
+    ) {
       engines.push(`${row.rank_engine}:skip`);
       continue;
     }

@@ -38,8 +38,7 @@ const FAMILY_PATTERNS: Array<{ id: RoleFamilyId; title: RegExp; body: RegExp }> 
     id: "engineering",
     title:
       /\b(engineer|engineering|sde|developer|devops|sre|platform|backend|frontend|fullstack|full[- ]stack|architect|data eng|ml eng|infra)\b/i,
-    body:
-      /\b(typescript|python|golang|kubernetes|postgres|api|microservices|on-call|code review|ci\/cd)\b/i,
+    body: /\b(typescript|python|golang|kubernetes|postgres|api|microservices|on-call|code review|ci\/cd)\b/i,
   },
   {
     id: "product",
@@ -208,7 +207,9 @@ function levelFromScore(score: number): FitLevel {
 
 function parseBandLakh(band?: string): { min: number | null; max: number | null } {
   if (!band) return { min: null, max: null };
-  const nums = [...band.matchAll(/(\d+(?:\.\d+)?)/g)].map((m) => Number(m[1])).filter((n) => n > 0 && n < 500);
+  const nums = [...band.matchAll(/(\d+(?:\.\d+)?)/g)]
+    .map((m) => Number(m[1]))
+    .filter((n) => n > 0 && n < 500);
   if (nums.length === 0) return { min: null, max: null };
   if (nums.length === 1) return { min: nums[0]! * 0.85, max: nums[0]! * 1.15 };
   return { min: Math.min(...nums), max: Math.max(...nums) };
@@ -259,8 +260,7 @@ function resolveWeights(w?: Partial<MatchWeights> | null): MatchWeights {
       if (typeof v === "number" && Number.isFinite(v) && v >= 0) base[k] = v;
     }
   }
-  const sum =
-    (Object.keys(base) as (keyof MatchWeights)[]).reduce((s, k) => s + base[k], 0) || 1;
+  const sum = (Object.keys(base) as (keyof MatchWeights)[]).reduce((s, k) => s + base[k], 0) || 1;
   for (const k of Object.keys(base) as (keyof MatchWeights)[]) base[k] = base[k] / sum;
   return base;
 }
@@ -294,11 +294,7 @@ function scoreCriterion(
 ): { score: number; note: string } {
   const blob = `${criterion.name} ${criterion.strongEvidence}`.toLowerCase();
   const tokens = [
-    ...new Set(
-      blob
-        .split(/[^a-z0-9+.#]+/)
-        .filter((t) => t.length > 3 && !STOP.has(t)),
-    ),
+    ...new Set(blob.split(/[^a-z0-9+.#]+/).filter((t) => t.length > 3 && !STOP.has(t))),
   ].slice(0, 14);
   if (tokens.length === 0) return { score: 45, note: "No checkable tokens" };
   const hits = tokens.filter((t) => resumeLower.includes(t));
@@ -576,8 +572,9 @@ export function matchCandidateToRole(input: {
     firstMatch(resume, /https?:\/\/\S*linkedin\.com\/\S+/i) ||
     firstMatch(resume, /linkedin\.com\/in\/\S+/i);
   const name =
-    lines.find((l) => !l.includes("@") && !/https?:/i.test(l) && /^[A-Za-z][A-Za-z .'-]{2,60}$/.test(l)) ??
-    "Candidate";
+    lines.find(
+      (l) => !l.includes("@") && !/https?:/i.test(l) && /^[A-Za-z][A-Za-z .'-]{2,60}$/.test(l),
+    ) ?? "Candidate";
 
   const cityHit = INDIA_CITIES.find((c) => lower.includes(c));
   const location = cityHit
@@ -593,17 +590,31 @@ export function matchCandidateToRole(input: {
       ),
     ) ?? "";
   const current_title = titleLine.replace(/\s+[—–-]\s+.+$/, "").slice(0, 100);
-  const companyFromTitle = titleLine.split(/\s+[—–@]| at |,\s*/)[1]?.trim().slice(0, 80) ?? "";
+  const companyFromTitle =
+    titleLine
+      .split(/\s+[—–@]| at |,\s*/)[1]
+      ?.trim()
+      .slice(0, 80) ?? "";
   const years = numMatch(resume, /(\d+(?:\.\d+)?)\s*\+?\s*years?/i);
 
   const stack = input.role.stack.filter(Boolean);
   const stack_match: StackMatch[] = stack.map((skill) => {
     if (positiveMention(resume, skill)) {
-      return { skill, level: "strong" as const, status: "satisfied" as const, note: "Positive evidence in resume" };
+      return {
+        skill,
+        level: "strong" as const,
+        status: "satisfied" as const,
+        note: "Positive evidence in resume",
+      };
     }
     const partial = lower.includes(skill.toLowerCase().slice(0, Math.max(3, skill.length - 1)));
     if (partial) {
-      return { skill, level: "partial" as const, status: "satisfied" as const, note: "Partial keyword match in resume" };
+      return {
+        skill,
+        level: "partial" as const,
+        status: "satisfied" as const,
+        note: "Partial keyword match in resume",
+      };
     }
     return {
       skill,
@@ -639,9 +650,10 @@ export function matchCandidateToRole(input: {
           ? "relocation"
           : "unknown";
 
-  const earlySignals = /first hire|founding|0\s*→\s*1|0-1|seed stage|wore (many|multiple) hats|on-call|tiny team|startup/i.test(
-    resume,
-  );
+  const earlySignals =
+    /first hire|founding|0\s*→\s*1|0-1|seed stage|wore (many|multiple) hats|on-call|tiny team|startup/i.test(
+      resume,
+    );
   const early_stage_fit: IndiaContext["early_stage_fit"] = earlySignals
     ? "high"
     : /startup|series [ab]|early stage/i.test(resume)
@@ -663,9 +675,7 @@ export function matchCandidateToRole(input: {
   const skillScore =
     stack.length === 0
       ? 55
-      : Math.round(
-          ((strongStack * 1 + partialStack * 0.45) / stack.length) * 100,
-        );
+      : Math.round(((strongStack * 1 + partialStack * 0.45) / stack.length) * 100);
 
   const mustScore =
     input.role.mustHaves.length === 0
@@ -677,11 +687,7 @@ export function matchCandidateToRole(input: {
       ? 50
       : Math.min(100, Math.round((niceHits.length / input.role.niceToHaves.length) * 100));
 
-  const titleScore = familyOk
-    ? resumeFamily === roleFamily
-      ? 88
-      : 72
-    : 22;
+  const titleScore = familyOk ? (resumeFamily === roleFamily ? 88 : 72) : 22;
 
   // Seniority: rough years vs stage
   let seniorityScore = 55;
@@ -697,7 +703,13 @@ export function matchCandidateToRole(input: {
   }
 
   const locationScore =
-    location_fit === "local" ? 90 : location_fit === "remote_india" ? 75 : location_fit === "relocation" ? 55 : 45;
+    location_fit === "local"
+      ? 90
+      : location_fit === "remote_india"
+        ? 75
+        : location_fit === "relocation"
+          ? 55
+          : 45;
 
   const band = parseBandLakh(input.role.compensationBand);
   let compScore = 60;
@@ -825,9 +837,7 @@ export function matchCandidateToRole(input: {
 
   const hardGates: string[] = [];
   if (!familyOk) {
-    hardGates.push(
-      `Function mismatch: resume reads as ${resumeFamily}, role is ${roleFamily}`,
-    );
+    hardGates.push(`Function mismatch: resume reads as ${resumeFamily}, role is ${roleFamily}`);
     composite = Math.min(composite, 42);
   }
   if (useFounderRubric) {
@@ -889,7 +899,11 @@ export function matchCandidateToRole(input: {
         }
       }
     }
-    if (hc.noticeMaxDays != null && notice_period_days != null && notice_period_days > hc.noticeMaxDays) {
+    if (
+      hc.noticeMaxDays != null &&
+      notice_period_days != null &&
+      notice_period_days > hc.noticeMaxDays
+    ) {
       const msg = `Notice ${notice_period_days}d exceeds ceiling ${hc.noticeMaxDays}d`;
       risks.push(msg);
       if (hc.strictFilter) {
@@ -897,7 +911,11 @@ export function matchCandidateToRole(input: {
         composite = Math.min(composite, 42);
       }
     }
-    if (expected_ctc_lakh != null && hc.compMaxLpa != null && expected_ctc_lakh > hc.compMaxLpa * 1.15) {
+    if (
+      expected_ctc_lakh != null &&
+      hc.compMaxLpa != null &&
+      expected_ctc_lakh > hc.compMaxLpa * 1.15
+    ) {
       const msg = `Expected CTC above constraint (~${hc.compMaxLpa} LPA)`;
       risks.push(msg);
       if (hc.strictFilter) {
@@ -905,7 +923,11 @@ export function matchCandidateToRole(input: {
         composite = Math.min(composite, 42);
       }
     }
-    if (expected_ctc_lakh != null && hc.compMinLpa != null && expected_ctc_lakh < hc.compMinLpa * 0.7) {
+    if (
+      expected_ctc_lakh != null &&
+      hc.compMinLpa != null &&
+      expected_ctc_lakh < hc.compMinLpa * 0.7
+    ) {
       risks.push(`Expected CTC well below band floor (~${hc.compMinLpa} LPA) — verify interest`);
     }
   }
@@ -930,7 +952,8 @@ export function matchCandidateToRole(input: {
   }
   if (evidence.length === 0) {
     const quote = lines.find((l) => l.length > 28 && l.length < 200);
-    if (quote) evidence.push({ claim: "Representative line from resume", quote: quote.slice(0, 220) });
+    if (quote)
+      evidence.push({ claim: "Representative line from resume", quote: quote.slice(0, 220) });
   }
 
   const gaps: string[] = [];
@@ -944,7 +967,8 @@ export function matchCandidateToRole(input: {
   }
   if (mustHits.length < input.role.mustHaves.length) {
     const missed = input.role.mustHaves.filter((m) => !mustHits.includes(m));
-    if (missed.length) gaps.push(`Must-haves not clearly evidenced: ${missed.slice(0, 3).join("; ")}`);
+    if (missed.length)
+      gaps.push(`Must-haves not clearly evidenced: ${missed.slice(0, 3).join("; ")}`);
   }
   if (years == null) gaps.push("Years of experience not explicit on the resume");
 

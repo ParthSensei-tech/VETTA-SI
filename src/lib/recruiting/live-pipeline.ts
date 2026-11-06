@@ -80,7 +80,10 @@ function answersFor(tier: LiveApplicant["tier"], title: string): string[] {
   ];
 }
 
-function decide(rank: RankResult | null, evaluation: ScreenEvaluation | null): {
+function decide(
+  rank: RankResult | null,
+  evaluation: ScreenEvaluation | null,
+): {
   status: PipelineStatus;
   reasoning: string;
 } {
@@ -143,7 +146,8 @@ function gtmApplicants(): LiveApplicant[] {
     ["Ritu Verma", "Noida", "Manual QA", "weak", "Product co", "6", "30 days"],
   ];
   return rows.map((r, i) => {
-    const [fullName, location, currentTitle, tier, currentCompany, yearsExperience, noticePeriod] = r;
+    const [fullName, location, currentTitle, tier, currentCompany, yearsExperience, noticePeriod] =
+      r;
     const email = `${fullName.toLowerCase().replace(/ /g, ".")}.${i}@live.vetta.test`;
     const strongResume = `${fullName}
 ${location}
@@ -187,7 +191,8 @@ ${yearsExperience} years of experience
 Notice: ${noticePeriod}
 Expected: 12 LPA
 Craft: React, JavaScript`;
-    const resumeText = tier === "strong" ? strongResume : tier === "medium" ? mediumResume : weakResume;
+    const resumeText =
+      tier === "strong" ? strongResume : tier === "medium" ? mediumResume : weakResume;
     return {
       fullName,
       email,
@@ -229,7 +234,8 @@ function productApplicants(): LiveApplicant[] {
     ["Arjun Verma", "Noida", "Android Engineer", "weak", "App studio", "6", "30 days"],
   ];
   return rows.map((r, i) => {
-    const [fullName, location, currentTitle, tier, currentCompany, yearsExperience, noticePeriod] = r;
+    const [fullName, location, currentTitle, tier, currentCompany, yearsExperience, noticePeriod] =
+      r;
     const email = `${fullName.toLowerCase().replace(/ /g, ".")}.fe${i}@live.vetta.test`;
     const strongResume = `${fullName}
 ${location}
@@ -271,7 +277,8 @@ ${yearsExperience} years of experience
 Notice: ${noticePeriod}
 Expected: 18 LPA
 Craft: HTML, CSS, JavaScript`;
-    const resumeText = tier === "strong" ? strongResume : tier === "medium" ? mediumResume : weakResume;
+    const resumeText =
+      tier === "strong" ? strongResume : tier === "medium" ? mediumResume : weakResume;
     return {
       fullName,
       email,
@@ -314,17 +321,17 @@ async function processApplicant(opts: {
 
   const { generateScreen, evaluateScreen } = await import("./ai.server");
   const roleInput = {
-      companyName: opts.role.companyName,
-      companyStage: opts.role.companyStage,
-      title: opts.role.title,
-      location: opts.role.location,
-      workMode: opts.role.workMode,
-      compensationBand: opts.role.compensationBand,
-      stack: opts.role.stack,
-      mustHaves: opts.role.mustHaves,
-      niceToHaves: opts.role.niceToHaves,
-      jdText: opts.role.jdText,
-    };
+    companyName: opts.role.companyName,
+    companyStage: opts.role.companyStage,
+    title: opts.role.title,
+    location: opts.role.location,
+    workMode: opts.role.workMode,
+    compensationBand: opts.role.compensationBand,
+    stack: opts.role.stack,
+    mustHaves: opts.role.mustHaves,
+    niceToHaves: opts.role.niceToHaves,
+    jdText: opts.role.jdText,
+  };
   const { rankWithProductionPrompt, safeRecordLiveRank } = await import("./harness/server");
   const ranked = await rankWithProductionPrompt(opts.userId, {
     resumeText: resume,

@@ -35,8 +35,8 @@ export const MODEL_PRICING_TABLE: Record<string, ModelPricing> = {
   "llama3.2": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
 
   // Local rule-based engine
-  "evidence": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
-  "local": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  evidence: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  local: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
 };
 
 // Default pricing for unknown models per provider
@@ -72,8 +72,12 @@ export const USD_TO_INR_RATE =
  * about what a model costs.
  */
 export function modelPriceFor(model: string, provider: string): ModelPricing {
-  const normModel = String(model || "").toLowerCase().trim();
-  const normProvider = String(provider || "").toLowerCase().trim();
+  const normModel = String(model || "")
+    .toLowerCase()
+    .trim();
+  const normProvider = String(provider || "")
+    .toLowerCase()
+    .trim();
   return (
     MODEL_PRICING_TABLE[normModel] ??
     DEFAULT_PROVIDER_PRICING[normProvider] ?? { promptUsdPerMillion: 0, completionUsdPerMillion: 0 }
@@ -158,8 +162,10 @@ export function calculateModelCost(args: {
   const costInr = Math.round(costUsd * USD_TO_INR_RATE * 10000) / 10000;
 
   // Benchmark baseline cost (gpt-4o rates)
-  const baselinePrompt = (promptTokens / 1_000_000) * BASELINE_BENCHMARK_PRICING.promptUsdPerMillion;
-  const baselineComp = (completionTokens / 1_000_000) * BASELINE_BENCHMARK_PRICING.completionUsdPerMillion;
+  const baselinePrompt =
+    (promptTokens / 1_000_000) * BASELINE_BENCHMARK_PRICING.promptUsdPerMillion;
+  const baselineComp =
+    (completionTokens / 1_000_000) * BASELINE_BENCHMARK_PRICING.completionUsdPerMillion;
   const baselineUsd = baselinePrompt + baselineComp;
   const baselineInr = Math.round(baselineUsd * USD_TO_INR_RATE * 10000) / 10000;
 
@@ -220,11 +226,12 @@ export const formatCostRupees = formatCostInr;
  */
 export function formatCostSideBySide(
   cost: number | { usd?: number; cents?: number; inr?: number },
-  format: "parens" | "slash" | "inline" = "parens"
+  format: "parens" | "slash" | "inline" = "parens",
 ): string {
   const usd = typeof cost === "number" ? cost : (cost.usd ?? (cost.cents ? cost.cents / 100 : 0));
   const cents = typeof cost === "number" ? cost * 100 : (cost.cents ?? usd * 100);
-  const inr = typeof cost === "number" ? cost * USD_TO_INR_RATE : (cost.inr ?? usd * USD_TO_INR_RATE);
+  const inr =
+    typeof cost === "number" ? cost * USD_TO_INR_RATE : (cost.inr ?? usd * USD_TO_INR_RATE);
 
   const usdStr = formatCostUsd(usd);
   const centsStr = formatCostCents(cents);

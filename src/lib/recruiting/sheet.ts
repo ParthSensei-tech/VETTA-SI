@@ -81,9 +81,14 @@ export async function shareToXlsx(view: ShareView): Promise<Uint8Array> {
   return new Uint8Array(buf as ArrayBuffer);
 }
 
-export async function shareToXlsxBase64(view: ShareView): Promise<{ filename: string; base64: string }> {
+export async function shareToXlsxBase64(
+  view: ShareView,
+): Promise<{ filename: string; base64: string }> {
   const bytes = await shareToXlsx(view);
-  const slug = `${view.companyName}-${view.roleTitle}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 48);
+  const slug = `${view.companyName}-${view.roleTitle}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .slice(0, 48);
   return { filename: `${slug || "vetta-slate"}.xlsx`, base64: toBase64(bytes) };
 }
 

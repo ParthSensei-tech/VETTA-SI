@@ -131,21 +131,31 @@ for (const [scenario, env, history, gates] of [
 
       // The invariants.
       if (task === "rank" && ctx.context === "interactive" && d.chosen?.id.startsWith("ollama:")) {
-        problems.push(`${scenario}: an interactive rank went to ${d.chosen.id} inside ${ctx.deadlineMs}ms`);
+        problems.push(
+          `${scenario}: an interactive rank went to ${d.chosen.id} inside ${ctx.deadlineMs}ms`,
+        );
       }
       if (d.timeoutMs > ctx.deadlineMs) {
-        problems.push(`${scenario}/${task}/${ctx.context}: timeout ${d.timeoutMs}ms exceeds the deadline`);
+        problems.push(
+          `${scenario}/${task}/${ctx.context}: timeout ${d.timeoutMs}ms exceeds the deadline`,
+        );
       }
       if (d.timeoutMs < 1_000) {
-        problems.push(`${scenario}/${task}: timeout ${d.timeoutMs}ms is not a usable attempt budget`);
+        problems.push(
+          `${scenario}/${task}: timeout ${d.timeoutMs}ms is not a usable attempt budget`,
+        );
       }
       if (!d.chosen && Object.keys(env).length > 0) {
-        problems.push(`${scenario}/${task}/${ctx.context}: nothing eligible, which the keys should prevent`);
+        problems.push(
+          `${scenario}/${task}/${ctx.context}: nothing eligible, which the keys should prevent`,
+        );
       }
       // The 200-application burst is keyless and local, so the clock must cost it exactly nothing.
       if (!Object.keys(env).length && task === "rank" && ctx.context === "interactive") {
         if (d.chosen?.id !== "local:evidence") {
-          problems.push(`keyless burst rank went to ${d.chosen?.id} instead of the local evidence engine`);
+          problems.push(
+            `keyless burst rank went to ${d.chosen?.id} instead of the local evidence engine`,
+          );
         }
         if (d.timeoutMs !== 14_000) {
           problems.push(`the keyless fast path lost its floor: ${d.timeoutMs}ms`);
@@ -158,7 +168,15 @@ for (const [scenario, env, history, gates] of [
 const pad = (s, n) => String(s).padEnd(n);
 for (const scenario of [...new Set(rows.map((r) => r.scenario))]) {
   console.log(`\n=== ${scenario} ===`);
-  console.log(pad("task", 16) + pad("context", 13) + pad("chosen", 26) + pad("timeout", 9) + pad("tokens", 11) + pad("p50 est", 9) + "clock-excluded");
+  console.log(
+    pad("task", 16) +
+      pad("context", 13) +
+      pad("chosen", 26) +
+      pad("timeout", 9) +
+      pad("tokens", 11) +
+      pad("p50 est", 9) +
+      "clock-excluded",
+  );
   for (const r of rows.filter((x) => x.scenario === scenario)) {
     console.log(
       pad(r.task, 16) +

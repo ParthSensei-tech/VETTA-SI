@@ -46,7 +46,8 @@ await getSql();
 const bootMs = Math.round(performance.now() - t_boot_start);
 
 const P = await import("../src/lib/recruiting/benchmark/phases.ts");
-const { calculateModelCost, formatCostSideBySide } = await import("../src/lib/observability/cost.ts");
+const { calculateModelCost, formatCostSideBySide } =
+  await import("../src/lib/observability/cost.ts");
 
 if (opts.suppressDeepen) P.openAllCircuits();
 if (opts.suppressEmbedding) P.suppressEmbeddingWorker();
@@ -57,7 +58,10 @@ if (opts.suppressEmbedding) P.suppressEmbeddingWorker();
 // specifier does not error; it just measures a degraded path. `rank.explain` is
 // only attached when those modules truly loaded, so it is the probe.
 // ---------------------------------------------------------------------------
-const ctx = await P.setupBench({ slateSize: Math.max(opts.n, opts.reps) + 10, orgCoversTraining: opts.orgCoversTraining });
+const ctx = await P.setupBench({
+  slateSize: Math.max(opts.n, opts.reps) + 10,
+  orgCoversTraining: opts.orgCoversTraining,
+});
 {
   const { parseAndRank } = await import("../src/lib/recruiting/ai.server.ts");
   const probeRole = ctx.roles[0];
@@ -83,7 +87,9 @@ const ctx = await P.setupBench({ slateSize: Math.max(opts.n, opts.reps) + 10, or
     );
     process.exit(2);
   }
-  console.log(`fidelity probe: OK (explain attached; ${Object.keys(resolvedSpecifiers()).length} aliased specifiers resolved)`);
+  console.log(
+    `fidelity probe: OK (explain attached; ${Object.keys(resolvedSpecifiers()).length} aliased specifiers resolved)`,
+  );
 }
 
 const uniq = await P.verifyDedupe(ctx.resumes, ctx.userId);
@@ -104,7 +110,15 @@ const slates = String(opts.slates)
 const L5 = [];
 for (const size of slates) {
   console.log(`  running ${size}-resume slate...`);
-  L5.push(await P.phaseL5(ctx, { n: size, maxJobs: opts.maxJobs, concurrency: opts.concurrency, budgetMs: opts.budgetMs, deadlineMs: opts.deadlineMs }));
+  L5.push(
+    await P.phaseL5(ctx, {
+      n: size,
+      maxJobs: opts.maxJobs,
+      concurrency: opts.concurrency,
+      budgetMs: opts.budgetMs,
+      deadlineMs: opts.deadlineMs,
+    }),
+  );
 }
 const L6 = await P.phaseL6(ctx, { n: 3, openCircuits: opts.suppressDeepen });
 
@@ -152,10 +166,16 @@ for (const size of RESUME_SIZES) {
     const promptText = `${RANK_SYSTEM}\n${"x".repeat(size.chars)}\n${"y".repeat(jdChars)}`;
     for (const p of PROVIDERS) {
       const typical = calculateModelCost({
-        provider: p.provider, model: p.model, promptText, completionText: "z".repeat(250 * 3.8),
+        provider: p.provider,
+        model: p.model,
+        promptText,
+        completionText: "z".repeat(250 * 3.8),
       });
       const capped = calculateModelCost({
-        provider: p.provider, model: p.model, promptText, completionText: "z".repeat(2200 * 3.8),
+        provider: p.provider,
+        model: p.model,
+        promptText,
+        completionText: "z".repeat(2200 * 3.8),
       });
       costMatrix.push({
         resumeChars: size.chars,
@@ -176,10 +196,14 @@ for (const size of RESUME_SIZES) {
   }
 }
 const cheapestPerTypicalRank = Math.min(
-  ...costMatrix.filter((c) => c.resumeBucket === "typical_4k" && c.jdChars === JD_TYPICAL).map((c) => c.inrTypical),
+  ...costMatrix
+    .filter((c) => c.resumeBucket === "typical_4k" && c.jdChars === JD_TYPICAL)
+    .map((c) => c.inrTypical),
 );
 const dearestPerTypicalRank = Math.max(
-  ...costMatrix.filter((c) => c.resumeBucket === "typical_4k" && c.jdChars === JD_TYPICAL).map((c) => c.inrTypical),
+  ...costMatrix
+    .filter((c) => c.resumeBucket === "typical_4k" && c.jdChars === JD_TYPICAL)
+    .map((c) => c.inrTypical),
 );
 
 const cores = os.cpus().length;
@@ -222,24 +246,39 @@ if (baseline) {
     }
   }
 } else {
-  for (const [k, t] of [["L1", targets.L1_p95], ["L2", targets.L2_p95], ["L4", targets.L4_p95]]) {
+  for (const [k, t] of [
+    ["L1", targets.L1_p95],
+    ["L2", targets.L2_p95],
+    ["L4", targets.L4_p95],
+  ]) {
     if (allStats[k].p95 > t) {
       gate.passed = false;
-      gate.reasons.push(`${k}.p95 ${allStats[k].p95}ms exceeds provisional target ${t}ms (no baseline.json yet)`);
+      gate.reasons.push(
+        `${k}.p95 ${allStats[k].p95}ms exceeds provisional target ${t}ms (no baseline.json yet)`,
+      );
     }
   }
 }
 // sanity floors — if these fail, the harness itself is wrong
-if (!(L2.stats.p50 > L1.stats.p50)) gate.reasons.push("ORDERING: L2.p50 is not greater than L1.p50 — fast path may not be doing real work");
-if (!(L3.mem.p50 < L2.stats.p50)) gate.reasons.push("ORDERING: L3 memHit is not faster than L2 — cache may not be engaged");
-if (L5.some((s) => s.notCompleted !== 0)) gate.reasons.push(`QUEUE: slates left jobs uncompleted (${L5.map((s) => s.notCompleted).join(", ")})`);
+if (!(L2.stats.p50 > L1.stats.p50))
+  gate.reasons.push(
+    "ORDERING: L2.p50 is not greater than L1.p50 — fast path may not be doing real work",
+  );
+if (!(L3.mem.p50 < L2.stats.p50))
+  gate.reasons.push("ORDERING: L3 memHit is not faster than L2 — cache may not be engaged");
+if (L5.some((s) => s.notCompleted !== 0))
+  gate.reasons.push(
+    `QUEUE: slates left jobs uncompleted (${L5.map((s) => s.notCompleted).join(", ")})`,
+  );
 if (uniqAfter.distinctCandidates < Math.max(...slates, 0)) {
   gate.reasons.push(
     `DEDUPE: slate produced only ${uniqAfter.distinctCandidates} distinct candidates for a ${Math.max(...slates, 0)}-resume corpus — timings would be cache hits, not fresh ranks`,
   );
 }
-if (L5.some((s) => s.failed > 0)) gate.reasons.push(`QUEUE: slates had failed jobs (${L5.map((s) => s.failed).join(", ")})`);
-if (!L6.engines.every((e) => e === "local")) gate.reasons.push(`L6: ladder engines not all local: ${JSON.stringify(L6.engines)}`);
+if (L5.some((s) => s.failed > 0))
+  gate.reasons.push(`QUEUE: slates had failed jobs (${L5.map((s) => s.failed).join(", ")})`);
+if (!L6.engines.every((e) => e === "local"))
+  gate.reasons.push(`L6: ladder engines not all local: ${JSON.stringify(L6.engines)}`);
 if (gate.reasons.length && gate.passed) gate.passed = false;
 
 // ---------------------------------------------------------------------------
@@ -262,12 +301,22 @@ for (const s of L5) {
       `${s.resumesPerSec}/sec  processed=${s.processed} completed=${s.completed} failed=${s.failed}  ` +
       `slices=${s.slices} derivedParallelism=${s.derivedParallelism}`,
   );
-  console.log(`     job durations p50=${s.jobDuration.p50} p95=${s.jobDuration.p95} p99=${s.jobDuration.p99}  queueAge p95=${s.queueAge.p95}`);
+  console.log(
+    `     job durations p50=${s.jobDuration.p50} p95=${s.jobDuration.p95} p99=${s.jobDuration.p99}  queueAge p95=${s.queueAge.p95}`,
+  );
 }
-console.log(row("L6 LLM ladder (overhead, no keys)", L6.stats, `  engines=${[...new Set(L6.engines)].join("/")}`));
+console.log(
+  row(
+    "L6 LLM ladder (overhead, no keys)",
+    L6.stats,
+    `  engines=${[...new Set(L6.engines)].join("/")}`,
+  ),
+);
 console.log("-----------------------------------------------------------------");
 console.log(`dominant time sink: ${dominant}`);
-console.log(`free-tier headroom: ${freeTier.cpuMsPerRank_p95}ms CPU/rank p95 across ${cores} cores => ~${freeTier.ranksPerSecPerCore} ranks/sec/core`);
+console.log(
+  `free-tier headroom: ${freeTier.cpuMsPerRank_p95}ms CPU/rank p95 across ${cores} cores => ~${freeTier.ranksPerSecPerCore} ranks/sec/core`,
+);
 console.log(`local COGS/rank (measured): ${costCentsPerRankLocal.toFixed(4)} cents`);
 console.log("\nLLM COGS per rank (ESTIMATED tokens, no live provider calls):");
 console.log(`  ${"resume/JD".padEnd(22)}${"provider".padEnd(26)}promptTok  typical      capped`);
@@ -278,10 +327,16 @@ for (const c of costMatrix) {
       `${String(c.promptTokens).padEnd(11)}${formatCostSideBySide(c.usdTypical, "parens").padEnd(13)}${formatCostSideBySide(c.usdCap, "parens")}`,
   );
 }
-console.log(`  typical 4k resume + 3k JD band: ₹${cheapestPerTypicalRank.toFixed(3)}–₹${dearestPerTypicalRank.toFixed(3)} per rank`);
+console.log(
+  `  typical 4k resume + 3k JD band: ₹${cheapestPerTypicalRank.toFixed(3)}–₹${dearestPerTypicalRank.toFixed(3)} per rank`,
+);
 console.log("");
-console.log(`L2 internal meta.latencyMs p50=${L2.internalLatency.p50} (cross-check vs wall ${L2.stats.p50})`);
-console.log(`gate: ${gate.passed ? "PASS" : "FAIL"} (${gate.mode})${gate.reasons.length ? "\n  - " + gate.reasons.join("\n  - ") : ""}`);
+console.log(
+  `L2 internal meta.latencyMs p50=${L2.internalLatency.p50} (cross-check vs wall ${L2.stats.p50})`,
+);
+console.log(
+  `gate: ${gate.passed ? "PASS" : "FAIL"} (${gate.mode})${gate.reasons.length ? "\n  - " + gate.reasons.join("\n  - ") : ""}`,
+);
 console.log("=================================================================\n");
 
 function vendor() {
@@ -330,8 +385,14 @@ const artifact = {
 
 mkdirSync(path.join("artifacts", "benchmarks"), { recursive: true });
 const stamp = artifact.generatedAt.replace(/[:.]/g, "-");
-writeFileSync(path.join("artifacts", "benchmarks", `resume-match-${stamp}.json`), JSON.stringify(artifact, null, 2));
-writeFileSync(path.join("artifacts", "benchmarks", "latest.json"), JSON.stringify(artifact, null, 2));
+writeFileSync(
+  path.join("artifacts", "benchmarks", `resume-match-${stamp}.json`),
+  JSON.stringify(artifact, null, 2),
+);
+writeFileSync(
+  path.join("artifacts", "benchmarks", "latest.json"),
+  JSON.stringify(artifact, null, 2),
+);
 if (opts.freezeBaseline) {
   const slim = {
     schema: "vetta.benchmark.baseline/v1",

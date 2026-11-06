@@ -128,10 +128,7 @@ export const auth = betterAuth({
     encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
-      trustedProviders: [
-        ...SOCIAL_PROVIDERS.map((p) => p.providerId),
-        GATE_PROVIDER_ID,
-      ],
+      trustedProviders: [...SOCIAL_PROVIDERS.map((p) => p.providerId), GATE_PROVIDER_ID],
       requireLocalEmailVerified: false,
     },
   },

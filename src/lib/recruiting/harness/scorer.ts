@@ -41,7 +41,13 @@ export type RunTotals = {
 };
 
 export function summarizeRun(
-  rows: Array<{ agree: boolean; adjacent: boolean; falseShortlist: boolean; falseReject: boolean; latencyMs: number | null }>,
+  rows: Array<{
+    agree: boolean;
+    adjacent: boolean;
+    falseShortlist: boolean;
+    falseReject: boolean;
+    latencyMs: number | null;
+  }>,
 ): RunTotals {
   const labeled = rows.length;
   const agree = rows.filter((r) => r.agree).length;

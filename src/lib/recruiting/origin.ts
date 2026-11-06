@@ -35,7 +35,9 @@ export function publicOrigin(): string {
     const protoHeader = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
     const proto =
       protoHeader ||
-      (host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]") ? "http" : "https");
+      (host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]")
+        ? "http"
+        : "https");
     return `${proto}://${host}`;
   } catch {
     return "";

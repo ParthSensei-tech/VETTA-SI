@@ -1,5 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, ClipboardCheck, LayoutGrid, Plus, Rocket, ShieldCheck, Users } from "lucide-react";
+import {
+  Activity,
+  ClipboardCheck,
+  LayoutGrid,
+  Plus,
+  Rocket,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
@@ -12,7 +20,13 @@ const NAV = [
   { to: "/app/talent", label: "Talent", icon: Users, exact: false, premium: false },
   { to: "/app/portal", label: "Portal", icon: Rocket, exact: false, premium: true },
   { to: "/app/harness", label: "Harness", icon: ShieldCheck, exact: false, premium: false },
-  { to: "/app/observability", label: "Observability", icon: Activity, exact: false, premium: false },
+  {
+    to: "/app/observability",
+    label: "Observability",
+    icon: Activity,
+    exact: false,
+    premium: false,
+  },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

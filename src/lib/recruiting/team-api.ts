@@ -2,12 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { ensureUserOrg } from "./org.server";
-import {
-  assertOrgPermission,
-  listOrgMembers,
-  addOrgMember,
-  updateOrgMember,
-} from "./rbac.server";
+import { assertOrgPermission, listOrgMembers, addOrgMember, updateOrgMember } from "./rbac.server";
 import {
   assignUserToRole,
   removeRoleAssignment,
@@ -15,14 +10,8 @@ import {
   assignUserToApplication,
   getApplicationAssignments,
 } from "./assignments.server";
-import {
-  getSharedCandidatePool,
-  getCandidateFullDossier,
-} from "./talent-pool.server";
-import {
-  findDuplicateCandidates,
-  mergeCandidates,
-} from "./duplicates.server";
+import { getSharedCandidatePool, getCandidateFullDossier } from "./talent-pool.server";
+import { findDuplicateCandidates, mergeCandidates } from "./duplicates.server";
 import {
   addCandidateNote,
   getCandidateNotes,
@@ -104,9 +93,7 @@ export const assignRoleMemberFn = createServerFn({ method: "POST" })
 
 export const getRoleAssignmentsFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .validator((input: unknown) =>
-    z.object({ roleId: z.string().min(1) }).parse(input),
-  )
+  .validator((input: unknown) => z.object({ roleId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }) => {
     const org = await ensureUserOrg(context.userId);
     return getRoleAssignments(org.orgId, data.roleId);
@@ -137,9 +124,7 @@ export const getSharedPoolFn = createServerFn({ method: "GET" })
 
 export const getCandidateDossierFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .validator((input: unknown) =>
-    z.object({ candidateId: z.string().min(1) }).parse(input),
-  )
+  .validator((input: unknown) => z.object({ candidateId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }) => {
     const org = await ensureUserOrg(context.userId);
     return getCandidateFullDossier(org.orgId, data.candidateId, context.userId);

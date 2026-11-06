@@ -17,7 +17,10 @@ function slugify(name: string): string {
  * Ensure the user has a personal organization and membership.
  * Enterprise multi-tenant root — all recruiting data attaches to org_id.
  */
-export async function ensureUserOrg(userId: string, displayName?: string): Promise<{
+export async function ensureUserOrg(
+  userId: string,
+  displayName?: string,
+): Promise<{
   orgId: string;
   name: string;
   retentionDays: number;

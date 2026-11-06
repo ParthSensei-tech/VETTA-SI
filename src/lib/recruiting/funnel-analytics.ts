@@ -21,11 +21,7 @@ export type FunnelStage = (typeof FUNNEL_STAGES)[number];
 
 export type JoiningStatus = "pending" | "joined" | "reneged" | "no_show";
 export type RetentionStatus =
-  | "pending"
-  | "retained_30d"
-  | "retained_60d"
-  | "retained_90d"
-  | "attrited_early";
+  "pending" | "retained_30d" | "retained_60d" | "retained_90d" | "attrited_early";
 export type InvoiceStatus = "draft" | "billed" | "collected" | "clawed_back";
 
 export type CycleTimeMetric = {
@@ -207,12 +203,9 @@ export function calculateGrossMargin(opts: {
 } {
   const directCost = opts.directCost ?? 0;
   const recruiterCommission = opts.recruiterCommission ?? 0;
-  const grossFee = Math.round((opts.offeredCtc * (opts.feePercentage / 100)) * 100) / 100;
+  const grossFee = Math.round(opts.offeredCtc * (opts.feePercentage / 100) * 100) / 100;
   const marginAmount = Math.round((grossFee - directCost - recruiterCommission) * 100) / 100;
-  const marginPercentage =
-    grossFee > 0
-      ? Math.round((marginAmount / grossFee) * 1000) / 10
-      : 0;
+  const marginPercentage = grossFee > 0 ? Math.round((marginAmount / grossFee) * 1000) / 10 : 0;
 
   return {
     grossFee,

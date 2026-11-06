@@ -11,10 +11,16 @@ export function CandidatePortalShell({ children }: { children: ReactNode }) {
           <VettaWordmark />
         </Link>
         <nav className="flex items-center gap-2 text-sm sm:gap-4">
-          <Link to="/jobs" className="hidden text-muted transition-colors duration-150 hover:text-fg sm:inline">
+          <Link
+            to="/jobs"
+            className="hidden text-muted transition-colors duration-150 hover:text-fg sm:inline"
+          >
             Open roles
           </Link>
-          <Link to="/" className="hidden text-muted transition-colors duration-150 hover:text-fg sm:inline">
+          <Link
+            to="/"
+            className="hidden text-muted transition-colors duration-150 hover:text-fg sm:inline"
+          >
             Home
           </Link>
           <Link to="/login" className="text-muted transition-colors duration-150 hover:text-fg">

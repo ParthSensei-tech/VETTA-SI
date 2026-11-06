@@ -26,7 +26,11 @@ export function screenPath(token: string): string {
 
 export function ensureAbsoluteUrl(pathOrUrl: string): string {
   if (!pathOrUrl) return pathOrUrl;
-  if (/^https?:\/\//i.test(pathOrUrl) || pathOrUrl.startsWith("mailto:") || pathOrUrl.startsWith("https://wa.me/")) {
+  if (
+    /^https?:\/\//i.test(pathOrUrl) ||
+    pathOrUrl.startsWith("mailto:") ||
+    pathOrUrl.startsWith("https://wa.me/")
+  ) {
     return pathOrUrl;
   }
   if (typeof window === "undefined") return pathOrUrl;

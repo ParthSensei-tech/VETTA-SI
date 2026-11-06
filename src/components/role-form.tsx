@@ -142,7 +142,10 @@ export function RoleForm({
           />
         </Field>
         <Field label="Location">
-          <Select value={value.location} onValueChange={(v) => setValue((s) => ({ ...s, location: v }))}>
+          <Select
+            value={value.location}
+            onValueChange={(v) => setValue((s) => ({ ...s, location: v }))}
+          >
             <SelectTrigger>
               <SelectValue placeholder="City" />
             </SelectTrigger>

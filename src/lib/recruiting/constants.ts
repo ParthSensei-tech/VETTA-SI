@@ -1,4 +1,11 @@
-import type { CompanyStage, EmploymentType, FitLevel, KnowledgeKind, PipelineStatus, WorkMode } from "./types";
+import type {
+  CompanyStage,
+  EmploymentType,
+  FitLevel,
+  KnowledgeKind,
+  PipelineStatus,
+  WorkMode,
+} from "./types";
 
 export const APP_NAME = "Vetta";
 
@@ -148,11 +155,7 @@ Stack is TypeScript across the board. Remote-India, overlap 11:00–19:00 IST. S
     workMode: "hybrid",
     compensationBand: "₹45–70 LPA + ESOP",
     stack: ["Kubernetes", "Terraform", "AWS", "Go"],
-    mustHaves: [
-      "Production Kubernetes",
-      "Infrastructure as code",
-      "Incident response",
-    ],
+    mustHaves: ["Production Kubernetes", "Infrastructure as code", "Incident response"],
     niceToHaves: ["Cost control at scale", "Security baselines"],
     jdText: `Series B. The product works; the platform is starting to creak. We need someone who has lived through growth, not someone who only wrote Helm charts in a platform-as-a-service team.
 

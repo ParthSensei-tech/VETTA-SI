@@ -81,7 +81,9 @@ export async function invalidateRoleRankCache(opts: {
   let count = 0;
   for (const [key, entry] of Array.from(map.entries())) {
     const roleMatch = opts.roleHash ? key.includes(opts.roleHash) : true;
-    const rubricMismatch = opts.rubricVersionId ? entry.rubricVersionId !== opts.rubricVersionId : true;
+    const rubricMismatch = opts.rubricVersionId
+      ? entry.rubricVersionId !== opts.rubricVersionId
+      : true;
     if (roleMatch && rubricMismatch) {
       map.delete(key);
       count += 1;
@@ -125,7 +127,9 @@ export async function getRankCache(opts: {
             and resume_hash = ${opts.resumeHash}
             and role_hash = ${opts.roleHash}
             and mode = ${opts.mode}`;
-      } catch { /* corrupt cache row — evict silently */ }
+      } catch {
+        /* corrupt cache row — evict silently */
+      }
       return null;
     }
     hit.at = now;

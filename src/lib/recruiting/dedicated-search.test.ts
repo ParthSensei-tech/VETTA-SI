@@ -179,44 +179,55 @@ test("Dedicated pgvector + PostgreSQL Search Infrastructure Suite", async (t) =>
   // ---------------------------------------------------------------------------
   // Stage 5 & 6: Hybrid Retrieval (FTS + pgvector + RRF) & Cross-Encoder Reranking
   // ---------------------------------------------------------------------------
-  await t.test("Stage 5 & 6: Two-Tower Hybrid Retrieval & Cross-Encoder Evidence Scoring", async () => {
-    const searchRes = await executeDedicatedHybridSearch({
-      userId: testUserId,
-      orgId,
-      roleId,
-      enableCrossEncoderRerank: true,
-      limit: 10,
-    });
+  await t.test(
+    "Stage 5 & 6: Two-Tower Hybrid Retrieval & Cross-Encoder Evidence Scoring",
+    async () => {
+      const searchRes = await executeDedicatedHybridSearch({
+        userId: testUserId,
+        orgId,
+        roleId,
+        enableCrossEncoderRerank: true,
+        limit: 10,
+      });
 
-    assert.ok(searchRes.items.length >= 2, "Must retrieve candidates");
-    assert.equal(searchRes.metadata.engine, "pgvector+postgres");
-    assert.equal(searchRes.metadata.fusionMethod, "reciprocal_rank_fusion_k60");
-    assert.equal(searchRes.metadata.crossEncoderReranked, true);
+      assert.ok(searchRes.items.length >= 2, "Must retrieve candidates");
+      assert.equal(searchRes.metadata.engine, "pgvector+postgres");
+      assert.equal(searchRes.metadata.fusionMethod, "reciprocal_rank_fusion_k60");
+      assert.equal(searchRes.metadata.crossEncoderReranked, true);
 
-    // Candidate Priya Sharma should be the top match
-    const topItem = searchRes.items[0]!;
-    assert.equal(topItem.candidateId, candPriyaId);
-    assert.equal(topItem.profile.fullName, "Priya Sharma");
-    assert.ok(topItem.rrfScore > 0);
+      // Candidate Priya Sharma should be the top match
+      const topItem = searchRes.items[0]!;
+      assert.equal(topItem.candidateId, candPriyaId);
+      assert.equal(topItem.profile.fullName, "Priya Sharma");
+      assert.ok(topItem.rrfScore > 0);
 
-    // Verify Evidence-Based Match Scoring details
-    assert.ok(topItem.evidence, "Top candidate must have evidence-based match scoring");
-    assert.ok(topItem.crossEncoderScore! >= 60, `Score (${topItem.crossEncoderScore}) must reflect strong match`);
-    assert.ok(
-      topItem.evidence.fitLevel === "strong_yes" || topItem.evidence.fitLevel === "yes" || topItem.evidence.fitLevel === "maybe",
-      `Fit level must be acceptable, got ${topItem.evidence.fitLevel}`,
-    );
-    assert.ok(topItem.evidence.categoryScores.skills >= 60, "Skills category score should be high");
-
-    // Negative control (Pastry chef) should not outrank tech candidates
-    const chefItem = searchRes.items.find((i) => i.candidateId === candDistractorId);
-    if (chefItem && chefItem.crossEncoderScore) {
+      // Verify Evidence-Based Match Scoring details
+      assert.ok(topItem.evidence, "Top candidate must have evidence-based match scoring");
       assert.ok(
-        topItem.crossEncoderScore! > chefItem.crossEncoderScore,
-        "Priya must outrank pastry chef",
+        topItem.crossEncoderScore! >= 60,
+        `Score (${topItem.crossEncoderScore}) must reflect strong match`,
       );
-    }
-  });
+      assert.ok(
+        topItem.evidence.fitLevel === "strong_yes" ||
+          topItem.evidence.fitLevel === "yes" ||
+          topItem.evidence.fitLevel === "maybe",
+        `Fit level must be acceptable, got ${topItem.evidence.fitLevel}`,
+      );
+      assert.ok(
+        topItem.evidence.categoryScores.skills >= 60,
+        "Skills category score should be high",
+      );
+
+      // Negative control (Pastry chef) should not outrank tech candidates
+      const chefItem = searchRes.items.find((i) => i.candidateId === candDistractorId);
+      if (chefItem && chefItem.crossEncoderScore) {
+        assert.ok(
+          topItem.crossEncoderScore! > chefItem.crossEncoderScore,
+          "Priya must outrank pastry chef",
+        );
+      }
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Stage 7 & 8: Recruiter Review, Shortlist Approval, & Outcome Tracking Loop
@@ -228,7 +239,8 @@ test("Dedicated pgvector + PostgreSQL Search Infrastructure Suite", async (t) =>
       roleId,
       orgId,
       nextStatus: "shortlisted",
-      recruiterNotes: "Excellent Kubernetes and distributed systems background. Approved for client review.",
+      recruiterNotes:
+        "Excellent Kubernetes and distributed systems background. Approved for client review.",
       recruiterUserId: testUserId,
     });
 

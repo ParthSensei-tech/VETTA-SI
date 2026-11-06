@@ -74,7 +74,10 @@ export function usePublicJobQuery(roleId: string) {
 export function usePortalApplicationQuery(applicationId: string) {
   return useQuery({
     queryKey: queryKeys.portalApplication(applicationId),
-    queryFn: () => getScreenByApplication({ data: { applicationId } }).catch(() => getPortalApplication({ data: { applicationId } })),
+    queryFn: () =>
+      getScreenByApplication({ data: { applicationId } }).catch(() =>
+        getPortalApplication({ data: { applicationId } }),
+      ),
     enabled: Boolean(applicationId),
     refetchInterval: (q) => {
       const stage = q.state.data?.stage;

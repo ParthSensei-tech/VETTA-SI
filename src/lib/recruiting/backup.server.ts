@@ -193,7 +193,9 @@ export async function restoreWorkspaceBackup(opts: {
     const foreignRoles = await sql<{ id: string }>`
       select id from roles where id = any(${allRoleIds}) and org_id is not null and org_id != ${orgId}`;
     if (foreignRoles.length > 0) {
-      throw new Error("Restore rejected: backup contains role IDs belonging to another organization");
+      throw new Error(
+        "Restore rejected: backup contains role IDs belonging to another organization",
+      );
     }
   }
   const allCandIds = candidates.map((c) => String(c.id));
@@ -201,7 +203,9 @@ export async function restoreWorkspaceBackup(opts: {
     const foreignCands = await sql<{ id: string }>`
       select id from candidates where id = any(${allCandIds}) and org_id is not null and org_id != ${orgId}`;
     if (foreignCands.length > 0) {
-      throw new Error("Restore rejected: backup contains candidate IDs belonging to another organization");
+      throw new Error(
+        "Restore rejected: backup contains candidate IDs belonging to another organization",
+      );
     }
   }
   const allAppIds = applications.map((a) => String(a.id));
@@ -209,7 +213,9 @@ export async function restoreWorkspaceBackup(opts: {
     const foreignApps = await sql<{ id: string }>`
       select id from applications where id = any(${allAppIds}) and org_id is not null and org_id != ${orgId}`;
     if (foreignApps.length > 0) {
-      throw new Error("Restore rejected: backup contains application IDs belonging to another organization");
+      throw new Error(
+        "Restore rejected: backup contains application IDs belonging to another organization",
+      );
     }
   }
 
@@ -372,7 +378,9 @@ export async function restoreWorkspaceBackup(opts: {
           mode: opts.mode || "merge",
         })}
       )`;
-  } catch { /* audit log is best-effort */ }
+  } catch {
+    /* audit log is best-effort */
+  }
 
   return {
     ok: true,

@@ -110,7 +110,11 @@ export const acknowledgeAlertAction = createServerFn({ method: "POST" })
       await assertOrgPermission(context.userId, targetOrgId, "observability:manage");
     }
 
-    const ok = await acknowledgeAlert(data.alertId, context.userId, isOperator ? undefined : targetOrgId);
+    const ok = await acknowledgeAlert(
+      data.alertId,
+      context.userId,
+      isOperator ? undefined : targetOrgId,
+    );
     return { ok };
   });
 
@@ -140,7 +144,11 @@ export const resolveAlertAction = createServerFn({ method: "POST" })
       await assertOrgPermission(context.userId, targetOrgId, "observability:manage");
     }
 
-    const ok = await resolveAlert(data.alertId, context.userId, isOperator ? undefined : targetOrgId);
+    const ok = await resolveAlert(
+      data.alertId,
+      context.userId,
+      isOperator ? undefined : targetOrgId,
+    );
     return { ok };
   });
 

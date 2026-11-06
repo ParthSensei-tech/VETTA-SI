@@ -10,7 +10,13 @@ import { getSql } from "../db.ts";
 import { USD_TO_INR_RATE } from "../observability/cost.ts";
 import type { ModelTaskType } from "../observability/types.ts";
 import { MODEL_ARMS, armModel, type CallContext, type ModelCandidate } from "./model-registry.ts";
-import { decideRoute, type ArmHistory, type GatePass, type RouteDecision, type RouteInput } from "./model-router.ts";
+import {
+  decideRoute,
+  type ArmHistory,
+  type GatePass,
+  type RouteDecision,
+  type RouteInput,
+} from "./model-router.ts";
 
 /** Cost and latency of a served call are only meaningful over a recent window. */
 const HISTORY_WINDOW_DAYS = 7;
@@ -25,8 +31,12 @@ function centsToInr(cents: number): number {
 
 /** Map a `model_cost_logs` (provider, model) pair back onto a registry arm id. */
 export function armIdFor(provider: string, model: string): string {
-  const p = String(provider || "").toLowerCase().trim();
-  const m = String(model || "").toLowerCase().trim();
+  const p = String(provider || "")
+    .toLowerCase()
+    .trim();
+  const m = String(model || "")
+    .toLowerCase()
+    .trim();
   const exact = MODEL_ARMS.find((a) => a.provider === p && armModel(a).toLowerCase() === m);
   if (exact) return exact.id;
   const declared = MODEL_ARMS.find((a) => a.provider === p && a.declaredModel.toLowerCase() === m);
@@ -47,7 +57,10 @@ function median(values: number[]): number {
  * Per-arm performance for one task, read from the cost ledger.
  * `orgId` scopes it to one tenant's traffic; null aggregates across the deployment.
  */
-export async function routerHistory(task: ModelTaskType, orgId?: string | null): Promise<ArmHistory[]> {
+export async function routerHistory(
+  task: ModelTaskType,
+  orgId?: string | null,
+): Promise<ArmHistory[]> {
   const sql = await getSql();
   // meta_json carries the timeout bookkeeping (`router.timedOut`), and it is a text column, so the
   // JSON operator needs a ::jsonb cast — the same one `routerStatus` had to add.
@@ -97,7 +110,9 @@ export async function routerHistory(task: ModelTaskType, orgId?: string | null):
       p50DurationMs: median(served.map((r) => Number(r.duration_ms ?? 0))),
       successRate: judged.length ? judged.filter((r) => r.success).length / judged.length : 1,
       abortedSamples: killed.length,
-      abortedElapsedMaxMs: killed.length ? Math.max(...killed.map((r) => Number(r.duration_ms ?? 0))) : 0,
+      abortedElapsedMaxMs: killed.length
+        ? Math.max(...killed.map((r) => Number(r.duration_ms ?? 0)))
+        : 0,
     });
   }
   return out;
@@ -145,7 +160,9 @@ export async function orgSpendTodayInr(orgId?: string | null): Promise<number> {
 }
 
 /** `ROUTER_DAILY_BUDGET_INR`; 0 (or unset) means no cap. */
-export function routerDailyBudgetInr(env: Record<string, string | undefined> = process.env): number {
+export function routerDailyBudgetInr(
+  env: Record<string, string | undefined> = process.env,
+): number {
   const raw = Number.parseFloat(env.ROUTER_DAILY_BUDGET_INR ?? "");
   return Number.isFinite(raw) && raw > 0 ? raw : 0;
 }
@@ -168,7 +185,10 @@ const hostProbe = globalThis as typeof globalThis & {
 const BELIEF_TTL_MS = 1_000;
 const beliefCache = new Map<string, { at: number; value: readonly unknown[] }>();
 
-async function belief<T extends readonly unknown[]>(key: string, load: () => Promise<T>): Promise<T> {
+async function belief<T extends readonly unknown[]>(
+  key: string,
+  load: () => Promise<T>,
+): Promise<T> {
   const hit = beliefCache.get(key);
   if (hit && Date.now() - hit.at < BELIEF_TTL_MS) return hit.value as T;
   const value = await load();
@@ -250,7 +270,9 @@ export async function planRoute(args: PlanRouteArgs): Promise<RouteDecision> {
   const [history, gates, spent] = await Promise.all([
     args.cold
       ? Promise.resolve([] as ArmHistory[])
-      : belief(`history:${args.task}:${args.orgId ?? "global"}`, () => routerHistory(args.task, args.orgId)),
+      : belief(`history:${args.task}:${args.orgId ?? "global"}`, () =>
+          routerHistory(args.task, args.orgId),
+        ),
     args.cold ? Promise.resolve([] as GatePass[]) : belief("gates", passedGates),
     budget > 0 ? orgSpendTodayInr(args.orgId) : Promise.resolve(0),
   ]).catch(() => [[], [], 0] as [ArmHistory[], GatePass[], number]);

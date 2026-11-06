@@ -301,12 +301,15 @@ function levelFromScore(score: number): RankResult["level"] {
 }
 
 /** Blend embedding alignment into a finished rank. Hard gates stay caps. */
-export function applyDomainToRank(rank: RankResult, domain: {
-  ready: boolean;
-  alignment: number;
-  market: number | null;
-  note: string;
-}): RankResult {
+export function applyDomainToRank(
+  rank: RankResult,
+  domain: {
+    ready: boolean;
+    alignment: number;
+    market: number | null;
+    note: string;
+  },
+): RankResult {
   if (!domain.ready || !rank.match) return rank;
   const dims = [...rank.match.dimensions];
   const domainWeight = 0.18;

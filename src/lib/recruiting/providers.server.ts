@@ -184,7 +184,8 @@ async function callGroq(args: {
   };
   const text = body.choices?.[0]?.message?.content?.trim() ?? "";
   if (!text) return { ok: false, error: "Empty Groq response", retryable: true, model };
-  const promptTokens = body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
+  const promptTokens =
+    body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
   const completionTokens = body.usage?.completion_tokens ?? Math.ceil(text.length / 4);
   return { ok: true, text, model, promptTokens, completionTokens };
 }
@@ -224,9 +225,14 @@ async function callGemini(args: {
     candidates?: { content?: { parts?: { text?: string }[] } }[];
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   };
-  const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("")?.trim() ?? "";
+  const text =
+    body.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text ?? "")
+      .join("")
+      ?.trim() ?? "";
   if (!text) return { ok: false, error: "Empty Gemini response", retryable: true, model };
-  const promptTokens = body.usageMetadata?.promptTokenCount ?? Math.ceil((args.system.length + args.user.length) / 4);
+  const promptTokens =
+    body.usageMetadata?.promptTokenCount ?? Math.ceil((args.system.length + args.user.length) / 4);
   const completionTokens = body.usageMetadata?.candidatesTokenCount ?? Math.ceil(text.length / 4);
   return { ok: true, text, model, promptTokens, completionTokens };
 }
@@ -271,7 +277,8 @@ async function callOpenAI(args: {
   };
   const text = body.choices?.[0]?.message?.content?.trim() ?? "";
   if (!text) return { ok: false, error: "Empty OpenAI response", retryable: true, model };
-  const promptTokens = body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
+  const promptTokens =
+    body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
   const completionTokens = body.usage?.completion_tokens ?? Math.ceil(text.length / 4);
   return { ok: true, text, model, promptTokens, completionTokens };
 }
@@ -318,7 +325,8 @@ async function callOllama(args: {
     if (body.error) return { ok: false, error: body.error, retryable: true, model };
     const text = stripThink(body.message?.content ?? "");
     if (!text) return { ok: false, error: "Empty Ollama response", retryable: true, model };
-    const promptTokens = body.prompt_eval_count ?? Math.ceil((args.system.length + args.user.length) / 4);
+    const promptTokens =
+      body.prompt_eval_count ?? Math.ceil((args.system.length + args.user.length) / 4);
     const completionTokens = body.eval_count ?? Math.ceil(text.length / 4);
     return { ok: true, text, model, promptTokens, completionTokens };
   } catch (e) {
@@ -374,7 +382,8 @@ async function callXai(args: {
   };
   const text = stripThink(body.choices?.[0]?.message?.content ?? "");
   if (!text) return { ok: false, error: "Empty xAI response", retryable: true, model };
-  const promptTokens = body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
+  const promptTokens =
+    body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
   const completionTokens = body.usage?.completion_tokens ?? Math.ceil(text.length / 4);
   return { ok: true, text, model, promptTokens, completionTokens };
 }
@@ -412,7 +421,10 @@ export async function completeWithLadder(args: {
   const maxAttempts = args.maxAttemptsPerProvider ?? 2;
   const order = availableLadderProviders().filter((p) => {
     if (p === "groq" && !process.env.GROQ_API_KEY?.trim()) return false;
-    if (p === "gemini" && !(process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()))
+    if (
+      p === "gemini" &&
+      !(process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim())
+    )
       return false;
     if (p === "openai" && !process.env.OPENAI_API_KEY?.trim()) return false;
     if (p === "xai" && !process.env.XAI_API_KEY?.trim()) return false;
@@ -569,7 +581,7 @@ export async function completeWithRouter(args: {
   // arm and a laptop-CPU Ollama arm cannot share one timeout and stay honest about either.
   const deadlineAt = started + Math.max(1, route.deadlineMs);
   const attemptBudgetMs = () => {
-    const base = route.timeoutMs > 0 ? route.timeoutMs : args.timeoutMs ?? 14_000;
+    const base = route.timeoutMs > 0 ? route.timeoutMs : (args.timeoutMs ?? 14_000);
     const remaining = deadlineAt - Date.now();
     return Math.max(1_000, Math.min(base, remaining));
   };
@@ -581,7 +593,13 @@ export async function completeWithRouter(args: {
 
   // The router ranked these; a transient failure on the top arm should not waste the task, so the
   // runner-on is tried too. Only two, because every extra arm is another round of waiting.
-  const queue = [arm, ...route.ranked.slice(1).map((r) => getArm(r.armId)).filter(Boolean)]
+  const queue = [
+    arm,
+    ...route.ranked
+      .slice(1)
+      .map((r) => getArm(r.armId))
+      .filter(Boolean),
+  ]
     .slice(0, 2)
     .filter((a) => a && a.provider !== "local" && a.provider !== "xenova");
 

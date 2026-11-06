@@ -262,4 +262,3 @@ export async function assertAuthorizedOperator(userId: string): Promise<void> {
     throw new Error(`Forbidden: User '${userId}' is not an authorized system operator`);
   }
 }
-

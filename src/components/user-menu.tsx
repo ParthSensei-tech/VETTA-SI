@@ -63,7 +63,9 @@ export function UserMenu() {
           {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
           {theme === "light" ? "Night mode" : "Day mode"}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void navigate({ to: "/jobs" })}>Candidate portal</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => void navigate({ to: "/jobs" })}>
+          Candidate portal
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={signingOut}
           onSelect={() => {

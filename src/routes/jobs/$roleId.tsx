@@ -143,7 +143,8 @@ function JobApply() {
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">
           <StageChip stage={job.companyStage} />
           <span>
-            {job.location} · {WORK_MODE_LABEL[job.workMode]} · {EMPLOYMENT_LABEL[job.employmentType]}
+            {job.location} · {WORK_MODE_LABEL[job.workMode]} ·{" "}
+            {EMPLOYMENT_LABEL[job.employmentType]}
           </span>
         </div>
         {job.compensationBand ? (
@@ -162,7 +163,9 @@ function JobApply() {
 
         <section className="mt-8">
           <h2 className="font-display text-xl">The seat</h2>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">{job.jdText}</p>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">
+            {job.jdText}
+          </p>
         </section>
 
         {job.mustHaves.length > 0 ? (
@@ -178,7 +181,9 @@ function JobApply() {
 
         {job.niceToHaves.length > 0 ? (
           <section className="mt-6">
-            <h2 className="text-xs font-medium tracking-wide text-muted uppercase">Nice-to-haves</h2>
+            <h2 className="text-xs font-medium tracking-wide text-muted uppercase">
+              Nice-to-haves
+            </h2>
             <ul className="mt-3 flex flex-col gap-2 text-sm leading-relaxed text-muted">
               {job.niceToHaves.map((item) => (
                 <li key={item}>{item}</li>
@@ -207,7 +212,9 @@ function JobApply() {
                   i <= workflowStep ? "bg-elevated text-fg" : "text-subtle",
                 )}
               >
-                <span className="font-mono text-xs tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-xs tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="flex-1">{label}</span>
                 {i === workflowStep ? <span className="text-xs text-muted">Working</span> : null}
               </li>
@@ -216,7 +223,12 @@ function JobApply() {
         ) : (
           <form className="mt-6 flex flex-col gap-4" onSubmit={onSubmit}>
             <Field label="Full name" required>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" required />
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoComplete="name"
+                required
+              />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Email" required>
@@ -229,7 +241,11 @@ function JobApply() {
                 />
               </Field>
               <Field label="Phone">
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                />
               </Field>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -302,7 +318,11 @@ function JobApply() {
                 className="flex min-h-20 flex-col items-start justify-center rounded-lg border border-dashed border-border bg-bg px-4 py-3 text-left transition-colors duration-150 hover:border-border-strong"
               >
                 <span className="text-sm">
-                  {readingFile ? "Reading file…" : resumeFile ? "Replace file" : "Upload PDF, Word, or text"}
+                  {readingFile
+                    ? "Reading file…"
+                    : resumeFile
+                      ? "Replace file"
+                      : "Upload PDF, Word, or text"}
                 </span>
                 <span className="mt-1 text-xs text-subtle">
                   {resumeFileLabel(resumeFile, resumeText.length)}

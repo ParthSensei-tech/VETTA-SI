@@ -366,7 +366,11 @@ export async function evaluateSystemAlerts(): Promise<SystemAlert[]> {
 /**
  * Acknowledges an active alert. Scoped to org if orgId is provided.
  */
-export async function acknowledgeAlert(alertId: string, userId: string, orgId?: string): Promise<boolean> {
+export async function acknowledgeAlert(
+  alertId: string,
+  userId: string,
+  orgId?: string,
+): Promise<boolean> {
   const sql = await getSql();
   try {
     if (orgId) {
@@ -390,7 +394,11 @@ export async function acknowledgeAlert(alertId: string, userId: string, orgId?: 
 /**
  * Resolves an active alert manually. Scoped to org if orgId is provided.
  */
-export async function resolveAlert(alertId: string, userId: string, orgId?: string): Promise<boolean> {
+export async function resolveAlert(
+  alertId: string,
+  userId: string,
+  orgId?: string,
+): Promise<boolean> {
   const sql = await getSql();
   try {
     if (orgId) {
@@ -695,16 +703,20 @@ export async function getObservabilitySummary(opts?: {
       // Group by task
       byTask[row.task_type] ??= { costCents: 0, costUsd: 0, costInr: 0, tokens: 0, count: 0 };
       byTask[row.task_type].costCents += cents;
-      byTask[row.task_type].costUsd = Math.round((byTask[row.task_type].costCents / 100) * 1000) / 1000;
-      byTask[row.task_type].costInr = Math.round(byTask[row.task_type].costUsd * USD_TO_INR_RATE * 100) / 100;
+      byTask[row.task_type].costUsd =
+        Math.round((byTask[row.task_type].costCents / 100) * 1000) / 1000;
+      byTask[row.task_type].costInr =
+        Math.round(byTask[row.task_type].costUsd * USD_TO_INR_RATE * 100) / 100;
       byTask[row.task_type].tokens += tokens;
       byTask[row.task_type].count += 1;
 
       // Group by provider
       byProvider[row.provider] ??= { costCents: 0, costUsd: 0, costInr: 0, tokens: 0, count: 0 };
       byProvider[row.provider].costCents += cents;
-      byProvider[row.provider].costUsd = Math.round((byProvider[row.provider].costCents / 100) * 1000) / 1000;
-      byProvider[row.provider].costInr = Math.round(byProvider[row.provider].costUsd * USD_TO_INR_RATE * 100) / 100;
+      byProvider[row.provider].costUsd =
+        Math.round((byProvider[row.provider].costCents / 100) * 1000) / 1000;
+      byProvider[row.provider].costInr =
+        Math.round(byProvider[row.provider].costUsd * USD_TO_INR_RATE * 100) / 100;
       byProvider[row.provider].tokens += tokens;
       byProvider[row.provider].count += 1;
 

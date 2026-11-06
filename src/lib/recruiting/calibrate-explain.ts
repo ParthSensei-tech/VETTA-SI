@@ -73,7 +73,12 @@ export function predictProba(w: CalWeights, x: Float32Array): number {
 }
 
 /** One labeled outcome. y=1 shortlist/hire, y=0 reject. */
-export function trainCalibration(w: CalWeights, x: Float32Array, positive: boolean, lr = 0.08): number {
+export function trainCalibration(
+  w: CalWeights,
+  x: Float32Array,
+  positive: boolean,
+  lr = 0.08,
+): number {
   const p = predictProba(w, x);
   const y = positive ? 1 : 0;
   const err = p - y;
@@ -108,7 +113,10 @@ export function parseHrPage(html: string, source: string): HrChunk[] {
     const letters = (sentence.match(/\p{L}/gu) ?? []).length;
     if (letters < 20) continue;
     const lang: "en" | "hi" = dev / Math.max(1, letters) > 0.35 ? "hi" : "en";
-    if (lang === "en" && !/\b(hr|ctc|notice|offer|hiring|salary|probation|gratuity|employee|recruit)/i.test(sentence)) {
+    if (
+      lang === "en" &&
+      !/\b(hr|ctc|notice|offer|hiring|salary|probation|gratuity|employee|recruit)/i.test(sentence)
+    ) {
       continue;
     }
     const key = sentence.slice(0, 80);
@@ -167,8 +175,12 @@ export function explainRank(
   const compEn = expected == null ? "" : ` Expected CTC ${inr(expected)}.`;
   const glossEn = enHits.map((h) => h.text).join(" ");
   const en = ready
-    ? `Shortlist chance ${pct}% from ${samples} of your past shortlist and reject calls (not a generic model prior). ${noticeEn}${compEn} ${quote ? `Evidence: “${quote}”.` : ""} ${gap ? `Gap: ${gap}.` : ""} ${risk ? `Risk: ${risk}.` : ""} ${glossEn ? `HR context: ${glossEn}` : ""}`.replace(/\s+/g, " ").trim()
-    : `Calibration is not ready — it needs ${MIN_CAL_SAMPLES} of your shortlist or reject decisions (you have ${samples}). Until then this is an evidence score, not a probability. ${noticeEn}${compEn} ${quote ? `Evidence: “${quote}”.` : ""} ${glossEn ? `HR context: ${glossEn}` : ""}`.replace(/\s+/g, " ").trim();
+    ? `Shortlist chance ${pct}% from ${samples} of your past shortlist and reject calls (not a generic model prior). ${noticeEn}${compEn} ${quote ? `Evidence: “${quote}”.` : ""} ${gap ? `Gap: ${gap}.` : ""} ${risk ? `Risk: ${risk}.` : ""} ${glossEn ? `HR context: ${glossEn}` : ""}`
+        .replace(/\s+/g, " ")
+        .trim()
+    : `Calibration is not ready — it needs ${MIN_CAL_SAMPLES} of your shortlist or reject decisions (you have ${samples}). Until then this is an evidence score, not a probability. ${noticeEn}${compEn} ${quote ? `Evidence: “${quote}”.` : ""} ${glossEn ? `HR context: ${glossEn}` : ""}`
+        .replace(/\s+/g, " ")
+        .trim();
 
   const noticeHi =
     notice == null
@@ -181,8 +193,12 @@ export function explainRank(
   const compHi = expected == null ? "" : ` उम्मीद CTC ${inr(expected)}।`;
   const glossHi = hiHits.map((h) => h.text).join(" ");
   const hi = ready
-    ? `आपके ${samples} पुराने शॉर्टलिस्ट/रिजेक्ट फैसलों के हिसाब से शॉर्टलिस्ट चांस ${pct}% है। ${noticeHi}${compHi} ${quote ? `सबूत: “${quote}”.` : ""} ${gap ? `गैप: ${gap}.` : ""} ${risk ? `रिस्क: ${risk}.` : ""} ${glossHi ? `HR संदर्भ: ${glossHi}` : "Hinglish HR भाषा: CTC, नोटिस, ऑफर ड्रॉप और जॉइनिंग इसी स्कोर के साथ देखें।"}`.replace(/\s+/g, " ").trim()
-    : `कैलिब्रेशन अभी तैयार नहीं — ${MIN_CAL_SAMPLES} शॉर्टलिस्ट या रिजेक्ट फैसलों के बाद संभावना दिखेगी (अभी ${samples})। ${noticeHi}${compHi} ${quote ? `सबूत: “${quote}”.` : ""} ${glossHi ? `HR संदर्भ: ${glossHi}` : ""}`.replace(/\s+/g, " ").trim();
+    ? `आपके ${samples} पुराने शॉर्टलिस्ट/रिजेक्ट फैसलों के हिसाब से शॉर्टलिस्ट चांस ${pct}% है। ${noticeHi}${compHi} ${quote ? `सबूत: “${quote}”.` : ""} ${gap ? `गैप: ${gap}.` : ""} ${risk ? `रिस्क: ${risk}.` : ""} ${glossHi ? `HR संदर्भ: ${glossHi}` : "Hinglish HR भाषा: CTC, नोटिस, ऑफर ड्रॉप और जॉइनिंग इसी स्कोर के साथ देखें।"}`
+        .replace(/\s+/g, " ")
+        .trim()
+    : `कैलिब्रेशन अभी तैयार नहीं — ${MIN_CAL_SAMPLES} शॉर्टलिस्ट या रिजेक्ट फैसलों के बाद संभावना दिखेगी (अभी ${samples})। ${noticeHi}${compHi} ${quote ? `सबूत: “${quote}”.` : ""} ${glossHi ? `HR संदर्भ: ${glossHi}` : ""}`
+        .replace(/\s+/g, " ")
+        .trim();
 
   const hrTerms = [...enHits, ...hiHits].map((h) => h.text.slice(0, 80));
   return {
@@ -206,7 +222,12 @@ export function serializeCal(w: CalWeights): string {
 
 export function deserializeCal(raw: string): CalWeights | null {
   try {
-    const s = JSON.parse(raw) as { w: number[]; samples: number; positives: number; brierEma: number };
+    const s = JSON.parse(raw) as {
+      w: number[];
+      samples: number;
+      positives: number;
+      brierEma: number;
+    };
     if (!s.w || s.w.length !== CAL_DIM) return null;
     return {
       w: Float32Array.from(s.w),

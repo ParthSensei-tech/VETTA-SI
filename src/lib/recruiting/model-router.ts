@@ -248,7 +248,11 @@ function estimateTokens(text: string): number {
   return Math.max(0, Math.ceil(text.length / 3.8));
 }
 
-function historyFor(history: ArmHistory[], armId: string, task: ModelTaskType): ArmHistory | undefined {
+function historyFor(
+  history: ArmHistory[],
+  armId: string,
+  task: ModelTaskType,
+): ArmHistory | undefined {
   return history.find((h) => h.armId === armId && h.task === task && h.samples > 0);
 }
 
@@ -332,7 +336,10 @@ function armFeasibilityMs(
   completionTokens: number,
 ): number {
   // A call we killed is evidence the arm is slower than its declared class, so it raises the floor.
-  return Math.max(armLatencyPriorMs(arm, promptTokens, completionTokens), h?.abortedElapsedMaxMs ?? 0);
+  return Math.max(
+    armLatencyPriorMs(arm, promptTokens, completionTokens),
+    h?.abortedElapsedMaxMs ?? 0,
+  );
 }
 
 /**
@@ -361,7 +368,10 @@ export function decideRoute(input: RouteInput): RouteDecision {
   // is per-arm, which is why one constant at every call site could never have been right.
   const context = input.context ?? "interactive";
   const hardMaxMs = contextHardMaxMs(context, env);
-  const minAttemptTimeoutMs = Math.max(1, input.minAttemptTimeoutMs ?? DEFAULT_MIN_ATTEMPT_TIMEOUT_MS);
+  const minAttemptTimeoutMs = Math.max(
+    1,
+    input.minAttemptTimeoutMs ?? DEFAULT_MIN_ATTEMPT_TIMEOUT_MS,
+  );
   const deadlineMs =
     input.deadlineMs && input.deadlineMs > 0 ? Math.min(input.deadlineMs, hardMaxMs) : hardMaxMs;
   // Arms are excluded for being too slow only once a caller states a deadline, so every existing
@@ -379,7 +389,10 @@ export function decideRoute(input: RouteInput): RouteDecision {
     // right — but exclusion on the clock only does, so a caller that states no deadline keeps the
     // candidate set it has always had and simply gets a realistic answer size.
     const feasible = armFeasibleOutputTokens(arm, promptTokens, deadlineMs);
-    const outputTokensFit = Math.max(0, Math.min(maxTokens, Number.isFinite(feasible) ? feasible : maxTokens));
+    const outputTokensFit = Math.max(
+      0,
+      Math.min(maxTokens, Number.isFinite(feasible) ? feasible : maxTokens),
+    );
     const fitMs = armFeasibilityMs(arm, h, promptTokens, outputTokensFit);
     return {
       armId: arm.id,
@@ -387,7 +400,8 @@ export function decideRoute(input: RouteInput): RouteDecision {
       feasibleOutputTokens: feasible,
       outputTokensFit,
       fitMs,
-      tooSlow: enforceDeadline && (fitMs > deadlineMs || outputTokensFit < profile.minViableOutputTokens),
+      tooSlow:
+        enforceDeadline && (fitMs > deadlineMs || outputTokensFit < profile.minViableOutputTokens),
     };
   };
 
@@ -464,7 +478,9 @@ export function decideRoute(input: RouteInput): RouteDecision {
 
     // Say what the verdict bought, separately from what the floor still refuses: both can be true
     // at once, and a desk that only showed the second would hide why a free arm is being used.
-    const admitted = eligible.filter((a) => a.qualityPrior < floor && passedEngines.has(a.provider));
+    const admitted = eligible.filter(
+      (a) => a.qualityPrior < floor && passedEngines.has(a.provider),
+    );
     if (admitted.length > 0) {
       reasons.push(
         `gate passed for ${input.task} via ${[...new Set(admitted.map((a) => a.provider))].join(", ")}: cost and speed may be traded for quality`,
@@ -508,11 +524,14 @@ export function decideRoute(input: RouteInput): RouteDecision {
       // Free arms only. Local never bills tokens, so it is always the floor.
       const freeOnly = candidates.filter((a) => a.isFree);
       if (freeOnly.length > 0) {
-        for (const p of priced) if (!p.arm.isFree) rejected.push({ armId: p.arm.id, reason: "budget" });
+        for (const p of priced)
+          if (!p.arm.isFree) rejected.push({ armId: p.arm.id, reason: "budget" });
         candidates = freeOnly;
         degraded = true;
         degradeReason = `daily budget ₹${remaining.toFixed(2)} left; degraded to a free arm`;
-        reasons.push(`budget: ₹${remaining.toFixed(2)} of ₹${cap.toFixed(2)} left, paid arms skipped`);
+        reasons.push(
+          `budget: ₹${remaining.toFixed(2)} of ₹${cap.toFixed(2)} left, paid arms skipped`,
+        );
       } else {
         candidates = [];
         degraded = true;
@@ -526,7 +545,9 @@ export function decideRoute(input: RouteInput): RouteDecision {
         candidates = affordable.map((p) => p.arm);
         degraded = true;
         degradeReason = `daily budget: ${skipped.length} arm(s) priced above ₹${remaining.toFixed(2)} remaining`;
-        reasons.push(`budget: skipped ${skipped.map((p) => p.arm.id).join(", ")} over ₹${remaining.toFixed(2)} remaining`);
+        reasons.push(
+          `budget: skipped ${skipped.map((p) => p.arm.id).join(", ")} over ₹${remaining.toFixed(2)} remaining`,
+        );
       }
     }
   }

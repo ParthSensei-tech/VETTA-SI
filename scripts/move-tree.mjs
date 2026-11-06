@@ -22,14 +22,7 @@
 //   node scripts/move-tree.mjs --dry-run [--batch N] [--json out.json]
 //   node scripts/move-tree.mjs --apply --batch N --yes
 
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join as nativeJoin } from "node:path";
 import * as posix from "node:path/posix";
@@ -60,7 +53,10 @@ export const SELF_FILES = [
 
 /** POSIX-relative repo path, no leading `./`. */
 export function norm(p) {
-  return p.split(/[\\/]+/).join("/").replace(/^\.\//, "");
+  return p
+    .split(/[\\/]+/)
+    .join("/")
+    .replace(/^\.\//, "");
 }
 
 /** The extensionless+index resolution rules the bundler and the test hook use. */
@@ -323,11 +319,18 @@ function cli() {
       process.exitCode = 2;
       return;
     }
-    writeFileSync(p, JSON.stringify({ batch: onlyBatch ?? "all", table: [...table], rows, errors }, null, 2));
-    console.log(`wrote ${p}: ${moved} moves, ${rows.length} specifier rewrites, ${errors.length} problems`);
+    writeFileSync(
+      p,
+      JSON.stringify({ batch: onlyBatch ?? "all", table: [...table], rows, errors }, null, 2),
+    );
+    console.log(
+      `wrote ${p}: ${moved} moves, ${rows.length} specifier rewrites, ${errors.length} problems`,
+    );
   }
   if (!flag("json") || flag("verbose")) {
-    console.log(`batch=${onlyBatch ?? "all"} moves=${moved} rewrites=${rows.length} problems=${errors.length}`);
+    console.log(
+      `batch=${onlyBatch ?? "all"} moves=${moved} rewrites=${rows.length} problems=${errors.length}`,
+    );
     for (const r of rows) console.log(`  ${r.file}\n    ${r.spec}  ->  ${r.next}`);
   }
   if (errors.length) {

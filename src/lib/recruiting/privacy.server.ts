@@ -145,7 +145,11 @@ export async function hasActiveConsent(opts: {
   purpose: string;
 }): Promise<boolean> {
   if (!purposeById(opts.purpose)) return false;
-  return mayProcess({ orgId: opts.orgId, subjectId: opts.subjectId, purpose: opts.purpose as PurposeId });
+  return mayProcess({
+    orgId: opts.orgId,
+    subjectId: opts.subjectId,
+    purpose: opts.purpose as PurposeId,
+  });
 }
 
 async function applicationIdsFor(subjectId: string): Promise<{
@@ -236,7 +240,11 @@ async function forgetProviders(
   return results;
 }
 
-async function stripShares(orgId: string | null, userId: string, applicationIds: string[]): Promise<number> {
+async function stripShares(
+  orgId: string | null,
+  userId: string,
+  applicationIds: string[],
+): Promise<number> {
   if (!applicationIds.length) return 0;
   const sql = await getSql();
   const blocked = new Set(applicationIds);
@@ -324,23 +332,30 @@ export async function eraseSubject(opts: {
     const jobs = await sql`
       delete from ingest_jobs where application_id = any(${ids}) returning 1`;
     stores.ingest_jobs = jobs.length;
-    const labels = await sql`delete from rank_labels where application_id = any(${ids}) returning 1`;
+    const labels =
+      await sql`delete from rank_labels where application_id = any(${ids}) returning 1`;
     stores.rank_labels = labels.length;
-    const feedback = await sql`delete from rank_feedback where application_id = any(${ids}) returning 1`;
+    const feedback =
+      await sql`delete from rank_feedback where application_id = any(${ids}) returning 1`;
     stores.rank_feedback = feedback.length;
-    const traces = await sql`delete from rank_traces where application_id = any(${ids}) returning 1`;
+    const traces =
+      await sql`delete from rank_traces where application_id = any(${ids}) returning 1`;
     stores.rank_traces = traces.length;
-    const shadows = await sql`delete from shadow_comparisons where application_id = any(${ids}) returning 1`;
+    const shadows =
+      await sql`delete from shadow_comparisons where application_id = any(${ids}) returning 1`;
     stores.shadow_comparisons = shadows.length;
-    const outcomes = await sql`delete from outcome_events where application_id = any(${ids}) returning 1`;
+    const outcomes =
+      await sql`delete from outcome_events where application_id = any(${ids}) returning 1`;
     stores.outcome_events = outcomes.length;
-    const reminders = await sql`delete from screen_reminders where application_id = any(${ids}) returning 1`;
+    const reminders =
+      await sql`delete from screen_reminders where application_id = any(${ids}) returning 1`;
     stores.screen_reminders = reminders.length;
     const evals = await sql`
       delete from eval_cases
       where application_id = any(${ids}) returning 1`;
     stores.eval_cases = evals.length;
-    const approvals = await sql`delete from approvals where application_id = any(${ids}) returning 1`;
+    const approvals =
+      await sql`delete from approvals where application_id = any(${ids}) returning 1`;
     stores.approvals = approvals.length;
     const screens = await sql`delete from screens where application_id = any(${ids}) returning 1`;
     stores.screens = screens.length;
@@ -360,7 +375,8 @@ export async function eraseSubject(opts: {
     await sql`delete from rank_traces where resume_hash = any(${scope.resumeHashes})`;
   }
 
-  const embeddings = await sql`delete from candidate_embeddings where candidate_id = ${opts.subjectId} returning 1`;
+  const embeddings =
+    await sql`delete from candidate_embeddings where candidate_id = ${opts.subjectId} returning 1`;
   stores.embeddings = embeddings.length;
 
   if (scope.resumeText.trim().length >= 40) {
@@ -409,7 +425,8 @@ export async function eraseSubject(opts: {
     delete from consent_records where org_id = ${orgId} and subject_id = ${opts.subjectId} returning 1`;
   stores.consent_records = consent.length;
 
-  const apps = await sql`delete from applications where candidate_id = ${opts.subjectId} returning 1`;
+  const apps =
+    await sql`delete from applications where candidate_id = ${opts.subjectId} returning 1`;
   stores.applications = apps.length;
   const people = await sql`delete from candidates where id = ${opts.subjectId} returning 1`;
   stores.candidates = people.length;
@@ -426,7 +443,11 @@ export async function eraseSubject(opts: {
   return { erased: (stores.candidates ?? 0) > 0, subjectRef: ref, stores, providers };
 }
 
-async function withdrawRows(opts: { orgId: string; subjectId: string; purpose?: string }): Promise<void> {
+async function withdrawRows(opts: {
+  orgId: string;
+  subjectId: string;
+  purpose?: string;
+}): Promise<void> {
   const sql = await getSql();
   if (opts.purpose) {
     await sql`
@@ -525,14 +546,20 @@ export async function withdrawConsent(opts: {
           turns = [];
         }
         const voiceText = new Set(
-          turns.filter((turn) => turn.channel === "voice").map((turn) => (turn.text ?? "").trim()).filter(Boolean),
+          turns
+            .filter((turn) => turn.channel === "voice")
+            .map((turn) => (turn.text ?? "").trim())
+            .filter(Boolean),
         );
         const kept = turns.filter((turn) => turn.channel !== "voice");
         const answers = await sql<{ answers_json: string }>`
           select answers_json from screens where id = ${screen.id} limit 1`;
         let answerRows: Array<{ question_id?: string; answer?: string }> = [];
         try {
-          answerRows = JSON.parse(answers[0]?.answers_json ?? "[]") as Array<{ question_id?: string; answer?: string }>;
+          answerRows = JSON.parse(answers[0]?.answers_json ?? "[]") as Array<{
+            question_id?: string;
+            answer?: string;
+          }>;
         } catch {
           answerRows = [];
         }
@@ -574,7 +601,11 @@ export async function purgeExpiredCandidateData(orgId?: string): Promise<{ purge
         and updated_at < now() - (${String(days)} || ' days')::interval
       limit 100`;
     for (const person of old) {
-      const result = await eraseSubject({ orgId: org.id, subjectId: person.id, reason: "retention" });
+      const result = await eraseSubject({
+        orgId: org.id,
+        subjectId: person.id,
+        reason: "retention",
+      });
       if (result.erased) purged += 1;
     }
     await sql`
@@ -673,7 +704,10 @@ export async function orgPrivacySummary(orgId: string): Promise<{
       } catch {
         stores = [];
       }
-      const created = row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at ?? "");
+      const created =
+        row.created_at instanceof Date
+          ? row.created_at.toISOString()
+          : String(row.created_at ?? "");
       return { subjectRef: row.subject_ref, reason: row.reason, createdAt: created, stores };
     }),
   };

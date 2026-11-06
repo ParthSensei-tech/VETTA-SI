@@ -4,18 +4,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { KNOWLEDGE_HINT, KNOWLEDGE_LABEL } from "@/lib/recruiting/constants";
-import { grantScreenVoiceConsent, postScreenTurn, postScreenVoice } from "@/lib/recruiting/screen-session";
+import {
+  grantScreenVoiceConsent,
+  postScreenTurn,
+  postScreenVoice,
+} from "@/lib/recruiting/screen-session";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import type { KnowledgeKind, PortalApplication, ScreenTurn } from "@/lib/recruiting/types";
 import { cn } from "@/lib/utils";
 
-export function ScreenChat({
-  data,
-  token,
-}: {
-  data: PortalApplication;
-  token?: string;
-}) {
+export function ScreenChat({ data, token }: { data: PortalApplication; token?: string }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
@@ -51,7 +49,8 @@ export function ScreenChat({
     onSuccess: (next) => {
       void qc.setQueryData(queryKeys.portalApplication(data.id), next);
       if (token) void qc.setQueryData(queryKeys.screenToken(token), next);
-      if (next.stage === "complete") toast.success("Screen submitted. A human still owns the next step.");
+      if (next.stage === "complete")
+        toast.success("Screen submitted. A human still owns the next step.");
     },
     onError: (e) => {
       const msg = errorMessage(e);
@@ -97,13 +96,15 @@ export function ScreenChat({
       setDraft("");
       void qc.setQueryData(queryKeys.portalApplication(data.id), next);
       if (token) void qc.setQueryData(queryKeys.screenToken(token), next);
-      if (next.stage === "complete") toast.success("Screen submitted. A human still owns the next step.");
+      if (next.stage === "complete")
+        toast.success("Screen submitted. A human still owns the next step.");
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
 
   const lastAgent = [...data.transcript].reverse().find((t) => t.role === "agent");
-  const kind = (lastAgent?.kind === "system" ? "practical" : lastAgent?.kind) as KnowledgeKind | undefined;
+  const kind = (lastAgent?.kind === "system" ? "practical" : lastAgent?.kind) as
+    KnowledgeKind | undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -113,14 +114,16 @@ export function ScreenChat({
           <h2 className="font-display text-2xl tracking-tight">Screen with Vetta</h2>
         </div>
         <p className="font-mono text-xs tabular-nums text-subtle">
-          {Math.min(data.progress.asked, data.progress.total)}/{data.progress.total || questions.length} · ~
-          {data.progress.minutes || 50}m
+          {Math.min(data.progress.asked, data.progress.total)}/
+          {data.progress.total || questions.length} · ~{data.progress.minutes || 50}m
         </p>
       </div>
 
       <ol className="flex gap-1.5" aria-label="Progress">
         {questions.map((q) => {
-          const answered = data.transcript.some((t) => t.role === "candidate" && t.question_id === q.id && !t.is_followup);
+          const answered = data.transcript.some(
+            (t) => t.role === "candidate" && t.question_id === q.id && !t.is_followup,
+          );
           const current = lastAgent?.question_id === q.id && !done;
           return (
             <li
@@ -166,7 +169,8 @@ export function ScreenChat({
             <div className="mb-3 rounded-xl border border-accent/30 bg-accent/10 p-3 text-xs leading-relaxed text-fg">
               <p className="font-semibold text-accent">Voice prescreen consent required</p>
               <p className="mt-1 text-muted">
-                Voice prescreen records your audio responses and transcribes them via speech models solely for this interview. You may withdraw this consent at any time.
+                Voice prescreen records your audio responses and transcribes them via speech models
+                solely for this interview. You may withdraw this consent at any time.
               </p>
               <div className="mt-2.5 flex items-center gap-2">
                 <Button
@@ -206,12 +210,23 @@ export function ScreenChat({
             }}
           />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <p className="text-[11px] text-subtle">Type, or hold a voice note in English, Hindi, or Hinglish. Nothing here is billed.</p>
+            <p className="text-[11px] text-subtle">
+              Type, or hold a voice note in English, Hindi, or Hinglish. Nothing here is billed.
+            </p>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" disabled={voiceMut.isPending} onClick={() => void toggleRecord()}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={voiceMut.isPending}
+                onClick={() => void toggleRecord()}
+              >
                 {recording ? "Stop" : voiceMut.isPending ? "Hearing…" : "Voice"}
               </Button>
-              <Button type="submit" disabled={mut.isPending || draft.trim().length < 8} className="min-w-28">
+              <Button
+                type="submit"
+                disabled={mut.isPending || draft.trim().length < 8}
+                className="min-w-28"
+              >
                 {mut.isPending ? "Sending…" : "Send"}
               </Button>
             </div>

@@ -35,17 +35,17 @@ import {
   simulateAtsRelayPing,
 } from "@/lib/recruiting/autonomous-portal-api";
 import { formatRelative, cn } from "@/lib/utils";
-import type {
-  AutonomousPortal,
-  HitlDecision,
-  HitlCheckpointType,
-} from "@/lib/recruiting/types";
+import type { AutonomousPortal, HitlDecision, HitlCheckpointType } from "@/lib/recruiting/types";
 
 export const Route = createFileRoute("/app/portal")({ component: AutonomousPortalManagement });
 
 function AutonomousPortalManagement() {
-  const [activeTab, setActiveTab] = useState<"connect" | "hitl" | "settings" | "simulator">("connect");
-  const [selectedChannel, setSelectedChannel] = useState<"career_portal" | "embed_widget" | "ats_webhook" | "direct_drop">("career_portal");
+  const [activeTab, setActiveTab] = useState<"connect" | "hitl" | "settings" | "simulator">(
+    "connect",
+  );
+  const [selectedChannel, setSelectedChannel] = useState<
+    "career_portal" | "embed_widget" | "ats_webhook" | "direct_drop"
+  >("career_portal");
 
   // Portal config query
   const portalQuery = useQuery({
@@ -94,13 +94,19 @@ function AutonomousPortalManagement() {
               Autonomous Career Portal & Ingestion Engine
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted">
-              Replaces slow, keyword-parsing legacy ATS (Workday, Taleo) with an agentic multi-stage retrieval architecture and strict Human-in-the-Loop decision checkpoints.
+              Replaces slow, keyword-parsing legacy ATS (Workday, Taleo) with an agentic multi-stage
+              retrieval architecture and strict Human-in-the-Loop decision checkpoints.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm">
-              <a href={`/portal/${portal.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
+              <a
+                href={`/portal/${portal.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5"
+              >
                 <Globe className="size-4" />
                 View Public Portal
                 <ExternalLink className="size-3" />
@@ -122,7 +128,8 @@ function AutonomousPortalManagement() {
             <div>
               <p className="font-semibold text-fg">Freemium Tier (Always Preserved)</p>
               <p className="mt-0.5 text-muted">
-                Manual resume folder drop & paste inside Desk. Single-batch instant match without portal infrastructure.
+                Manual resume folder drop & paste inside Desk. Single-batch instant match without
+                portal infrastructure.
               </p>
             </div>
           </div>
@@ -131,7 +138,8 @@ function AutonomousPortalManagement() {
             <div>
               <p className="font-semibold text-fg">Premium Tier (Active on this Workspace)</p>
               <p className="mt-0.5 text-muted">
-                Self-service candidate career portal, dynamic missing-info intake, legacy ATS webhook relay, and strict Human-in-the-Loop safeguards.
+                Self-service candidate career portal, dynamic missing-info intake, legacy ATS
+                webhook relay, and strict Human-in-the-Loop safeguards.
               </p>
             </div>
           </div>
@@ -171,35 +179,38 @@ function AutonomousPortalManagement() {
           <div className="flex flex-col gap-1">
             <h2 className="font-display text-2xl">Connect Your Hiring Workflows Easily</h2>
             <p className="text-sm text-muted">
-              Choose how your company connects to the Autonomous Ingestion Engine. Follow the frictionless helping steps provided for each option below.
+              Choose how your company connects to the Autonomous Ingestion Engine. Follow the
+              frictionless helping steps provided for each option below.
             </p>
           </div>
 
           {/* Option Selector Cards */}
           <div className="grid gap-3 md:grid-cols-4">
-            {(["career_portal", "embed_widget", "ats_webhook", "direct_drop"] as const).map((channelKey) => {
-              const guide = guides[channelKey];
-              const isSelected = selectedChannel === channelKey;
-              return (
-                <button
-                  key={channelKey}
-                  type="button"
-                  onClick={() => setSelectedChannel(channelKey)}
-                  className={cn(
-                    "flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all",
-                    isSelected
-                      ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                      : "border-border bg-surface hover:border-primary/40",
-                  )}
-                >
-                  <span className="rounded-md bg-elevated px-2 py-0.5 text-[10px] font-semibold text-muted">
-                    {guide?.badge || "Option"}
-                  </span>
-                  <p className="font-semibold text-fg">{guide?.title || channelKey}</p>
-                  <p className="line-clamp-2 text-xs text-muted">{guide?.description}</p>
-                </button>
-              );
-            })}
+            {(["career_portal", "embed_widget", "ats_webhook", "direct_drop"] as const).map(
+              (channelKey) => {
+                const guide = guides[channelKey];
+                const isSelected = selectedChannel === channelKey;
+                return (
+                  <button
+                    key={channelKey}
+                    type="button"
+                    onClick={() => setSelectedChannel(channelKey)}
+                    className={cn(
+                      "flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all",
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                        : "border-border bg-surface hover:border-primary/40",
+                    )}
+                  >
+                    <span className="rounded-md bg-elevated px-2 py-0.5 text-[10px] font-semibold text-muted">
+                      {guide?.badge || "Option"}
+                    </span>
+                    <p className="font-semibold text-fg">{guide?.title || channelKey}</p>
+                    <p className="line-clamp-2 text-xs text-muted">{guide?.description}</p>
+                  </button>
+                );
+              },
+            )}
           </div>
 
           {/* Active Option Helping Steps Card */}
@@ -218,7 +229,12 @@ function AutonomousPortalManagement() {
 
                 {selectedChannel === "career_portal" && (
                   <Button asChild variant="secondary" size="sm">
-                    <a href={`/portal/${portal.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
+                    <a
+                      href={`/portal/${portal.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5"
+                    >
                       Live Portal: /portal/{portal.slug}
                       <ExternalLink className="size-3.5" />
                     </a>
@@ -289,8 +305,14 @@ function AutonomousPortalManagement() {
                       className="h-7 text-xs"
                       onClick={async () => {
                         const snippet = currentGuide.copySnippet?.code
-                          .replace("{PORTAL_URL}", `${window.location.origin}/portal/${portal.slug}`)
-                          .replace("{WEBHOOK_RELAY_URL}", `${window.location.origin}/api/ats-relay?secret=${portal.webhookSecret}`);
+                          .replace(
+                            "{PORTAL_URL}",
+                            `${window.location.origin}/portal/${portal.slug}`,
+                          )
+                          .replace(
+                            "{WEBHOOK_RELAY_URL}",
+                            `${window.location.origin}/api/ats-relay?secret=${portal.webhookSecret}`,
+                          );
                         if (snippet) {
                           await navigator.clipboard.writeText(snippet);
                           toast.success("Snippet copied to clipboard");
@@ -303,8 +325,14 @@ function AutonomousPortalManagement() {
                   </div>
                   <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-surface p-3 text-fg">
                     {currentGuide.copySnippet.code
-                      .replace("{PORTAL_URL}", `${typeof window !== "undefined" ? window.location.origin : ""}/portal/${portal.slug}`)
-                      .replace("{WEBHOOK_RELAY_URL}", `${typeof window !== "undefined" ? window.location.origin : ""}/api/ats-relay?secret=${portal.webhookSecret}`)}
+                      .replace(
+                        "{PORTAL_URL}",
+                        `${typeof window !== "undefined" ? window.location.origin : ""}/portal/${portal.slug}`,
+                      )
+                      .replace(
+                        "{WEBHOOK_RELAY_URL}",
+                        `${typeof window !== "undefined" ? window.location.origin : ""}/api/ats-relay?secret=${portal.webhookSecret}`,
+                      )}
                   </pre>
                 </div>
               )}
@@ -315,7 +343,10 @@ function AutonomousPortalManagement() {
 
       {/* TAB 2: STRICT HUMAN-IN-THE-LOOP (HITL) DECISION QUEUE */}
       {activeTab === "hitl" && (
-        <HitlQueueManager checkpoints={hitlQuery.data?.checkpoints || []} refetch={hitlQuery.refetch} />
+        <HitlQueueManager
+          checkpoints={hitlQuery.data?.checkpoints || []}
+          refetch={hitlQuery.refetch}
+        />
       )}
 
       {/* TAB 3: PORTAL & STRICT HITL POLICY SETTINGS */}
@@ -343,7 +374,9 @@ function HitlQueueManager({
   refetch: () => void;
 }) {
   const [filter, setFilter] = useState<"pending" | "all">("pending");
-  const filtered = checkpoints.filter((c) => (filter === "pending" ? c.status === "pending" : true));
+  const filtered = checkpoints.filter((c) =>
+    filter === "pending" ? c.status === "pending" : true,
+  );
 
   return (
     <section className="flex flex-col gap-6">
@@ -351,12 +384,15 @@ function HitlQueueManager({
         <div>
           <h2 className="font-display text-2xl">Strict Human-in-the-Loop Review Center</h2>
           <p className="text-sm text-muted">
-            The autonomous engine stops and requests human judgment for critical forks: high-fit interview approvals, unstated requirement probes, and rejection confirmations.
+            The autonomous engine stops and requests human judgment for critical forks: high-fit
+            interview approvals, unstated requirement probes, and rejection confirmations.
           </p>
         </div>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
           <TabsList>
-            <TabsTrigger value="pending">Pending Review ({checkpoints.filter((c) => c.status === "pending").length})</TabsTrigger>
+            <TabsTrigger value="pending">
+              Pending Review ({checkpoints.filter((c) => c.status === "pending").length})
+            </TabsTrigger>
             <TabsTrigger value="all">Full Audit History</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -410,10 +446,26 @@ function HitlCheckpointCard({
   });
 
   const badgeConfig: Record<HitlCheckpointType, { label: string; color: string; icon: any }> = {
-    shortlist_interview: { label: "Interview Sign-Off", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", icon: Sparkles },
-    missing_info_probe: { label: "Missing Info Intake", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400", icon: HelpCircle },
-    candidate_rejection: { label: "Rejection Safeguard", color: "bg-rose-500/15 text-rose-600 dark:text-rose-400", icon: ShieldAlert },
-    rubric_approval: { label: "Rubric Calibration", color: "bg-sky-500/15 text-sky-600 dark:text-sky-400", icon: Sliders },
+    shortlist_interview: {
+      label: "Interview Sign-Off",
+      color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+      icon: Sparkles,
+    },
+    missing_info_probe: {
+      label: "Missing Info Intake",
+      color: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+      icon: HelpCircle,
+    },
+    candidate_rejection: {
+      label: "Rejection Safeguard",
+      color: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+      icon: ShieldAlert,
+    },
+    rubric_approval: {
+      label: "Rubric Calibration",
+      color: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+      icon: Sliders,
+    },
   };
 
   const badge = badgeConfig[checkpoint.checkpointType] || badgeConfig.shortlist_interview;
@@ -424,7 +476,12 @@ function HitlCheckpointCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className={cn("flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", badge.color)}>
+            <span
+              className={cn(
+                "flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                badge.color,
+              )}
+            >
               <badge.icon className="size-3.5" />
               {badge.label}
             </span>
@@ -457,7 +514,9 @@ function HitlCheckpointCard({
 
       {/* AI Grounded Summary */}
       <div className="rounded-xl border border-border/60 bg-elevated/40 p-3.5 text-xs text-fg">
-        <p className="font-semibold text-muted">Agent Recommendation: {checkpoint.aiRecommendation.toUpperCase()}</p>
+        <p className="font-semibold text-muted">
+          Agent Recommendation: {checkpoint.aiRecommendation.toUpperCase()}
+        </p>
         <p className="mt-1 leading-relaxed">{checkpoint.evidenceSummary}</p>
       </div>
 
@@ -467,7 +526,10 @@ function HitlCheckpointCard({
           <span className="font-semibold text-muted">Unstated Items Checked:</span>
           <div className="flex flex-wrap gap-1.5">
             {checkpoint.missingRequirements.map((req, i) => (
-              <span key={i} className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:text-amber-400">
+              <span
+                key={i}
+                className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-600 dark:text-amber-400"
+              >
                 {req}
               </span>
             ))}
@@ -592,7 +654,8 @@ function PortalSettingsEditor({
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-2xl">Autonomous Ingestion & HITL Policies</h2>
         <p className="text-sm text-muted">
-          Configure how candidate ingestion operates and fine-tune where human approval is strictly required.
+          Configure how candidate ingestion operates and fine-tune where human approval is strictly
+          required.
         </p>
       </div>
 
@@ -606,7 +669,10 @@ function PortalSettingsEditor({
           <div className="flex flex-col gap-1.5">
             <Label>Subpath Careers Slug (/portal/[slug])</Label>
             <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
-            <p className="text-xs text-muted">Public URL: {typeof window !== "undefined" ? window.location.origin : ""}/portal/{slug}</p>
+            <p className="text-xs text-muted">
+              Public URL: {typeof window !== "undefined" ? window.location.origin : ""}/portal/
+              {slug}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -616,7 +682,11 @@ function PortalSettingsEditor({
 
           <div className="flex flex-col gap-1.5">
             <Label>Portal Description</Label>
-            <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
 
@@ -630,9 +700,15 @@ function PortalSettingsEditor({
               onChange={(e) => setHitlPolicy(e.target.value as any)}
               className="h-10 rounded-lg border border-border bg-surface px-3 text-sm text-fg"
             >
-              <option value="strict">Strict (Human approval required on ALL shortlists, probes, and rejections)</option>
-              <option value="balanced">Balanced (Human approval on shortlists and low-confidence edge cases)</option>
-              <option value="autonomous">Autonomous (Auto-shortlists high scores, only flags anomalies)</option>
+              <option value="strict">
+                Strict (Human approval required on ALL shortlists, probes, and rejections)
+              </option>
+              <option value="balanced">
+                Balanced (Human approval on shortlists and low-confidence edge cases)
+              </option>
+              <option value="autonomous">
+                Autonomous (Auto-shortlists high scores, only flags anomalies)
+              </option>
             </select>
           </div>
 
@@ -649,13 +725,17 @@ function PortalSettingsEditor({
               onChange={(e) => setThreshold(Number(e.target.value))}
               className="accent-primary"
             />
-            <p className="text-xs text-muted">Candidates scoring above this threshold trigger the Interview Sign-Off gate.</p>
+            <p className="text-xs text-muted">
+              Candidates scoring above this threshold trigger the Interview Sign-Off gate.
+            </p>
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-3">
             <div>
               <p className="text-sm font-medium">Rejection Safeguard</p>
-              <p className="text-xs text-muted">Prevent black-box rejections without explicit human confirmation.</p>
+              <p className="text-xs text-muted">
+                Prevent black-box rejections without explicit human confirmation.
+              </p>
             </div>
             <input
               type="checkbox"
@@ -668,7 +748,9 @@ function PortalSettingsEditor({
           <div className="flex items-center justify-between border-t border-border pt-3">
             <div>
               <p className="text-sm font-medium">Dynamic Missing-Info Candidate Intake</p>
-              <p className="text-xs text-muted">Prompt candidates for unstated notice period and CTC during submission.</p>
+              <p className="text-xs text-muted">
+                Prompt candidates for unstated notice period and CTC during submission.
+              </p>
             </div>
             <input
               type="checkbox"
@@ -693,13 +775,7 @@ function PortalSettingsEditor({
 // ATS SIMULATOR (WORKDAY / TALEO / GREENHOUSE TESTER)
 // ============================================================================
 
-function AtsSimulator({
-  portalId,
-  onComplete,
-}: {
-  portalId: string;
-  onComplete: () => void;
-}) {
+function AtsSimulator({ portalId, onComplete }: { portalId: string; onComplete: () => void }) {
   const [ats, setAts] = useState<"workday" | "taleo" | "greenhouse" | "lever">("workday");
   const [candidateName, setCandidateName] = useState("Kiran Rao");
   const [candidateEmail, setCandidateEmail] = useState("kiran.rao@example.com");
@@ -728,7 +804,8 @@ function AtsSimulator({
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-2xl">Legacy ATS Webhook Relay Simulator</h2>
         <p className="text-sm text-muted">
-          Simulate an applicant arriving from Workday, Taleo, Greenhouse, or Lever to observe multi-stage retrieval and strict Human-in-the-Loop checkpoint routing in real-time.
+          Simulate an applicant arriving from Workday, Taleo, Greenhouse, or Lever to observe
+          multi-stage retrieval and strict Human-in-the-Loop checkpoint routing in real-time.
         </p>
       </div>
 
@@ -765,7 +842,8 @@ function AtsSimulator({
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
         <p className="text-xs text-muted">
-          This test runs real-time two-tower pgvector semantic search and routes through the HITL gate.
+          This test runs real-time two-tower pgvector semantic search and routes through the HITL
+          gate.
         </p>
         <Button onClick={() => simMut.mutate()} disabled={simMut.isPending} className="gap-2">
           <Rocket className="size-4" />

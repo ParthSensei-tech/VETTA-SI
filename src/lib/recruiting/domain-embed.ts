@@ -12,9 +12,35 @@ export const HIDDEN = 48;
 export const EMBED_DIM = 32;
 
 const STOP = new Set([
-  "the", "and", "for", "with", "that", "this", "from", "are", "was", "were",
-  "you", "your", "our", "their", "have", "has", "had", "not", "but", "into",
-  "about", "over", "will", "can", "all", "any", "job", "role", "work",
+  "the",
+  "and",
+  "for",
+  "with",
+  "that",
+  "this",
+  "from",
+  "are",
+  "was",
+  "were",
+  "you",
+  "your",
+  "our",
+  "their",
+  "have",
+  "has",
+  "had",
+  "not",
+  "but",
+  "into",
+  "about",
+  "over",
+  "will",
+  "can",
+  "all",
+  "any",
+  "job",
+  "role",
+  "work",
 ]);
 
 export type EmbedWeights = {
@@ -118,7 +144,14 @@ export function hashFeatures(text: string): Float32Array {
   return x;
 }
 
-function gemv(w: Float32Array, rows: number, cols: number, x: Float32Array, b: Float32Array, relu: boolean) {
+function gemv(
+  w: Float32Array,
+  rows: number,
+  cols: number,
+  x: Float32Array,
+  b: Float32Array,
+  relu: boolean,
+) {
   const y = new Float32Array(rows);
   for (let r = 0; r < rows; r += 1) {
     let s = b[r] ?? 0;
@@ -152,7 +185,14 @@ export function alignmentScore(cos: number): number {
   return Math.round(Math.max(0, Math.min(100, ((cos + 1) / 2) * 100)));
 }
 
-function outerAdd(w: Float32Array, rows: number, cols: number, dy: Float32Array, x: Float32Array, lr: number) {
+function outerAdd(
+  w: Float32Array,
+  rows: number,
+  cols: number,
+  dy: Float32Array,
+  x: Float32Array,
+  lr: number,
+) {
   for (let r = 0; r < rows; r += 1) {
     const g = dy[r] ?? 0;
     if (g === 0) continue;
@@ -275,8 +315,8 @@ export function trainPair(
   const dzr = new Float32Array(EMBED_DIM);
   const dzp = new Float32Array(EMBED_DIM);
   for (let i = 0; i < EMBED_DIM; i += 1) {
-    const gi = inv * zp[i]! - c * zr[i]! / (nr * nr);
-    const gj = inv * zr[i]! - c * zp[i]! / (np * np);
+    const gi = inv * zp[i]! - (c * zr[i]!) / (nr * nr);
+    const gj = inv * zr[i]! - (c * zp[i]!) / (np * np);
     dzr[i] = dc * gi;
     dzp[i] = dc * gj;
   }
@@ -345,7 +385,8 @@ export function parseMarketPage(html: string, source: string): MarketMetric[] {
     metrics.push({ key: k, value, unit, source });
   };
 
-  const pct = /([A-Za-z][A-Za-z0-9 /&+-]{2,42}?)(?:\s+hiring|\s+roles|\s+sector)?\s+(grew|growth|rising|rose|up|down|declined|fell|recorded|at|by)?\s*(-?\d+(?:\.\d+)?)\s*%/gi;
+  const pct =
+    /([A-Za-z][A-Za-z0-9 /&+-]{2,42}?)(?:\s+hiring|\s+roles|\s+sector)?\s+(grew|growth|rising|rose|up|down|declined|fell|recorded|at|by)?\s*(-?\d+(?:\.\d+)?)\s*%/gi;
   let m: RegExpExecArray | null;
   while ((m = pct.exec(text))) {
     const verb = (m[2] ?? "").toLowerCase();

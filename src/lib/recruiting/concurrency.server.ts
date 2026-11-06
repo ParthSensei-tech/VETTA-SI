@@ -8,7 +8,9 @@ export type OptimisticTable = "roles" | "candidates" | "applications" | "candida
  * If expectedVersion matches, increments version and applies updates atomically.
  * If expectedVersion does not match, throws ConcurrencyConflictError with current record state.
  */
-export async function updateWithOptimisticLock<T extends Record<string, any> = Record<string, any>>(opts: {
+export async function updateWithOptimisticLock<
+  T extends Record<string, any> = Record<string, any>,
+>(opts: {
   table: OptimisticTable;
   id: string;
   expectedVersion: number;
@@ -109,10 +111,14 @@ export async function updateWithOptimisticLock<T extends Record<string, any> = R
   if (updatedRows.length === 0) {
     // A concurrent write raced and updated between the select and update
     let latestRows: Array<Record<string, unknown>> = [];
-    if (opts.table === "roles") latestRows = await sql`select * from roles where id = ${opts.id} limit 1`;
-    else if (opts.table === "candidates") latestRows = await sql`select * from candidates where id = ${opts.id} limit 1`;
-    else if (opts.table === "applications") latestRows = await sql`select * from applications where id = ${opts.id} limit 1`;
-    else if (opts.table === "candidate_notes") latestRows = await sql`select * from candidate_notes where id = ${opts.id} limit 1`;
+    if (opts.table === "roles")
+      latestRows = await sql`select * from roles where id = ${opts.id} limit 1`;
+    else if (opts.table === "candidates")
+      latestRows = await sql`select * from candidates where id = ${opts.id} limit 1`;
+    else if (opts.table === "applications")
+      latestRows = await sql`select * from applications where id = ${opts.id} limit 1`;
+    else if (opts.table === "candidate_notes")
+      latestRows = await sql`select * from candidate_notes where id = ${opts.id} limit 1`;
 
     const latest = latestRows[0] || {};
     throw new ConcurrencyConflictError({

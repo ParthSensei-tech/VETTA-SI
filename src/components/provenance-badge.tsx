@@ -8,10 +8,7 @@ export function ProvenanceChip({ provenance }: { provenance: RankProvenance | nu
   return (
     <Badge
       variant={provenance.isLocal ? "outline" : "solid"}
-      className={cn(
-        "gap-1",
-        provenance.isStale && "border-warn/50 bg-warn/10 text-warn",
-      )}
+      className={cn("gap-1", provenance.isStale && "border-warn/50 bg-warn/10 text-warn")}
     >
       {provenance.isLocal ? "⚙ Local" : `🤖 ${provenance.provider}`}
       {provenance.rubricVersion != null && (
@@ -40,13 +37,16 @@ export function ProvenanceDetail({
         className={cn(
           "gap-1",
           provenance.isLocal && "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
-          !provenance.isLocal && "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
+          !provenance.isLocal &&
+            "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
         )}
       >
         {provenance.isLocal ? (
           <>⚙ {provenance.fallback ? "Local (fallback)" : "Local · routed choice"}</>
         ) : (
-          <>🤖 LLM · {provenance.provider} / {provenance.model}</>
+          <>
+            🤖 LLM · {provenance.provider} / {provenance.model}
+          </>
         )}
       </Badge>
 

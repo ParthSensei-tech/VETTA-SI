@@ -87,23 +87,27 @@ function ApplicationView({ data }: { data: PortalApplication }) {
         <div className="rounded-2xl bg-surface p-6 shadow-[var(--shadow-border)]">
           <p className="font-display text-2xl">The desk is reading you.</p>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-            Vetta is ranking the resume against this JD. Your written screen will appear here as a conversation —
-            usually under a minute. We’ll remind you by email or WhatsApp if it sits.
+            Vetta is ranking the resume against this JD. Your written screen will appear here as a
+            conversation — usually under a minute. We’ll remind you by email or WhatsApp if it sits.
           </p>
           <div className="vetta-shimmer mt-6 h-1.5 rounded-full bg-elevated" />
         </div>
       ) : null}
 
-      {data.stage === "screening" && data.questions && data.questions.length > 0 ? <ScreenChat data={data} /> : null}
+      {data.stage === "screening" && data.questions && data.questions.length > 0 ? (
+        <ScreenChat data={data} />
+      ) : null}
 
       {data.stage === "complete" ? (
         <div className="flex flex-col gap-6">
-          {data.transcript.length > 0 ? <ScreenChat data={data} /> : (
+          {data.transcript.length > 0 ? (
+            <ScreenChat data={data} />
+          ) : (
             <div className="rounded-2xl bg-surface p-6 shadow-[var(--shadow-border)]">
               <p className="font-display text-2xl">Submitted. A human still owns the next step.</p>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-                Your resume is ranked, the written screen is in evaluation, and a client pack — if the desk drafts one —
-                waits in the recruiter’s approval queue.
+                Your resume is ranked, the written screen is in evaluation, and a client pack — if
+                the desk drafts one — waits in the recruiter’s approval queue.
               </p>
             </div>
           )}

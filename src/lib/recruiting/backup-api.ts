@@ -10,9 +10,7 @@ import {
 
 export const exportWorkspaceBackup = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .validator((input: unknown) =>
-    z.object({ roleId: z.string().optional() }).parse(input ?? {}),
-  )
+  .validator((input: unknown) => z.object({ roleId: z.string().optional() }).parse(input ?? {}))
   .handler(async ({ context, data }): Promise<WorkspaceBackup> => {
     const org = await ensureUserOrg(context.userId);
     return createWorkspaceBackup({

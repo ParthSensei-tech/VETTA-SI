@@ -668,16 +668,9 @@ export type HarnessSnapshot = {
 };
 
 export type HitlCheckpointType =
-  | "rubric_approval"
-  | "missing_info_probe"
-  | "shortlist_interview"
-  | "candidate_rejection";
+  "rubric_approval" | "missing_info_probe" | "shortlist_interview" | "candidate_rejection";
 
-export type HitlDecisionStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "clarification_requested";
+export type HitlDecisionStatus = "pending" | "approved" | "rejected" | "clarification_requested";
 
 export type HitlPolicy = "strict" | "balanced" | "autonomous";
 
@@ -770,4 +763,3 @@ export type AtsWebhookPayload = {
     title?: string;
   };
 };
-

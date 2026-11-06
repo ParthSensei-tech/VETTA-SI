@@ -18,11 +18,7 @@ export const ParsedProfileSchema = z.object({
   linkedin_url: z.string().trim().default(""),
   current_title: z.string().trim().default(""),
   current_company: z.string().trim().default(""),
-  years_experience: z
-    .number()
-    .nullable()
-    .catch(null)
-    .default(null),
+  years_experience: z.number().nullable().catch(null).default(null),
   skills: z
     .array(z.string().trim())
     .default([])
@@ -36,28 +32,11 @@ export const RankEvidenceItemSchema = z.object({
 });
 
 export const IndiaContextSchema = z.object({
-  location_fit: z
-    .enum(["local", "relocation", "remote_india", "unknown"])
-    .default("unknown"),
-  notice_period_days: z
-    .number()
-    .int()
-    .nullable()
-    .catch(null)
-    .default(null),
-  current_ctc_lakh: z
-    .number()
-    .nullable()
-    .catch(null)
-    .default(null),
-  expected_ctc_lakh: z
-    .number()
-    .nullable()
-    .catch(null)
-    .default(null),
-  early_stage_fit: z
-    .enum(["high", "medium", "low", "unknown"])
-    .default("unknown"),
+  location_fit: z.enum(["local", "relocation", "remote_india", "unknown"]).default("unknown"),
+  notice_period_days: z.number().int().nullable().catch(null).default(null),
+  current_ctc_lakh: z.number().nullable().catch(null).default(null),
+  expected_ctc_lakh: z.number().nullable().catch(null).default(null),
+  early_stage_fit: z.enum(["high", "medium", "low", "unknown"]).default("unknown"),
   notes: z.string().trim().default(""),
 });
 
@@ -150,13 +129,7 @@ export const ScreenFollowUpResponseSchema = z.object({
 });
 
 export const ScreenEvaluationResponseSchema = z.object({
-  score: z
-    .number()
-    .min(0)
-    .max(100)
-    .nullable()
-    .catch(null)
-    .default(null),
+  score: z.number().min(0).max(100).nullable().catch(null).default(null),
   verdict: z.string().trim().min(1).default("Needs review"),
   strengths: z.array(z.string()).default([]),
   concerns: z.array(z.string()).default([]),

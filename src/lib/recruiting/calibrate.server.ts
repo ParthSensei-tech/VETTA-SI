@@ -89,7 +89,9 @@ async function fetchPage(url: string): Promise<string | null> {
 }
 
 /** Pull current HR pages (English glossary + Hindi workplace language). */
-export async function refreshHrLexicon(force = false): Promise<{ chunks: number; skipped: boolean }> {
+export async function refreshHrLexicon(
+  force = false,
+): Promise<{ chunks: number; skipped: boolean }> {
   const sql = await getSql();
   if (!force) {
     const recent = await sql<{ n: number }>`
@@ -116,7 +118,10 @@ export async function refreshHrLexicon(force = false): Promise<{ chunks: number;
   return { chunks: stored, skipped: false };
 }
 
-export async function attachExplanation(rank: RankResult, orgId?: string | null): Promise<RankResult> {
+export async function attachExplanation(
+  rank: RankResult,
+  orgId?: string | null,
+): Promise<RankResult> {
   const org = orgId ? await loadCal(orgId) : initCalWeights();
   const shared = await loadCal(SHARED);
   const cal = org.samples >= 12 ? org : shared.samples >= 12 ? shared : org;
@@ -129,4 +134,3 @@ export async function attachExplanation(rank: RankResult, orgId?: string | null)
   const explain: Explanation = explainRank(rank, cal.samples > 0 ? cal : null, chunks);
   return { ...rank, explain };
 }
-

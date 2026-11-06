@@ -2,7 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { PIPELINE_LABEL, STAGE_LABEL } from "@/lib/recruiting/constants";
 import type { CompanyStage, PipelineStatus } from "@/lib/recruiting/types";
 
-const pipelineVariant: Record<PipelineStatus, "default" | "solid" | "success" | "warn" | "danger" | "outline"> = {
+const pipelineVariant: Record<
+  PipelineStatus,
+  "default" | "solid" | "success" | "warn" | "danger" | "outline"
+> = {
   ingested: "outline",
   ranked: "default",
   shortlisted: "solid",

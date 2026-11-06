@@ -20,7 +20,10 @@ test("parser reads percents and index from a page, not from constants", () => {
   </body></html>`;
   const metrics = parseMarketPage(html, "https://example.test/report");
   assert.ok(metrics.some((m) => m.unit === "percent" && m.value === 20));
-  assert.ok(metrics.some((m) => m.unit === "percent" && m.value === -18) || metrics.some((m) => m.value === 18));
+  assert.ok(
+    metrics.some((m) => m.unit === "percent" && m.value === -18) ||
+      metrics.some((m) => m.value === 18),
+  );
   assert.ok(metrics.some((m) => m.unit === "index" && m.value === 3053));
   assert.ok(metrics.some((m) => m.unit === "count" && m.value === 14934097));
   const doc = metricsToDocument(metrics);

@@ -7,7 +7,13 @@ import { BatchIngestDialog } from "@/components/batch-ingest-dialog";
 import { ExportSlateDialog } from "@/components/export-slate-dialog";
 import { RubricEditor } from "@/components/rubric-editor";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { NightQueue } from "@/components/night-queue";
 import { Textarea } from "@/components/ui/textarea";
 import { CandidatePanel } from "@/components/candidate-panel";
@@ -84,7 +90,9 @@ function RoleWorkspace() {
 
   const { role, applications } = data;
   const screenSent = applications.filter((a) => a.screen).length;
-  const screenDone = applications.filter((a) => a.screen?.status === "evaluated" || a.screen?.completedAt).length;
+  const screenDone = applications.filter(
+    (a) => a.screen?.status === "evaluated" || a.screen?.completedAt,
+  ).length;
   const screenRate = screenSent > 0 ? Math.round((screenDone / screenSent) * 100) : 0;
 
   return (
@@ -130,7 +138,11 @@ function RoleWorkspace() {
               Share apply link
             </Button>
           ) : null}
-          <Button variant="secondary" onClick={() => setExportOpen(true)} disabled={applications.length === 0}>
+          <Button
+            variant="secondary"
+            onClick={() => setExportOpen(true)}
+            disabled={applications.length === 0}
+          >
             <FileSpreadsheet className="size-4" />
             Export
           </Button>

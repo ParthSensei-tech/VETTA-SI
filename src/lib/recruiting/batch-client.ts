@@ -57,7 +57,11 @@ export async function prepareBatchFiles(files: File[]): Promise<{
             skipped.push(`${name} (too large)`);
             continue;
           }
-          items.push({ filename: name, contentBase64: bytesToBase64(bytes), size: bytes.byteLength });
+          items.push({
+            filename: name,
+            contentBase64: bytesToBase64(bytes),
+            size: bytes.byteLength,
+          });
           continue;
         }
         let found = 0;

@@ -33,8 +33,8 @@ function ApprovalsPage() {
           <p className="text-xs tracking-[0.18em] text-muted uppercase">Gate</p>
           <h1 className="font-display text-4xl tracking-tight">Human approval</h1>
           <p className="mt-2 max-w-xl text-sm text-muted">
-            Client-facing copy cannot leave this queue without a stamp. Edit if needed, then approve — send
-            produces a live link, not just a status.
+            Client-facing copy cannot leave this queue without a stamp. Edit if needed, then approve
+            — send produces a live link, not just a status.
           </p>
         </div>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as "pending" | "all")}>
@@ -104,17 +104,29 @@ function ApprovalItem({ approval }: { approval: Approval }) {
           <>
             <label className="flex flex-col gap-2">
               <span className="text-xs text-muted">Edit summary before you stamp</span>
-              <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} className="min-h-32" />
+              <Textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                className="min-h-32"
+              />
             </label>
             <label className="flex flex-col gap-2">
               <span className="text-xs text-muted">Internal note</span>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} className="min-h-20" />
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="min-h-20"
+              />
             </label>
             <div className="flex flex-wrap gap-2">
               <Button disabled={mut.isPending} onClick={() => mut.mutate("approved")}>
                 Approve
               </Button>
-              <Button variant="secondary" disabled={mut.isPending} onClick={() => mut.mutate("rejected")}>
+              <Button
+                variant="secondary"
+                disabled={mut.isPending}
+                onClick={() => mut.mutate("rejected")}
+              >
                 Reject
               </Button>
             </div>
@@ -122,7 +134,9 @@ function ApprovalItem({ approval }: { approval: Approval }) {
         ) : approval.status === "approved" ? (
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setSendOpen(true)}>Send to client</Button>
-            <p className="self-center text-xs text-muted">Creates a shareable page, PDF, and optional email.</p>
+            <p className="self-center text-xs text-muted">
+              Creates a shareable page, PDF, and optional email.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">

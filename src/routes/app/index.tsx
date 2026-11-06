@@ -34,8 +34,8 @@ function Desk() {
           <p className="text-xs tracking-[0.18em] text-muted uppercase">Desk</p>
           <h1 className="font-display text-4xl tracking-tight">Your roles</h1>
           <p className="mt-2 max-w-lg text-sm text-muted">
-            Add a role, drop resumes. Ranking and shortlist prep run in the background.
-            You only review and approve what goes to the client.
+            Add a role, drop resumes. Ranking and shortlist prep run in the background. You only
+            review and approve what goes to the client.
           </p>
           <p className="mt-2 max-w-lg text-xs text-muted">
             {data.domainModel.ready
@@ -174,19 +174,13 @@ function friendlyAction(action: string): string {
   return map[action] ?? action.replace(/_/g, " ");
 }
 
-function Stat({
-  label,
-  value,
-  warn,
-}: {
-  label: string;
-  value: number;
-  warn?: boolean;
-}) {
+function Stat({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
   return (
     <div className="rounded-2xl bg-surface px-4 py-4 shadow-[var(--shadow-border)]">
       <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-1 font-mono text-3xl tabular-nums ${warn ? "text-warn" : "text-fg"}`}>{value}</p>
+      <p className={`mt-1 font-mono text-3xl tabular-nums ${warn ? "text-warn" : "text-fg"}`}>
+        {value}
+      </p>
     </div>
   );
 }

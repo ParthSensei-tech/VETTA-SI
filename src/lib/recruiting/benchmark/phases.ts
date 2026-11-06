@@ -15,7 +15,13 @@
 import { getSql } from "../../db.ts";
 import { rankLocally } from "../local-rank.ts";
 import type { CallContext } from "../model-registry.ts";
-import { buildResumeList, buildRoles, verifyUniqueness, type BenchResume, type BenchRole } from "./corpus.ts";
+import {
+  buildResumeList,
+  buildRoles,
+  verifyUniqueness,
+  type BenchResume,
+  type BenchRole,
+} from "./corpus.ts";
 
 // ---------------------------------------------------------------------------
 // stats
@@ -69,9 +75,12 @@ const PROVIDER_NAMES = ["groq", "gemini", "openai", "ollama", "xai"];
  * instead of contaminating the slate wall-clock with 12 ladder walks.
  */
 export function openAllCircuits(): void {
-  const g = globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, { openUntil: number; fails: number }> };
+  const g = globalThis as typeof globalThis & {
+    __vettaCircuits__?: Map<string, { openUntil: number; fails: number }>;
+  };
   g.__vettaCircuits__ ??= new Map();
-  for (const p of PROVIDER_NAMES) g.__vettaCircuits__.set(p, { openUntil: Date.now() + 60 * 60_000, fails: 5 });
+  for (const p of PROVIDER_NAMES)
+    g.__vettaCircuits__.set(p, { openUntil: Date.now() + 60 * 60_000, fails: 5 });
 }
 
 /**
@@ -81,14 +90,18 @@ export function openAllCircuits(): void {
  * return early, so L4/L5 measure ingest cost rather than model loading.
  */
 export function suppressEmbeddingWorker(): void {
-  const g = globalThis as typeof globalThis & { __vettaEmbeddingTimer__?: ReturnType<typeof setTimeout> };
+  const g = globalThis as typeof globalThis & {
+    __vettaEmbeddingTimer__?: ReturnType<typeof setTimeout>;
+  };
   const sentinel = setTimeout(() => {}, 0);
   clearTimeout(sentinel);
   g.__vettaEmbeddingTimer__ = sentinel;
 }
 
 export function restoreEmbeddingWorker(): void {
-  const g = globalThis as typeof globalThis & { __vettaEmbeddingTimer__?: ReturnType<typeof setTimeout> };
+  const g = globalThis as typeof globalThis & {
+    __vettaEmbeddingTimer__?: ReturnType<typeof setTimeout>;
+  };
   g.__vettaEmbeddingTimer__ = undefined;
 }
 
@@ -125,7 +138,10 @@ export function toRankRole(r: BenchRole) {
   } as unknown as Parameters<typeof rankLocally>[0]["role"];
 }
 
-export async function setupBench(opts: { slateSize: number; orgCoversTraining?: boolean }): Promise<BenchCtx> {
+export async function setupBench(opts: {
+  slateSize: number;
+  orgCoversTraining?: boolean;
+}): Promise<BenchCtx> {
   const sql = await getSql();
   const userId = `bench_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const { ensureUserOrg } = await import("../org.server.ts");
@@ -225,7 +241,6 @@ export async function verifyDedupe(
 // ---------------------------------------------------------------------------
 // phases
 // ---------------------------------------------------------------------------
-
 
 /** Time `fn` over the first `n` resumes, dropping `warmup` leading samples. */
 async function timed(
@@ -501,9 +516,18 @@ export async function phaseLiveArms(
   const { MODEL_ARMS, armModel } = await import("../model-registry.ts");
   const { routerHistory, ollamaHostUp } = await import("../model-router.server.ts");
 
-  const KEY_NAMES = ["GROQ_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OLLAMA_MODEL"];
+  const KEY_NAMES = [
+    "GROQ_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "OPENAI_API_KEY",
+    "XAI_API_KEY",
+    "OLLAMA_MODEL",
+  ];
   const savedEnv = new Map<string, string | undefined>(KEY_NAMES.map((k) => [k, process.env[k]]));
-  const savedCircuits = (globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }).__vettaCircuits__;
+  const savedCircuits = (
+    globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }
+  ).__vettaCircuits__;
 
   const arms = MODEL_ARMS.filter((a) => a.provider !== "local" && a.provider !== "xenova");
   const hostUp = await ollamaHostUp();
@@ -512,7 +536,10 @@ export async function phaseLiveArms(
   const skipped: Array<{ armId: string; why: string }> = [];
   for (const arm of arms) {
     if (arm.spendsOwnerQuota && !opts.allowOwnerQuota) {
-      skipped.push({ armId: arm.id, why: "spends the app owner's real quota — pass --allow-owner-quota" });
+      skipped.push({
+        armId: arm.id,
+        why: "spends the app owner's real quota — pass --allow-owner-quota",
+      });
       continue;
     }
     if (arm.provider === "ollama" && !hostUp) {
@@ -520,7 +547,10 @@ export async function phaseLiveArms(
       continue;
     }
     if (!arm.envKeys.every((k) => (process.env[k] ?? "").trim())) {
-      skipped.push({ armId: arm.id, why: `missing ${arm.envKeys.filter((k) => !(process.env[k] ?? "").trim()).join(", ")}` });
+      skipped.push({
+        armId: arm.id,
+        why: `missing ${arm.envKeys.filter((k) => !(process.env[k] ?? "").trim()).join(", ")}`,
+      });
       continue;
     }
     eligible.push(arm);
@@ -600,11 +630,15 @@ export async function phaseLiveArms(
         if (value) process.env[k] = value;
       }
     }
-    (globalThis as typeof globalThis & { __vettaOllamaUp__?: { at: number; up: boolean } }).__vettaOllamaUp__ = {
+    (
+      globalThis as typeof globalThis & { __vettaOllamaUp__?: { at: number; up: boolean } }
+    ).__vettaOllamaUp__ = {
       at: Date.now(),
       up: provider === "ollama",
     };
-    (globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }).__vettaCircuits__ = new Map();
+    (
+      globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }
+    ).__vettaCircuits__ = new Map();
 
     const samples: number[] = [];
     let servedByProvider = 0;
@@ -669,12 +703,15 @@ export async function phaseLiveArms(
     if (v === undefined) delete process.env[k];
     else process.env[k] = v;
   }
-  (globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }).__vettaCircuits__ = savedCircuits ?? new Map();
+  (
+    globalThis as typeof globalThis & { __vettaCircuits__?: Map<string, unknown> }
+  ).__vettaCircuits__ = savedCircuits ?? new Map();
 
   // A 30-app deep-rank walk is what a shortlist actually costs; 200 is the same number x ~7.
   // Runs after the env is restored, so it measures the product path — every key the user has —
   // rather than the isolated single-provider slice above.
-  let deepen: { apps: number; wallMs: number; perAppMs: number; projected200Ms: number } | null = null;
+  let deepen: { apps: number; wallMs: number; perAppMs: number; projected200Ms: number } | null =
+    null;
   if (
     opts.deepenApps &&
     opts.deepenApps > 0 &&

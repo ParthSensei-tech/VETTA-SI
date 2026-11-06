@@ -35,9 +35,12 @@ export function pcm16ToFloat(base64: string): Float32Array {
   return out;
 }
 
-export async function transcribePcm16(base64: string): Promise<{ text: string; lang: string | null; model: string }> {
+export async function transcribePcm16(
+  base64: string,
+): Promise<{ text: string; lang: string | null; model: string }> {
   const audio = pcm16ToFloat(base64);
-  if (audio.length < 16000 * 0.4) throw new Error("That clip is too short. Hold the button a little longer, or type.");
+  if (audio.length < 16000 * 0.4)
+    throw new Error("That clip is too short. Hold the button a little longer, or type.");
   if (audio.length > 16000 * 90) throw new Error("Keep a voice note under 90 seconds.");
   const run = await asr();
   const result = await run(audio, { task: "transcribe", return_timestamps: false });

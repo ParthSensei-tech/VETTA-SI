@@ -178,7 +178,12 @@ export function serializeHead(h: HeadWeights): string {
 
 export function deserializeHead(raw: string): HeadWeights | null {
   try {
-    const s = JSON.parse(raw) as { w: number[]; samples: number; positives: number; brierEma: number };
+    const s = JSON.parse(raw) as {
+      w: number[];
+      samples: number;
+      positives: number;
+      brierEma: number;
+    };
     if (!s.w || s.w.length !== OUTCOME_DIM) return null;
     return {
       w: Float32Array.from(s.w),

@@ -83,7 +83,10 @@ export function BatchIngestDialog({
         });
         added += result.added;
         parseErrors.push(...result.errors);
-        setProgress({ done: Math.min(prepared.items.length, added + parseErrors.length), total: prepared.items.length });
+        setProgress({
+          done: Math.min(prepared.items.length, added + parseErrors.length),
+          total: prepared.items.length,
+        });
       }
       return { added, skipped: prepared.skipped, parseErrors, total: prepared.items.length };
     },
@@ -121,7 +124,8 @@ export function BatchIngestDialog({
         <DialogHeader>
           <DialogTitle>Drop resumes</DialogTitle>
           <DialogDescription>
-            PDF, Word, zip, or a spreadsheet. We sort them in the background — you review when ready.
+            PDF, Word, zip, or a spreadsheet. We sort them in the background — you review when
+            ready.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +151,9 @@ export function BatchIngestDialog({
         >
           <Upload className="size-5 text-muted" />
           <p className="text-sm">Drop a zip, CSV, Excel, or resume files</p>
-          <p className="text-xs text-subtle">PDF · DOCX · TXT · ZIP · CSV · XLSX · up to 200 per drop</p>
+          <p className="text-xs text-subtle">
+            PDF · DOCX · TXT · ZIP · CSV · XLSX · up to 200 per drop
+          </p>
         </button>
         <input
           ref={inputRef}
@@ -183,7 +189,11 @@ export function BatchIngestDialog({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           {files.length > 0 && !busy ? (
-            <button type="button" className="text-sm text-muted hover:text-fg" onClick={() => setFiles([])}>
+            <button
+              type="button"
+              className="text-sm text-muted hover:text-fg"
+              onClick={() => setFiles([])}
+            >
               Clear
             </button>
           ) : (
@@ -201,7 +211,8 @@ export function BatchIngestDialog({
 function FileGlyph({ name }: { name: string }) {
   const lower = name.toLowerCase();
   if (lower.endsWith(".zip")) return <FileArchive className="size-4 shrink-0" />;
-  if (lower.endsWith(".csv") || lower.endsWith(".xlsx")) return <FileSpreadsheet className="size-4 shrink-0" />;
+  if (lower.endsWith(".csv") || lower.endsWith(".xlsx"))
+    return <FileSpreadsheet className="size-4 shrink-0" />;
   return <FileText className="size-4 shrink-0" />;
 }
 

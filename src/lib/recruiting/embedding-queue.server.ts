@@ -575,9 +575,7 @@ export async function switchActiveEmbeddingModel(opts: {
 /**
  * Cancels an ongoing reindexing process for an organization.
  */
-export async function cancelModelReindex(opts: {
-  orgId: string;
-}): Promise<{ cancelled: true }> {
+export async function cancelModelReindex(opts: { orgId: string }): Promise<{ cancelled: true }> {
   const sql = await getSql();
   const config = await sql<{ target_model: string | null }>`
     select target_model from embedding_index_configs where org_id = ${opts.orgId} limit 1`;

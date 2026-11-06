@@ -24,9 +24,17 @@ export const Route = createFileRoute("/api/whatsapp/webhook")({
       POST: async ({ request }) => {
         if (!process.env.WHATSAPP_VERIFY_TOKEN) return Response.json({ configured: false });
         const body = (await request.json().catch(() => null)) as {
-          entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ from?: string; type?: string; text?: { body?: string } }> } }> }>;
+          entry?: Array<{
+            changes?: Array<{
+              value?: {
+                messages?: Array<{ from?: string; type?: string; text?: { body?: string } }>;
+              };
+            }>;
+          }>;
         } | null;
-        const messages = body?.entry?.flatMap((e) => e.changes ?? []).flatMap((c) => c.value?.messages ?? []) ?? [];
+        const messages =
+          body?.entry?.flatMap((e) => e.changes ?? []).flatMap((c) => c.value?.messages ?? []) ??
+          [];
         const sql = await getSql();
         for (const message of messages) {
           if (message.type !== "text" || !message.from || !message.text?.body) continue;

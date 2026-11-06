@@ -37,14 +37,16 @@ export const SUPPORTED_EMBEDDING_MODELS: Record<string, EmbeddingModelInfo> = {
     dim: 384,
     prefixQuery: (q) => `query: ${q.slice(0, 6000)}`,
     prefixPassage: (p) => `passage: ${p.slice(0, 6000)}`,
-    description: "Multilingual passage embeddings (E5, 384 dimensions). Ideal for multilingual Indian resumes.",
+    description:
+      "Multilingual passage embeddings (E5, 384 dimensions). Ideal for multilingual Indian resumes.",
   },
   "Xenova/bge-small-en-v1.5": {
     id: "Xenova/bge-small-en-v1.5",
     name: "BGE Small English v1.5",
     version: "v1.5",
     dim: 384,
-    prefixQuery: (q) => `Represent this sentence for searching relevant passages: ${q.slice(0, 6000)}`,
+    prefixQuery: (q) =>
+      `Represent this sentence for searching relevant passages: ${q.slice(0, 6000)}`,
     prefixPassage: (p) => p.slice(0, 6000),
     description: "High-accuracy English retrieval embeddings (BGE v1.5, 384 dimensions).",
   },
@@ -101,56 +103,166 @@ const SEMANTIC_CLUSTERS = [
   {
     name: "cloud_devops_infra",
     terms: [
-      "kubernetes", "k8s", "container", "containers", "orchestration", "docker",
-      "eks", "gke", "aks", "helm", "terraform", "ansible", "cloud", "aws", "gcp",
-      "azure", "infrastructure", "devops", "sre", "reliability", "ci/cd",
-      "pipeline", "sysadmin", "linux", "ecs", "istio", "envoy", "loadbalancer",
+      "kubernetes",
+      "k8s",
+      "container",
+      "containers",
+      "orchestration",
+      "docker",
+      "eks",
+      "gke",
+      "aks",
+      "helm",
+      "terraform",
+      "ansible",
+      "cloud",
+      "aws",
+      "gcp",
+      "azure",
+      "infrastructure",
+      "devops",
+      "sre",
+      "reliability",
+      "ci/cd",
+      "pipeline",
+      "sysadmin",
+      "linux",
+      "ecs",
+      "istio",
+      "envoy",
+      "loadbalancer",
     ],
   },
   {
     name: "ml_ai_datascience",
     terms: [
-      "ml", "ai", "machine learning", "deep learning", "pytorch", "tensorflow",
-      "neural", "inference", "training", "transformer", "transformers", "llm",
-      "nlp", "computer vision", "embeddings", "model", "feature engineering",
-      "data science", "huggingface", "gpu", "cuda", "backprop",
+      "ml",
+      "ai",
+      "machine learning",
+      "deep learning",
+      "pytorch",
+      "tensorflow",
+      "neural",
+      "inference",
+      "training",
+      "transformer",
+      "transformers",
+      "llm",
+      "nlp",
+      "computer vision",
+      "embeddings",
+      "model",
+      "feature engineering",
+      "data science",
+      "huggingface",
+      "gpu",
+      "cuda",
+      "backprop",
     ],
   },
   {
     name: "frontend_ui_web",
     terms: [
-      "frontend", "react", "next.js", "nextjs", "vue", "angular", "javascript",
-      "typescript", "css", "html", "web vitals", "dom", "ui", "ux", "redux",
-      "state", "client-side", "responsive", "tailwind", "webpack", "vite", "lcp",
+      "frontend",
+      "react",
+      "next.js",
+      "nextjs",
+      "vue",
+      "angular",
+      "javascript",
+      "typescript",
+      "css",
+      "html",
+      "web vitals",
+      "dom",
+      "ui",
+      "ux",
+      "redux",
+      "state",
+      "client-side",
+      "responsive",
+      "tailwind",
+      "webpack",
+      "vite",
+      "lcp",
     ],
   },
   {
     name: "backend_distributed",
     terms: [
-      "backend", "distributed", "microservices", "kafka", "rabbitmq", "grpc",
-      "rest", "consensus", "raft", "paxos", "database", "postgres", "redis",
-      "nosql", "sql", "api", "golang", "java", "spring", "node", "python",
+      "backend",
+      "distributed",
+      "microservices",
+      "kafka",
+      "rabbitmq",
+      "grpc",
+      "rest",
+      "consensus",
+      "raft",
+      "paxos",
+      "database",
+      "postgres",
+      "redis",
+      "nosql",
+      "sql",
+      "api",
+      "golang",
+      "java",
+      "spring",
+      "node",
+      "python",
     ],
   },
   {
     name: "mobile_dev",
     terms: [
-      "mobile", "android", "ios", "swift", "kotlin", "flutter", "react native",
-      "xcode", "gradle", "play store", "app store",
+      "mobile",
+      "android",
+      "ios",
+      "swift",
+      "kotlin",
+      "flutter",
+      "react native",
+      "xcode",
+      "gradle",
+      "play store",
+      "app store",
     ],
   },
   {
     name: "security_compliance",
     terms: [
-      "security", "cyber", "infosec", "pentest", "vulnerability", "oauth",
-      "jwt", "auth", "encryption", "firewall", "soc2", "gdpr", "compliance",
+      "security",
+      "cyber",
+      "infosec",
+      "pentest",
+      "vulnerability",
+      "oauth",
+      "jwt",
+      "auth",
+      "encryption",
+      "firewall",
+      "soc2",
+      "gdpr",
+      "compliance",
     ],
   },
   {
     name: "culinary_hospitality",
     terms: [
-      "pastry", "chef", "culinary", "baking", "sourdough", "bread", "croissant",
-      "cooking", "restaurant", "hospitality", "hotel", "kitchen", "recipe",
+      "pastry",
+      "chef",
+      "culinary",
+      "baking",
+      "sourdough",
+      "bread",
+      "croissant",
+      "cooking",
+      "restaurant",
+      "hospitality",
+      "hotel",
+      "kitchen",
+      "recipe",
     ],
   },
 ];
@@ -163,7 +275,10 @@ const SEMANTIC_CLUSTERS = [
 function deterministicVectorFallback(text: string, dim: number): number[] {
   const vec = new Float64Array(dim);
   const lower = text.toLowerCase();
-  const tokens = lower.replace(/[^\w\s-]/g, " ").split(/\s+/).filter((w) => w.length > 1);
+  const tokens = lower
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 1);
 
   // 1. Concept cluster projection (orthogonal sub-spaces per semantic cluster)
   const clusterDims = Math.floor(dim * 0.5);
@@ -194,7 +309,7 @@ function deterministicVectorFallback(text: string, dim: number): number[] {
       h = Math.imul(h ^ t.charCodeAt(j), 16777619);
     }
     const idx = hashStart + (Math.abs(h) % hashSpan);
-    const sign = (h & 1) ? 1.0 : -1.0;
+    const sign = h & 1 ? 1.0 : -1.0;
     vec[idx] += sign * 1.0;
 
     // Character tri-grams for subword similarity
@@ -205,7 +320,7 @@ function deterministicVectorFallback(text: string, dim: number): number[] {
           triH = Math.imul(triH ^ t.charCodeAt(c + j), 16777619);
         }
         const triIdx = hashStart + (Math.abs(triH) % hashSpan);
-        const triSign = (triH & 1) ? 0.5 : -0.5;
+        const triSign = triH & 1 ? 0.5 : -0.5;
         vec[triIdx] += triSign;
       }
     }

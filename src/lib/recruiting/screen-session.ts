@@ -88,8 +88,15 @@ function jobFrom(row: AppHead): PublicJob {
   };
 }
 
-function portalStage(pipeline: string, hasQuestions: boolean, screenStatus: string | null): PortalApplication["stage"] {
-  if (screenStatus === "evaluated" || ["ready", "approved", "sent", "rejected", "hold"].includes(pipeline)) {
+function portalStage(
+  pipeline: string,
+  hasQuestions: boolean,
+  screenStatus: string | null,
+): PortalApplication["stage"] {
+  if (
+    screenStatus === "evaluated" ||
+    ["ready", "approved", "sent", "rejected", "hold"].includes(pipeline)
+  ) {
     return "complete";
   }
   if (hasQuestions || pipeline === "screening") return "screening";
@@ -99,9 +106,13 @@ function portalStage(pipeline: string, hasQuestions: boolean, screenStatus: stri
 function toPortal(row: AppHead, screen: ScreenDb | null): PortalApplication {
   const questions = screen ? normalizeQuestions(screen.questions_json) : [];
   const transcript = screen ? normalizeTranscript(screen.transcript_json) : [];
-  const answers = screen ? parseJson<{ question_id: string; answer: string }[]>(screen.answers_json, []) : [];
+  const answers = screen
+    ? parseJson<{ question_id: string; answer: string }[]>(screen.answers_json, [])
+    : [];
   const last = lastAgentTurn(transcript);
-  const asked = new Set(transcript.filter((t) => t.role === "candidate" && !t.is_followup).map((t) => t.question_id)).size;
+  const asked = new Set(
+    transcript.filter((t) => t.role === "candidate" && !t.is_followup).map((t) => t.question_id),
+  ).size;
   return {
     id: row.id,
     role: jobFrom(row),
@@ -178,7 +189,11 @@ async function ensureOpening(screen: ScreenDb, candidateName: string): Promise<S
   return { ...screen, transcript_json: JSON.stringify(transcript) };
 }
 
-async function finishScreen(screen: ScreenDb, questions: ScreenQuestion[], transcript: ScreenTurn[]) {
+async function finishScreen(
+  screen: ScreenDb,
+  questions: ScreenQuestion[],
+  transcript: ScreenTurn[],
+) {
   const sql = await getSql();
   const answers = answersFromTranscript(transcript);
   const { evaluateScreen } = await import("./ai.server");
@@ -409,7 +424,9 @@ export const postScreenVoice = createServerFn({ method: "POST" })
     const sql = await getSql();
     let screenAppId = data.applicationId;
     if (data.token) {
-      const s = await sql<{ application_id: string }>`select application_id from screens where invite_token = ${data.token} limit 1`;
+      const s = await sql<{
+        application_id: string;
+      }>`select application_id from screens where invite_token = ${data.token} limit 1`;
       if (s[0]) screenAppId = s[0].application_id;
     }
     if (!screenAppId) throw new Error("Screen not found");
@@ -447,7 +464,9 @@ export const grantScreenVoiceConsent = createServerFn({ method: "POST" })
     const sql = await getSql();
     let screenAppId = data.applicationId;
     if (data.token) {
-      const s = await sql<{ application_id: string }>`select application_id from screens where invite_token = ${data.token} limit 1`;
+      const s = await sql<{
+        application_id: string;
+      }>`select application_id from screens where invite_token = ${data.token} limit 1`;
       if (s[0]) screenAppId = s[0].application_id;
     }
     if (!screenAppId) throw new Error("Screen not found");
@@ -507,7 +526,9 @@ export const getScreenInvite = createServerFn({ method: "POST" })
       email: row.email,
       phone: row.phone,
       screenUrl: url,
-      mailto: row.email ? mailtoUrl(row.email, `Written screen · ${row.title}`, text) : mailtoUrl("", `Written screen · ${row.title}`, text),
+      mailto: row.email
+        ? mailtoUrl(row.email, `Written screen · ${row.title}`, text)
+        : mailtoUrl("", `Written screen · ${row.title}`, text),
       whatsappUrl: whatsappUrl(row.phone, text),
     };
   });

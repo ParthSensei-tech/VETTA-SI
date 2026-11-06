@@ -28,7 +28,8 @@ function TalentPage() {
       setFilters({
         q: q.trim(),
         location: location.trim(),
-        noticeMaxDays: noticeMaxDays != null && Number.isFinite(noticeMaxDays) ? noticeMaxDays : null,
+        noticeMaxDays:
+          noticeMaxDays != null && Number.isFinite(noticeMaxDays) ? noticeMaxDays : null,
         ctcMaxLakh: ctcMaxLakh != null && Number.isFinite(ctcMaxLakh) ? ctcMaxLakh : null,
       });
     }, 300);
@@ -54,10 +55,28 @@ function TalentPage() {
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-4">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Words or meaning, English or Hindi" />
-          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City" />
-          <Input value={notice} onChange={(e) => setNotice(e.target.value)} placeholder="Notice max (days)" inputMode="numeric" />
-          <Input value={ctc} onChange={(e) => setCtc(e.target.value)} placeholder="CTC max (LPA)" inputMode="decimal" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Words or meaning, English or Hindi"
+          />
+          <Input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="City"
+          />
+          <Input
+            value={notice}
+            onChange={(e) => setNotice(e.target.value)}
+            placeholder="Notice max (days)"
+            inputMode="numeric"
+          />
+          <Input
+            value={ctc}
+            onChange={(e) => setCtc(e.target.value)}
+            placeholder="CTC max (LPA)"
+            inputMode="decimal"
+          />
         </div>
       </header>
 
@@ -79,7 +98,11 @@ function TalentPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{row.candidate.fullName}</p>
                 <p className="truncate text-xs text-muted">
-                  {[row.candidate.currentTitle, row.candidate.currentCompany, row.candidate.location]
+                  {[
+                    row.candidate.currentTitle,
+                    row.candidate.currentCompany,
+                    row.candidate.location,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

@@ -47,7 +47,10 @@ function fallbackName(resumeText: string, filename: string): string {
       .find((l) => l && !l.includes("@") && l.length < 80 && !/^https?:/i.test(l)) ?? "";
   if (fromResume) return fromResume.slice(0, 80);
   const base = filename.replace(/^.*[/\\]/, "").replace(/\.[^.]+$/, "");
-  const cleaned = base.replace(/[._-]+/g, " ").replace(/\b(resume|cv)\b/gi, "").trim();
+  const cleaned = base
+    .replace(/[._-]+/g, " ")
+    .replace(/\b(resume|cv)\b/gi, "")
+    .trim();
   return (cleaned || "Unnamed candidate").slice(0, 80);
 }
 
@@ -70,7 +73,9 @@ export async function refreshBatchStats(batchId: string) {
     select count(*) as n from ingest_jobs where batch_id = ${batchId} and length(resume_text) >= 40`;
   const parsedCount = Number(parsedRows[0]?.n) || 0;
 
-  const batch = await sql<{ status: string }>`select status from ingest_batches where id = ${batchId} limit 1`;
+  const batch = await sql<{
+    status: string;
+  }>`select status from ingest_batches where id = ${batchId} limit 1`;
   const current = batch[0]?.status ?? "queued";
   if (current === "cancelled") {
     await sql`
@@ -85,7 +90,8 @@ export async function refreshBatchStats(batchId: string) {
   }
 
   const prev = current;
-  const next = total === 0 ? "queued" : remaining > 0 ? "running" : failed === total ? "failed" : "completed";
+  const next =
+    total === 0 ? "queued" : remaining > 0 ? "running" : failed === total ? "failed" : "completed";
 
   await sql`
     update ingest_batches set
@@ -348,7 +354,9 @@ async function claimNextJob(userId?: string): Promise<JobRow | null> {
 async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeued"> {
   const sql = await getSql();
   const jobStart = Date.now();
-  const queueAgeMs = job.created_at ? Math.max(0, jobStart - new Date(job.created_at).getTime()) : 0;
+  const queueAgeMs = job.created_at
+    ? Math.max(0, jobStart - new Date(job.created_at).getTime())
+    : 0;
 
   const recordMetric = (status: "completed" | "failed" | "requeued", error: string = "") => {
     void (async () => {
@@ -364,7 +372,9 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
           attempts: job.attempts,
           error,
         });
-      } catch { /* telemetry is best-effort — never block the queue */ }
+      } catch {
+        /* telemetry is best-effort — never block the queue */
+      }
     })();
   };
 

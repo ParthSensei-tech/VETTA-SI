@@ -3,7 +3,10 @@ import { unzipSync, strFromU8 } from "fflate";
 const MAX_CHARS = 40000;
 
 function clip(text: string): string {
-  const cleaned = text.replaceAll("\u0000", "").replace(/[ \t]+\n/g, "\n").trim();
+  const cleaned = text
+    .replaceAll("\u0000", "")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
   if (cleaned.length <= MAX_CHARS) return cleaned;
   return `${cleaned.slice(0, MAX_CHARS)}\n\n[truncated]`;
 }
@@ -19,9 +22,7 @@ async function extractPdf(file: File): Promise<string> {
   for (let i = 1; i <= n; i += 1) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    const line = content.items
-      .map((item) => ("str" in item ? String(item.str) : ""))
-      .join(" ");
+    const line = content.items.map((item) => ("str" in item ? String(item.str) : "")).join(" ");
     if (line.trim()) pages.push(line);
   }
   const text = pages.join("\n\n").replace(/[ ]{2,}/g, " ");

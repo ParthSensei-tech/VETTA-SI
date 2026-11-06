@@ -44,13 +44,13 @@ const keepPrefixes = Object.keys(map.keep)
   .filter((g) => g.startsWith("src/") && g.includes("**"))
   .map((g) => g.replace(/\/\*\*\/?\*?$/, ""));
 for (const f of owned) {
-  const kept =
-    f in map.keep || keepPrefixes.some((p) => f === p || f.startsWith(p + "/"));
+  const kept = f in map.keep || keepPrefixes.some((p) => f === p || f.startsWith(p + "/"));
   if (!table.has(f) && !kept) fail(`map is not total: ${f} is neither moved nor kept`);
 }
 
 // --- 2. tier honesty, read from file content --------------------------------
-const SERVER_SPEC = /["']((?:\.{1,2}\/|@\/)[^"']*(?:\.server(?:\.ts|\.tsx)?|\/server(?:\.ts|\.tsx)?|\/server\/))["']/g;
+const SERVER_SPEC =
+  /["']((?:\.{1,2}\/|@\/)[^"']*(?:\.server(?:\.ts|\.tsx)?|\/server(?:\.ts|\.tsx)?|\/server\/))["']/g;
 const tierOf = (p) => {
   const m = /src\/(?:features\/[^/]+|platform|shared)\/(domain|server|api|ui)\//.exec(p);
   return m ? m[1] : null;
@@ -76,7 +76,9 @@ for (const [from, to] of table) {
       `tier dishonest: ${from} reaches ${servers[0]} but maps into '${tier}/', which the lint boundary forbids`,
     );
   if (basename(to) !== basename(from))
-    fail(`basename changed: ${from} -> ${to} (the map's hard rule is directories change, names do not)`);
+    fail(
+      `basename changed: ${from} -> ${to} (the map's hard rule is directories change, names do not)`,
+    );
 }
 
 // --- 3. framework integrity --------------------------------------------------
@@ -88,26 +90,53 @@ for (const [from, to] of table) {
 }
 if (existsSync(posix.join(ROOT, "src/routeTree.gen.ts"))) {
   const gen = diskView.read("src/routeTree.gen.ts");
-  for (const from of table.keys()) if (gen.includes(from)) fail(`routeTree.gen.ts references ${from}, which moves`);
+  for (const from of table.keys())
+    if (gen.includes(from)) fail(`routeTree.gen.ts references ${from}, which moves`);
 }
 
 // --- 4. stale-path report ----------------------------------------------------
 const staleNeedle = flags.has("--final") ? fail : note;
 const stale = [];
-for (const f of [...diskView.list("src"), ...diskView.list("scripts"), ...diskView.list("server")].filter(isCodeFile)) {
+for (const f of [
+  ...diskView.list("src"),
+  ...diskView.list("scripts"),
+  ...diskView.list("server"),
+].filter(isCodeFile)) {
   const text = diskView.read(f);
-  for (const m of text.matchAll(/["'`]([^"'`]*(?:src\/lib\/(?:recruiting|auth|observability|og|app-data)\b|@\/lib\/)[^"'`]*)["'`]/g))
+  for (const m of text.matchAll(
+    /["'`]([^"'`]*(?:src\/lib\/(?:recruiting|auth|observability|og|app-data)\b|@\/lib\/)[^"'`]*)["'`]/g,
+  ))
     if (!/^src\/lib\/recruiting\/README/.test(f)) stale.push(`${f}: ${m[1]}`);
 }
 if (stale.length) staleNeedle(`${stale.length} literal path references into the old tree remain`);
 
 // --- 5. do the boundary rules actually fire? ---------------------------------
 const PROBES = [
-  { file: "src/components/__probe_tree.tsx", code: `import * as a from "@/lib/recruiting/ai.server";\nexport const p = async () => [a, await import("../lib/recruiting/queue.server.ts")];`, min: 2 },
-  { file: "src/routes/__probe_dir__/p.tsx", code: `import * as a from "../../lib/recruiting/org.server";\nexport const p = a;`, min: 1 },
-  { file: "src/features/verification/domain/__probe.ts", code: `import * as a from "@/features/verification/server/evidence.server";\nimport * as c from "@/components/app-shell";\nexport const p = async () => [a, c, await import("../server/evidence.server.ts")];`, min: 3 },
-  { file: "src/features/verification/api/__probe.ts", code: `import * as a from "@/features/verification/server/evidence.server";\nexport const p = a;`, min: 0 },
-  { file: "src/features/verification/domain/__probe_neg.ts", code: `import * as fw from "@tanstack/react-start/server";\nexport const p = fw;`, min: 0 },
+  {
+    file: "src/components/__probe_tree.tsx",
+    code: `import * as a from "@/lib/recruiting/ai.server";\nexport const p = async () => [a, await import("../lib/recruiting/queue.server.ts")];`,
+    min: 2,
+  },
+  {
+    file: "src/routes/__probe_dir__/p.tsx",
+    code: `import * as a from "../../lib/recruiting/org.server";\nexport const p = a;`,
+    min: 1,
+  },
+  {
+    file: "src/features/verification/domain/__probe.ts",
+    code: `import * as a from "@/features/verification/server/evidence.server";\nimport * as c from "@/components/app-shell";\nexport const p = async () => [a, c, await import("../server/evidence.server.ts")];`,
+    min: 3,
+  },
+  {
+    file: "src/features/verification/api/__probe.ts",
+    code: `import * as a from "@/features/verification/server/evidence.server";\nexport const p = a;`,
+    min: 0,
+  },
+  {
+    file: "src/features/verification/domain/__probe_neg.ts",
+    code: `import * as fw from "@tanstack/react-start/server";\nexport const p = fw;`,
+    min: 0,
+  },
 ];
 
 function probes() {
@@ -120,7 +149,12 @@ function probes() {
   }
   const res = spawnSync(
     process.execPath,
-    [posix.join(ROOT, "node_modules", "eslint", "bin", "eslint.js"), ...PROBES.map((p) => p.file), "--format", "json"],
+    [
+      posix.join(ROOT, "node_modules", "eslint", "bin", "eslint.js"),
+      ...PROBES.map((p) => p.file),
+      "--format",
+      "json",
+    ],
     { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
   );
   let parsed = [];
@@ -138,9 +172,12 @@ function probes() {
   for (const p of PROBES) {
     const hit = parsed.find((r) => r.filePath.replace(/\\/g, "/").endsWith(p.file));
     const got = (hit?.messages ?? []).filter((m) => m.severity === 2).length;
-    if (got < p.min) fail(`boundary rule went silent: ${p.file} expected >= ${p.min} errors, got ${got}`);
+    if (got < p.min)
+      fail(`boundary rule went silent: ${p.file} expected >= ${p.min} errors, got ${got}`);
     if (p.min === 0 && got > 0)
-      fail(`boundary rule over-fires on the legal case ${p.file}: ${JSON.stringify(hit.messages.map((m) => m.message))}`);
+      fail(
+        `boundary rule over-fires on the legal case ${p.file}: ${JSON.stringify(hit.messages.map((m) => m.message))}`,
+      );
   }
   return created.length;
 }

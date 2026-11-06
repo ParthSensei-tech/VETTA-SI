@@ -2,12 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getSql } from "../db.ts";
 import { ensureUserOrg } from "./org.server.ts";
-import {
-  hasPermission,
-  ROLE_PERMISSIONS,
-  type OrgRole,
-  type OrgPermission,
-} from "./rbac.ts";
+import { hasPermission, ROLE_PERMISSIONS, type OrgRole, type OrgPermission } from "./rbac.ts";
 import {
   assertOrgPermission,
   addOrgMember,
@@ -22,10 +17,7 @@ import {
   assignUserToApplication,
   getApplicationAssignments,
 } from "./assignments.server.ts";
-import {
-  getSharedCandidatePool,
-  getCandidateFullDossier,
-} from "./talent-pool.server.ts";
+import { getSharedCandidatePool, getCandidateFullDossier } from "./talent-pool.server.ts";
 import {
   normalizeEmail,
   normalizePhone,
@@ -40,9 +32,7 @@ import {
   updateTaskStatus,
   getRecruitingTasks,
 } from "./collaboration.server.ts";
-import {
-  updateWithOptimisticLock,
-} from "./concurrency.server.ts";
+import { updateWithOptimisticLock } from "./concurrency.server.ts";
 import { ConcurrencyConflictError } from "./concurrency.ts";
 
 function uid(): string {
@@ -116,12 +106,9 @@ test("RBAC: membership management, invitation, and role enforcement", async () =
   assert.equal(checked.userId, recruiterId);
 
   // Verify assertOrgPermission blocks unauthorized action
-  await assert.rejects(
-    async () => {
-      await assertOrgPermission(sourcerId, org.orgId, "candidates:merge");
-    },
-    /Forbidden: Role 'sourcer' lacks 'candidates:merge' permission/,
-  );
+  await assert.rejects(async () => {
+    await assertOrgPermission(sourcerId, org.orgId, "candidates:merge");
+  }, /Forbidden: Role 'sourcer' lacks 'candidates:merge' permission/);
 
   // Update member role from recruiter to lead_recruiter
   const updated = await updateOrgMember({
@@ -402,10 +389,14 @@ test("Duplicate Merge: atomic, conflict-safe candidate merge with cross-role pre
   assert.equal(transferredAppB[0]!.candidate_id, canonicalId);
 
   // 5. Verify task and note were re-pointed to canonical
-  const reTask = await sql<{ candidate_id: string }>`select candidate_id from recruiting_tasks where id = ${taskId}`;
+  const reTask = await sql<{
+    candidate_id: string;
+  }>`select candidate_id from recruiting_tasks where id = ${taskId}`;
   assert.equal(reTask[0]!.candidate_id, canonicalId);
 
-  const reNote = await sql<{ candidate_id: string }>`select candidate_id from candidate_notes where id = ${noteId}`;
+  const reNote = await sql<{
+    candidate_id: string;
+  }>`select candidate_id from candidate_notes where id = ${noteId}`;
   assert.equal(reNote[0]!.candidate_id, canonicalId);
 });
 

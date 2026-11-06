@@ -17,7 +17,8 @@ export const PURPOSES = [
   {
     id: "client_disclosure",
     label: "Share a card with the hiring company",
-    detail: "Name, headline, and the approved card can leave this workspace on a link that expires.",
+    detail:
+      "Name, headline, and the approved card can leave this workspace on a link that expires.",
     askOnApply: true,
     requiredOnApply: false,
     employerInstructionOk: true,
@@ -33,7 +34,8 @@ export const PURPOSES = [
   {
     id: "model_improvement",
     label: "Let this company's ranker learn from the decision",
-    detail: "Only the private model for this company. The resume is not sent out to train a public model.",
+    detail:
+      "Only the private model for this company. The resume is not sent out to train a public model.",
     askOnApply: true,
     requiredOnApply: false,
     employerInstructionOk: true,
@@ -88,9 +90,7 @@ export function purposeDenied(id: PurposeId): string {
   if (id === "model_improvement") {
     return "This person has not agreed to be used for model learning.";
   }
-  return purpose
-    ? `Processing is stopped for “${purpose.label}”.`
-    : "Processing is stopped.";
+  return purpose ? `Processing is stopped for “${purpose.label}”.` : "Processing is stopped.";
 }
 
 /**
