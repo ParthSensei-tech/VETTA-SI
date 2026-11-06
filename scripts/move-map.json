@@ -1,0 +1,336 @@
+{
+  "_comment": [
+    "The move map IS the spec. scripts/move-tree.mjs is a pure function of this file,",
+    "and scripts/check-tree-invariants.mjs verifies totality (every tracked src file is",
+    "named here or matched by a keep rule) and injectivity (no two sources share a target).",
+    "",
+    "Capability buckets come from docs/audit/03-architecture-analysis.md section 4, which",
+    "derived them from the measured dependency graph - they are adopted, not re-invented.",
+    "What changes is that each capability gets tier folders inside it, so the audit's flat",
+    "domain/ bucket becomes <capability>/domain/ and the tier is no longer a guess.",
+    "",
+    "HARD RULE for batches 4-10: directories change, basenames do NOT. Exception list is",
+    "only the three batch-3 suffix fixes. This keeps git rename detection trivial so a",
+    "reviewer can verify 'same file, new folder' mechanically instead of reading diffs.",
+    "",
+    "Every path below is repo-relative. 'keep' entries are framework- or platform-pinned",
+    "and moving one is either a public URL change or a contract with the app builder."
+  ],
+  "keep": {
+    "src/routes/**": "TanStack file-based routing: a moved route file silently changes a public URL",
+    "src/router.tsx": "framework entry, named getRouter() contract",
+    "src/routeTree.gen.ts": "generated; check-tree asserts its hash never changes during the move",
+    "src/styles.css": "template entry imported by __root",
+    "src/*.json": "asset manifests",
+    "server/**": "nitro serverDir, pinned at vite.config.ts:228",
+    "public/**": "platform chrome including public/__grok",
+    "migrations/**": "discovered by two path mechanisms (import.meta.glob and readdirSync)",
+    "scripts/**": "repo tooling, moved only where this map says explicitly",
+    "AGENTS.md": "project instructions",
+    "startup.sh": "restart contract",
+    "vite.config.ts": "must not be recreated; only its module-ID literals are rewritten",
+    "tsconfig.json": "must not be recreated",
+    "vercel.json": "deploy config",
+    ".grok/**": "platform config and skills",
+    "src/lib/recruiting/live-pipeline.ts": "PARKED, not moved and not deleted: open audit decision #1 (536 lines, 0 importers, and it writes synthetic applicants into real tables). If the decision is to keep it, its content says features/recruiting/api/ not domain/. Batch 10's gate is therefore 'src/lib contains exactly the files parked here' — the old tree cannot be deleted while a parked file is still in it."
+  },
+  "moves": [
+    {
+      "to": "src/platform",
+      "_tier": "shared infrastructure; the audit's rule 3 says it stays put and it never depends on a domain",
+      "from": [
+        "src/lib/db.ts",
+        "src/lib/env.server.ts",
+        "src/lib/theme.ts",
+        "src/lib/error-component.tsx",
+        "src/lib/auth",
+        "src/lib/observability",
+        "src/lib/app-data",
+        "src/lib/og"
+      ],
+      "batch": 4,
+      "risk": [
+        "vite.config.ts:40 ssrLoadModule('/src/lib/db.ts')",
+        "vite.config.ts:112 ssrLoadModule('/src/lib/auth/popup.server.ts')",
+        "vite.config.ts:172 ssrLoadModule('/src/lib/observability/access-logger.server.ts')",
+        "scripts/grok-pwa-shared.mjs:11 OG_SITE_REL_PATH -> src/lib/og/site.json",
+        "server/middleware/grok-pwa.ts consumes that constant",
+        "src/lib/db.ts:142 import.meta.glob('/migrations/*.sql') + :149 readdirSync fallback",
+        "src/lib/db.ts:1 and src/lib/auth/client.ts:3 import from scripts/ (cross-boundary relatives)"
+      ]
+    },
+    {
+      "to": "src/shared/utils.ts",
+      "from": ["src/lib/utils.ts"],
+      "batch": 4
+    },
+    {
+      "to": "src/shared/components",
+      "_tier": "generic, no domain knowledge",
+      "from": [
+        "src/components/app-shell.tsx",
+        "src/components/empty-state.tsx",
+        "src/components/providers.tsx",
+        "src/components/preview-host-bridge.tsx",
+        "src/components/status-chip.tsx",
+        "src/components/theme-provider.tsx",
+        "src/components/theme-toggle.tsx",
+        "src/components/user-menu.tsx",
+        "src/components/vetta-mark.tsx",
+        "src/components/candidate-portal-shell.tsx",
+        "src/components/ui"
+      ],
+      "batch": 5
+    },
+    {
+      "to": "src/features/ai/server",
+      "from": [
+        "src/lib/recruiting/ai.server.ts",
+        "src/lib/recruiting/ai-retry.server.ts",
+        "src/lib/recruiting/ai-guard.server.ts",
+        "src/lib/recruiting/providers.server.ts",
+        "src/lib/recruiting/model-router.server.ts",
+        "src/lib/recruiting/embed-text.server.ts",
+        "src/lib/recruiting/domain-embed.server.ts",
+        "src/lib/recruiting/transcribe.server.ts"
+      ],
+      "batch": 6,
+      "_note": "ai-guard.server.ts is largely pure (verifyEvidenceGrounding, normalizeForMatch) but keeps its .server suffix: the suffix is what the lint selector and ssrLoadModule read, and downgrading a suffix is a client/server change, not a move."
+    },
+    {
+      "to": "src/features/ai/domain",
+      "from": [
+        "src/lib/recruiting/ai-schema.ts",
+        "src/lib/recruiting/model-registry.ts",
+        "src/lib/recruiting/model-router.ts",
+        "src/lib/recruiting/domain-embed.ts",
+        "src/lib/recruiting/model-router.test.ts",
+        "src/lib/recruiting/domain-embed.test.ts",
+        "src/lib/recruiting/semantic-indexing.test.ts",
+        "src/lib/recruiting/ai-guard.test.ts",
+        "src/lib/recruiting/grounding-and-adversarial.test.ts"
+      ],
+      "batch": 6
+    },
+    {
+      "to": "src/features/ingest/server",
+      "from": [
+        "src/lib/recruiting/parse.server.ts",
+        "src/lib/recruiting/duplicates.server.ts",
+        "src/lib/recruiting/resilience.test.ts"
+      ],
+      "batch": 6,
+      "_note": "live-pipeline.ts is deliberately NOT moved here or anywhere: 0 importers and it writes synthetic applicants into real tables. It stays put until the open audit decision is answered; check-tree treats it as a keep."
+    },
+    {
+      "to": "src/features/ingest/domain",
+      "from": [
+        "src/lib/recruiting/pdf.ts",
+        "src/lib/recruiting/resume-file.ts",
+        "src/lib/recruiting/sheet.ts",
+        "src/lib/recruiting/batch-client.ts",
+        "src/lib/recruiting/normalize-screen.ts"
+      ],
+      "batch": 6
+    },
+    {
+      "to": "src/features/ingest/api",
+      "from": ["src/lib/recruiting/batch.ts"],
+      "batch": 6,
+      "_note": "Tier correction found by the Batch 1 rails, not by reading: batch.ts contains createServerFn handlers and lazily imports org.server, queue.server and parse.server. In the flat dir that was invisible; in domain/ it would have been a lint error, because domain is the isomorphic tier. Basename unchanged."
+    },
+    {
+      "to": "src/features/ranking/domain",
+      "from": [
+        "src/lib/recruiting/match-engine.ts",
+        "src/lib/recruiting/local-rank.ts",
+        "src/lib/recruiting/prescreen.ts",
+        "src/lib/recruiting/retrieve.ts",
+        "src/lib/recruiting/rubric-types.ts",
+        "src/lib/recruiting/rubric-guardrails.ts",
+        "src/lib/recruiting/calibrate-explain.ts",
+        "src/lib/recruiting/outcome.ts",
+        "src/lib/recruiting/prescreen.test.ts",
+        "src/lib/recruiting/retrieve.test.ts",
+        "src/lib/recruiting/retrieval-benchmark.test.ts",
+        "src/lib/recruiting/calibrate-explain.test.ts",
+        "src/lib/recruiting/outcome.test.ts"
+      ],
+      "batch": 7
+    },
+    {
+      "to": "src/features/ranking/server",
+      "from": [
+        "src/lib/recruiting/deepen.server.ts",
+        "src/lib/recruiting/rank-cache.server.ts",
+        "src/lib/recruiting/calibrate.server.ts",
+        "src/lib/recruiting/outcome.server.ts",
+        "src/lib/recruiting/rubric.server.ts",
+        "src/lib/recruiting/rubric-version.server.ts",
+        "src/lib/recruiting/rank-provenance.test.ts"
+      ],
+      "batch": 7
+    },
+    {
+      "to": "src/features/ranking/api",
+      "from": [
+        "src/lib/recruiting/rubric-api.ts",
+        "src/lib/recruiting/outcome-api.ts"
+      ],
+      "batch": 7
+    },
+    {
+      "to": "src/features/ranking/ui",
+      "from": [
+        "src/components/candidate-panel.tsx",
+        "src/components/rubric-editor.tsx",
+        "src/components/provenance-badge.tsx"
+      ],
+      "batch": 7
+    },
+    {
+      "to": "src/features/pipeline/domain",
+      "from": ["src/lib/recruiting/concurrency.ts"],
+      "batch": 7
+    },
+    {
+      "to": "src/features/pipeline/server",
+      "from": [
+        "src/lib/recruiting/queue.server.ts",
+        "src/lib/recruiting/embedding-queue.server.ts",
+        "src/lib/recruiting/concurrency.server.ts",
+        "src/lib/recruiting/search.server.ts",
+        "src/lib/recruiting/dedicated-search.server.ts",
+        "src/lib/recruiting/dedicated-search.test.ts"
+      ],
+      "batch": 7,
+      "_note": "routes/api/queue/tick.ts stays (framework). observability.server.ts lazily imports queue.server.ts twice to break a cycle - that legal cycle is documented in 06:113-122 and the re-keyed rules must not fire on it."
+    },
+    {
+      "to": "src/features/pipeline/api",
+      "from": [
+        "src/lib/recruiting/search-api.ts",
+        "src/lib/recruiting/dedicated-search-api.ts",
+        "src/lib/recruiting/embedding-api.ts"
+      ],
+      "batch": 7
+    },
+    {
+      "to": "src/features/pipeline/ui",
+      "from": ["src/components/night-queue.tsx"],
+      "batch": 7,
+      "_note": "polls every 2800ms, which is why networkidle never settles in QA"
+    },
+    {
+      "to": "src/features/people/domain",
+      "from": [
+        "src/lib/recruiting/rbac.ts",
+        "src/lib/recruiting/privacy.ts",
+        "src/lib/recruiting/links.ts",
+        "src/lib/recruiting/privacy.test.ts",
+        "src/lib/recruiting/tenant-isolation.test.ts",
+        "src/lib/recruiting/enterprise-collaboration.test.ts",
+        "src/lib/recruiting/autonomous-portal.test.ts"
+      ],
+      "batch": 8
+    },
+    {
+      "to": "src/features/people/api",
+      "from": [
+        "src/lib/recruiting/privacy-api.ts",
+        "src/lib/recruiting/autonomous-portal-api.ts",
+        "src/lib/recruiting/team-api.ts",
+        "src/lib/recruiting/labels.ts",
+        "src/lib/recruiting/portal.ts",
+        "src/lib/recruiting/share.ts",
+        "src/lib/recruiting/screen-session.ts"
+      ],
+      "batch": 8,
+      "_note": "Four more api-tier-by-behaviour files that the flat naming hid: labels, portal, share and screen-session each contain createServerFn handlers and import .server modules, so domain/ would have been a lint error. Same reason check-tree asserts the tier from file content rather than from filename."
+    },
+    {
+      "to": "src/features/people/server",
+      "from": [
+        "src/lib/recruiting/org.server.ts",
+        "src/lib/recruiting/rbac.server.ts",
+        "src/lib/recruiting/privacy.server.ts",
+        "src/lib/recruiting/talent-pool.server.ts",
+        "src/lib/recruiting/collaboration.server.ts",
+        "src/lib/recruiting/assignments.server.ts",
+        "src/lib/recruiting/autonomous-portal.server.ts",
+        "src/lib/recruiting/observability-auth.test.ts"
+      ],
+      "batch": 8
+    },
+    {
+      "to": "src/features/analytics/domain",
+      "from": [
+        "src/lib/recruiting/funnel-analytics.ts",
+        "src/lib/recruiting/funnel-analytics.test.ts"
+      ],
+      "batch": 8
+    },
+    {
+      "to": "src/features/analytics/server",
+      "from": [
+        "src/lib/recruiting/funnel-analytics.server.ts",
+        "src/lib/recruiting/backup.server.ts"
+      ],
+      "batch": 8
+    },
+    {
+      "to": "src/features/analytics/api",
+      "from": [
+        "src/lib/recruiting/analytics-api.ts",
+        "src/lib/recruiting/observability-api.ts",
+        "src/lib/recruiting/backup-api.ts"
+      ],
+      "batch": 8
+    },
+    {
+      "to": "src/features/eval",
+      "from": ["src/lib/recruiting/harness", "src/lib/recruiting/benchmark"],
+      "batch": 8,
+      "_note": "batch 3 first gives the three folder-named modules real suffixes (harness/server.ts -> harness/harness.server.ts, harness/api.ts -> harness/harness-api.ts, benchmark/phases.ts -> benchmark/phases.server.ts) so they stop evading the lint globs. Scripts/bench-live-arms.mjs:40,122 and benchmark-resume-match.mjs:48 import these by path."
+    },
+    {
+      "to": "src/features/recruiting/domain",
+      "from": [
+        "src/lib/recruiting/types.ts",
+        "src/lib/recruiting/constants.ts",
+        "src/lib/recruiting/hash.ts",
+        "src/lib/recruiting/origin.ts"
+      ],
+      "batch": 9,
+      "_note": "origin.ts imports '@tanstack/react-start/server' — a framework package, not a local server module. It is the reason the client→server pattern list is anchored to ./ ../ and @/ specifiers instead of the bare '**/server' group the audit config first used."
+    },
+    {
+      "to": "src/features/recruiting/api",
+      "from": [
+        "src/lib/recruiting/api.ts",
+        "src/lib/recruiting/query.ts"
+      ],
+      "batch": 9,
+      "_note": "api.ts moves whole with all 14 createServerFn export names unchanged (user decision). query.ts moves with it because query.ts:2 imports ./api - a client useQuery module sitting in the same flat dir as domain code; giving it the api tier is the honest answer and is what stops check-tree firing on arrival."
+    },
+    {
+      "to": "src/features/recruiting/ui",
+      "from": [
+        "src/components/screen-chat.tsx",
+        "src/components/send-to-client-dialog.tsx",
+        "src/components/client-card-view.tsx",
+        "src/components/export-slate-dialog.tsx",
+        "src/components/role-form.tsx",
+        "src/components/batch-ingest-dialog.tsx"
+      ],
+      "batch": 9,
+      "_note": "workspace-level surfaces that span ingest+ranking+people, same reasoning as the api hub."
+    },
+    {
+      "to": "src/features/verification",
+      "from": [],
+      "batch": "V0-V6",
+      "_note": "net-new premium feature; created in its final home immediately after batch 1 so it exercises the re-keyed globs with production code and costs zero import rewrites."
+    }
+  ]
+}

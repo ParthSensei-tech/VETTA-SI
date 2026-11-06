@@ -16,6 +16,7 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
+    "check:tree": "node scripts/check-tree-invariants.mjs --probes",
     "test": "node --test \"scripts/**/*.test.mjs\" && node --experimental-strip-types --test \"src/**/*.test.ts\"",
     "test:all": "node --experimental-strip-types --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\"",
     "test:src": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
