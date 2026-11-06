@@ -12,8 +12,8 @@
  * can be replayed from the inputs that produced it.
  */
 
-import { predictCostUsd, USD_TO_INR_RATE } from "../observability/cost.ts";
-import type { ModelTaskType } from "../observability/types.ts";
+import { predictCostUsd, USD_TO_INR_RATE } from "../../platform/observability/cost.ts";
+import type { ModelTaskType } from "../../platform/observability/types.ts";
 import {
   DEFAULT_MIN_ATTEMPT_TIMEOUT_MS,
   MODEL_ARMS,

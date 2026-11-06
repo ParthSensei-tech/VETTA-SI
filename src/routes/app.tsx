@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { RedirectToSignIn } from "@/lib/auth/gates";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { RedirectToSignIn } from "@/platform/auth/gates";
+import { useCurrentUserState } from "@/platform/auth/use-current-user";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/app")({ component: AppLayout });

@@ -5,7 +5,7 @@ import { NightQueue } from "@/components/night-queue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { StageChip } from "@/components/status-chip";
-import { formatRelative } from "@/lib/utils";
+import { formatRelative } from "@/shared/utils";
 import { useAllBatchesQuery, useWorkspaceQuery } from "@/lib/recruiting/query";
 
 export const Route = createFileRoute("/app/")({ component: Desk });

@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../auth/middleware.ts";
-import { getSql } from "../db.ts";
-import { iso, parseJson } from "../utils.ts";
+import { authMiddleware } from "../../platform/auth/middleware.ts";
+import { getSql } from "../../platform/db.ts";
+import { iso, parseJson } from "../../shared/utils.ts";
 import { decideApproval, loadRoleWorkspaceForUser } from "./api.ts";
 import { mailtoUrl, whatsappUrl } from "./links.ts";
 import type {
@@ -85,8 +85,8 @@ async function trySendGmail(
   loginUrl: string | null;
 }> {
   try {
-    const { callTool } = await import("@/lib/app-data/client.server");
-    const { ConnectorType } = await import("@/lib/app-data/types");
+    const { callTool } = await import("@/platform/app-data/client.server");
+    const { ConnectorType } = await import("@/platform/app-data/types");
     const attempts: Array<{ tool: string; args: Record<string, unknown> }> = [
       { tool: "gmail_send_email", args: { to, subject, body, html: false } },
       { tool: "gmail_create_draft", args: { to, subject, body } },

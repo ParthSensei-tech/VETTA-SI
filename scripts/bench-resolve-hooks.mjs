@@ -2,7 +2,7 @@
 //
 // Why this exists: `ai.server.ts` wraps its domain-embed / calibrate / outcome /
 // rubric work in try-catch and continues without them on failure. Several of those
-// modules import `@/lib/db` (a bundler alias) or extensionless relative specifiers,
+// modules import `@/platform/db` (a bundler alias) or extensionless relative specifiers,
 // which plain `node --experimental-strip-types` cannot resolve. Without this shim the
 // import throws ERR_MODULE_NOT_FOUND, gets swallowed, and the benchmark reports pure
 // match-engine CPU time as if it were full fast-path latency.

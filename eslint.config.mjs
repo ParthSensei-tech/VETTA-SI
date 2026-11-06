@@ -33,7 +33,7 @@ const LOWER_SURFACES = [
 // Exemptions, each measured rather than assumed:
 // - `src/routes/api/**` is the server entrypoint; it is server code.
 // - `src/routes/__root.tsx:12-16` builds a `createServerFn` inline, so its
-//   `await import("@/lib/auth/verify.server")` runs on the server, not in the
+//   `await import("@/platform/auth/verify.server")` runs on the server, not in the
 //   browser bundle. Legal today; open item to fold into the api edge.
 // - `*.test.ts` runs under `node --test` with no client bundle at all.
 const VIEW_EXEMPTIONS = [

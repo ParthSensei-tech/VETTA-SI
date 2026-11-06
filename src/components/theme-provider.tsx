@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { applyTheme, persistTheme, preferredTheme, type Theme } from "@/lib/theme";
+import { applyTheme, persistTheme, preferredTheme, type Theme } from "@/platform/theme";
 
 type ThemeContextValue = {
   theme: Theme;

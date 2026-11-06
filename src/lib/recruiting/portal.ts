@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getSql } from "@/lib/db";
-import { iso, parseJson } from "@/lib/utils";
+import { getSql } from "@/platform/db";
+import { iso, parseJson } from "@/shared/utils";
 import { normalizeQuestions, normalizeTranscript, lastAgentTurn } from "./normalize-screen";
 import type {
   CompanyStage,

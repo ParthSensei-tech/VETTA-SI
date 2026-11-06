@@ -6,7 +6,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../auth/middleware.ts";
+import { authMiddleware } from "../../platform/auth/middleware.ts";
 import {
   ensureAutonomousPortal,
   updateAutonomousPortal,
@@ -27,9 +27,9 @@ import type {
   HitlPolicy,
   AtsWebhookPayload,
 } from "./types.ts";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { randomUUID } from "node:crypto";
-import { parseJson } from "../utils.ts";
+import { parseJson } from "../../shared/utils.ts";
 import { matchCandidateToRole } from "./match-engine.ts";
 
 export const getAutonomousPortalConfig = createServerFn({ method: "GET" })

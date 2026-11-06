@@ -1,5 +1,5 @@
 import type { KnowledgeKind, ScreenFollowUp, ScreenQuestion, ScreenTurn } from "./types.ts";
-import { parseJson } from "../utils.ts";
+import { parseJson } from "../../shared/utils.ts";
 
 const KINDS: KnowledgeKind[] = ["practical", "basic", "common"];
 

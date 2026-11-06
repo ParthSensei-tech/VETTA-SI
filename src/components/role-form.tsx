@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { CITIES, ROLE_TEMPLATES, STAGE_LABEL } from "@/lib/recruiting/constants";
 import type { CompanyStage, EmploymentType, RoleInput, WorkMode } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 const empty: RoleInput = {
   companyName: "",

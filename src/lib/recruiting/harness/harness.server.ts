@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { getSql } from "@/lib/db";
-import { iso, parseJson } from "@/lib/utils";
+import { getSql } from "@/platform/db";
+import { iso, parseJson } from "@/shared/utils";
 import {
   RANK_SYSTEM,
   STRICT_RANK_SYSTEM,

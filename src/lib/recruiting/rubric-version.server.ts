@@ -3,8 +3,8 @@
  * Edits after scoring create a new version; lock when shortlist is stamped.
  */
 
-import { getSql } from "../db.ts";
-import { iso, parseJson } from "../utils.ts";
+import { getSql } from "../../platform/db.ts";
+import { iso, parseJson } from "../../shared/utils.ts";
 import {
   DEFAULT_HARD_CONSTRAINTS,
   type CriterionKind,
@@ -235,7 +235,7 @@ ${fields.jdText.slice(0, 6000)}`,
         // parse is known to be usable, since the spend already happened either way.
         void (async () => {
           try {
-            const { recordModelCost } = await import("../observability/observability.server.ts");
+            const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
             await recordModelCost({
               userId: opts.userId ?? null,
               taskType: "rubric_draft",

@@ -23,7 +23,7 @@ import { StaleBanner } from "@/components/provenance-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ingestResume, rerankStaleApplications } from "@/lib/recruiting/api";
 import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/lib/recruiting/query";
-import { cn, initials } from "@/lib/utils";
+import { cn, initials } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/roles/$roleId")({ component: RoleWorkspace });
 

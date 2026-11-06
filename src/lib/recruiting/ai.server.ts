@@ -32,7 +32,7 @@ import {
   verifyStackMatch,
   wrapUntrustedBlock,
 } from "./ai-guard.server.ts";
-import { estimateTokensFromText } from "../observability/cost.ts";
+import { estimateTokensFromText } from "../../platform/observability/cost.ts";
 import { MODEL_ARMS } from "./model-registry.ts";
 import { routeTelemetry } from "./model-router.ts";
 
@@ -119,7 +119,7 @@ async function complete(args: {
   system: string;
   user: string;
   maxTokens: number;
-  task: import("../observability/types").ModelTaskType;
+  task: import("../../platform/observability/types").ModelTaskType;
   /**
    * Whose patience this call buys. Defaults to `interactive` because every current caller is a
    * recruiter waiting on one answer; bulk and background paths say so explicitly.
@@ -167,7 +167,7 @@ async function complete(args: {
     const { system, user, task } = args;
     void (async () => {
       try {
-        const { recordModelCost } = await import("../observability/observability.server.ts");
+        const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
         await recordModelCost({
           userId: null,
           taskType: task,
@@ -507,7 +507,7 @@ export async function parseAndRank(input: {
     }
     void (async () => {
       try {
-        const { recordModelCost } = await import("../observability/observability.server.ts");
+        const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
         await recordModelCost({
           userId: input.userId,
           taskType: "rank",
@@ -627,7 +627,7 @@ ${wrappedResume}`,
 
   void (async () => {
     try {
-      const { recordModelCost } = await import("../observability/observability.server.ts");
+      const { recordModelCost } = await import("../../platform/observability/observability.server.ts");
       if (result.ok && !result.routedLocal) {
         await recordModelCost({
           userId: input.userId,

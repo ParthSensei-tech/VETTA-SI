@@ -1,5 +1,5 @@
-import { getSql } from "../db.ts";
-import { parseJson } from "../utils.ts";
+import { getSql } from "../../platform/db.ts";
+import { parseJson } from "../../shared/utils.ts";
 import type { CompanyStage, WorkMode } from "./types.ts";
 
 /**

@@ -1,4 +1,4 @@
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { type OrgPermission, type OrgRole, hasPermission } from "./rbac.ts";
 
 function newId(): string {

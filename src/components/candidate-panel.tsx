@@ -19,7 +19,7 @@ import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import { recordOutcome } from "@/lib/recruiting/outcome-api";
 import { getScreenInvite, recordScreenReminder } from "@/lib/recruiting/screen-session";
 import type { Application, PipelineStatus } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 const MOVES: Array<{ status: PipelineStatus; label: string }> = [
   { status: "shortlisted", label: "Shortlist" },

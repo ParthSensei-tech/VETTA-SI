@@ -4,7 +4,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../auth/middleware.ts";
+import { authMiddleware } from "../../platform/auth/middleware.ts";
 import {
   executeDedicatedHybridSearch,
   getSearchInfrastructureTelemetry,

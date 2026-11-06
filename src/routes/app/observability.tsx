@@ -37,8 +37,8 @@ import {
   formatCostSideBySide,
   formatCostUsd,
   USD_TO_INR_RATE,
-} from "@/lib/observability/cost";
-import { cn } from "@/lib/utils";
+} from "@/platform/observability/cost";
+import { cn } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/observability")({
   component: ObservabilityPage,

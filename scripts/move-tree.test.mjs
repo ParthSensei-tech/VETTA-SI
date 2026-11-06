@@ -235,6 +235,49 @@ test("between-batches trap: a moving file keeps a relative import into a folder 
   assert.deepEqual(second.errors, []);
 });
 
+test("a moved file importing OUTSIDE src keeps a relative path — the alias cannot reach it", () => {
+  // Batch 4 found this: src/lib/db.ts imports ../../scripts/migration-plan.mjs.
+  // Canonicalising that to `@/../scripts/migration-plan.mjs` typechecks (tsc
+  // reads @/ as src/) and bundles in Vite, but Node's ESM resolver rejects it
+  // as an invalid package specifier — so only `npm test` caught it, 13 files deep.
+  const view = memView({
+    "src/lib/db.ts": `import { pendingMigrations } from "../../scripts/migration-plan.mjs";\nexport const x = pendingMigrations;`,
+    "src/lib/auth/client.ts": `import { runSignOut } from "../../../scripts/sign-out-plan.mjs";\nexport const y = runSignOut;`,
+    "scripts/migration-plan.mjs": `export const pendingMigrations = [];`,
+    "scripts/sign-out-plan.mjs": `export const runSignOut = 1;`,
+  });
+  const map = mapOf([
+    { to: "src/platform/db.ts", from: ["src/lib/db.ts"], batch: 4 },
+    { to: "src/platform", from: ["src/lib/auth"], batch: 4 },
+  ]);
+  const { edits, errors } = planRewrites(map, view);
+  assert.deepEqual(errors, []);
+  assert.equal(
+    edits.get("src/lib/db.ts"),
+    undefined,
+    "same depth after the move, so nothing to rewrite",
+  );
+  assert.equal(edits.get("src/lib/auth/client.ts"), undefined);
+
+  // And when the depth *does* change, the relative path is recomputed, not aliased.
+  const deeper = memView({
+    "src/lib/db.ts": `import { pendingMigrations } from "../../scripts/migration-plan.mjs";`,
+    "scripts/migration-plan.mjs": `export const pendingMigrations = [];`,
+  });
+  const moved = planRewrites(
+    mapOf([{ to: "src/platform/deep/er/db.ts", from: ["src/lib/db.ts"], batch: 4 }]),
+    deeper,
+  );
+  const text = moved.edits.get("src/lib/db.ts").text;
+  assert.match(text, /from "\.\.\/\.\.\/\.\.\/\.\.\/scripts\/migration-plan\.mjs"/);
+  assert.ok(!text.includes("@/.."), "never emit an alias that escapes src");
+  const emitted = /from "([^"]+)"/.exec(text)[1];
+  assert.ok(
+    makeResolver(deeper)(emitted, "src/platform/deep/er"),
+    `and the recomputed path ${emitted} still resolves from the new home`,
+  );
+});
+
 test("idempotence: rewriting a rewritten file again changes nothing", () => {
   const view = memView({
     "src/lib/recruiting/ai.server.ts": `import { o } from "./org.server"; import { p } from "./privacy.server.ts";\nexport const h = [o, p];`,

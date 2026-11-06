@@ -2,7 +2,7 @@
  * Persists per-org calibration and the live EN/HI HR lexicon.
  */
 
-import { getSql } from "@/lib/db";
+import { getSql } from "@/platform/db";
 import type { RankResult } from "./types";
 import { hashFeatures } from "./domain-embed";
 import {

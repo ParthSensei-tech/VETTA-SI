@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { ensureUserOrg, assertOrgMember } from "./org.server.ts";
 import { addOrgMember, assertOrgPermission } from "./rbac.server.ts";
 import { loadRoleWorkspaceForUser, loadRoleOrThrow, loadApplicationBundle } from "./api.ts";

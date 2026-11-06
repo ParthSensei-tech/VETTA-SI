@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getSql } from "@/lib/db";
+import { getSql } from "@/platform/db";
 import { phonesMatch } from "@/lib/recruiting/prescreen";
 import { postScreenTurn } from "@/lib/recruiting/screen-session";
 

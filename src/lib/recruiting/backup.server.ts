@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { getSql } from "../db.ts";
-import { iso } from "../utils.ts";
+import { getSql } from "../../platform/db.ts";
+import { iso } from "../../shared/utils.ts";
 
 export type BackupStats = {
   rolesCount: number;

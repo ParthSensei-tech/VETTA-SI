@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
-import { getSql } from "@/lib/db";
-import { iso } from "@/lib/utils";
+import { authMiddleware } from "@/platform/auth/middleware";
+import { getSql } from "@/platform/db";
+import { iso } from "@/shared/utils";
 import type { IngestBatch, IngestBatchStatus, IngestJob, IngestJobStatus } from "./types";
 
 const MAX_ITEMS_PER_APPEND = 25;

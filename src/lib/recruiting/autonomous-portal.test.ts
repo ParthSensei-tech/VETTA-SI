@@ -10,7 +10,7 @@ import {
   decideHitlCheckpoint,
   processAtsWebhookIngestion,
 } from "./autonomous-portal.server.ts";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { randomUUID } from "node:crypto";
 import type { RequirementEvaluation, AtsWebhookPayload } from "./types.ts";
 

@@ -4,7 +4,7 @@
  * A narrower withdrawal only stops that use (shares, voice, learning).
  */
 
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import {
   NOTICE_VERSION,
   PRIVACY_STORES,

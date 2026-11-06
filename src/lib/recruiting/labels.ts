@@ -5,9 +5,9 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
-import { getSql } from "@/lib/db";
-import { parseJson } from "@/lib/utils";
+import { authMiddleware } from "@/platform/auth/middleware";
+import { getSql } from "@/platform/db";
+import { parseJson } from "@/shared/utils";
 import type { RankResult } from "./types";
 
 const LABEL_VALUES = [

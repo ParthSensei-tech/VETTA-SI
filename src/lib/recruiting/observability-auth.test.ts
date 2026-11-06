@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { ensureUserOrg } from "./org.server.ts";
 import { hasPermission } from "./rbac.ts";
 import {
@@ -14,7 +14,7 @@ import {
   retryFailedJobs,
   acknowledgeAlert,
   resolveAlert,
-} from "../observability/observability.server.ts";
+} from "../../platform/observability/observability.server.ts";
 
 function uid(): string {
   return crypto.randomUUID();

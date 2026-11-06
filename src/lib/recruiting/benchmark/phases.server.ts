@@ -12,7 +12,7 @@
  * measures a model instead of measuring the decision to skip one.
  */
 
-import { getSql } from "../../db.ts";
+import { getSql } from "../../../platform/db.ts";
 import { rankLocally } from "../local-rank.ts";
 import type { CallContext } from "../model-registry.ts";
 import {
@@ -167,7 +167,7 @@ export async function setupBench(opts: {
         ${JSON.stringify(r.niceToHaves)}, ${r.jdText}, 'open', ${org.orgId})`;
   }
 
-  const { dbSource } = await import("../../db.ts");
+  const { dbSource } = await import("../../../platform/db.ts");
   return {
     userId,
     orgId: org.orgId,

@@ -194,6 +194,11 @@ export function findSpecs(text) {
   return out;
 }
 
+/** Keep the author's extension choice when turning a path into an alias. */
+function stripExt(rel, oldSpec) {
+  return EXTENSIONS.some((e) => oldSpec.endsWith(e)) ? rel : rel.replace(/\.[a-z]+$/, "");
+}
+
 /** Re-render a specifier for its new location, preserving the author's form. */
 export function renderSpec(oldSpec, resolvedFile, newTarget, newImporterDir) {
   const hadExt = EXTENSIONS.some((e) => oldSpec.endsWith(e));
@@ -258,12 +263,20 @@ export function planRewrites(map, view, { onlyBatch, consumerDirs, looseFiles } 
         // typecheck run between batches would point at the wrong file. Rewrite
         // those to the canonical `@/` alias instead: same module, resolves the
         // same from any depth, and the later batch rewrites it for real.
+        //
+        // The alias only reaches *inside* src, though. A moved file importing
+        // repo tooling (scripts/, server/, migrations/) has to keep a relative
+        // path: `@/../scripts/x` typechecks and bundles, but Node's ESM
+        // resolver rejects it as an invalid package specifier.
         if (table.has(file) && r.file && /^\.\.?\//.test(spec)) {
-          let rel = posix.relative("src", resolvedPath);
-          if (!EXTENSIONS.some((e) => spec.endsWith(e))) rel = rel.replace(/\.[a-z]+$/, "");
-          const next = "@/" + rel;
-          out = out.slice(0, start) + next + out.slice(end);
-          changes.push({ spec, next, to: resolvedPath, canonicalised: true });
+          const relFromSrc = posix.relative("src", resolvedPath);
+          const next = relFromSrc.startsWith("..")
+            ? renderSpec(spec, resolvedPath, resolvedPath, posix.dirname(table.get(file)))
+            : "@/" + stripExt(relFromSrc, spec);
+          if (next !== spec) {
+            out = out.slice(0, start) + next + out.slice(end);
+            changes.push({ spec, next, to: resolvedPath, canonicalised: true });
+          }
         }
         continue;
       }

@@ -4,7 +4,7 @@ import { CandidatePortalShell } from "@/components/candidate-portal-shell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePublicShareQuery } from "@/lib/recruiting/query";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 export const Route = createFileRoute("/share/$token")({ component: SharePage });
 

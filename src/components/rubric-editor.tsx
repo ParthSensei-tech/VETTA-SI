@@ -21,7 +21,7 @@ import type {
 } from "@/lib/recruiting/rubric-types";
 import { DEFAULT_HARD_CONSTRAINTS } from "@/lib/recruiting/rubric-types";
 import { errorMessage } from "@/lib/recruiting/query";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 function newLocalId() {
   return crypto.randomUUID();

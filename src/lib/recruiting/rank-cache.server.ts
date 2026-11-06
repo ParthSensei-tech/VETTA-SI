@@ -1,5 +1,5 @@
-import { getSql } from "../db.ts";
-import { parseJson } from "../utils.ts";
+import { getSql } from "../../platform/db.ts";
+import { parseJson } from "../../shared/utils.ts";
 import { cacheKey } from "./hash.ts";
 import type { ParsedProfile, RankResult } from "./types.ts";
 

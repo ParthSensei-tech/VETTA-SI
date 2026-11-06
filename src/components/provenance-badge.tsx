@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { RankProvenance } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 /** Compact provenance chip for candidate cards in list views. */
 export function ProvenanceChip({ provenance }: { provenance: RankProvenance | null }) {

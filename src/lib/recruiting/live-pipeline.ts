@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { authMiddleware } from "@/lib/auth/middleware";
-import { getSql } from "@/lib/db";
+import { authMiddleware } from "@/platform/auth/middleware";
+import { getSql } from "@/platform/db";
 import { ROLE_TEMPLATES } from "./constants";
 import type { PipelineStatus, RankResult, ScreenEvaluation, ScreenQuestion } from "./types";
 

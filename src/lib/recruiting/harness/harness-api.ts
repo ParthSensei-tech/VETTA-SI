@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
+import { authMiddleware } from "@/platform/auth/middleware";
 import type { EvalRun, HarnessSettings, HarnessSnapshot, PromptVersion } from "../types";
 
 export const getHarness = createServerFn({ method: "GET" })

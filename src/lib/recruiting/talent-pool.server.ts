@@ -1,4 +1,4 @@
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 
 export type SharedCandidateSummary = {
   id: string;

@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { decideApproval } from "@/lib/recruiting/api";
 import { errorMessage, queryKeys, useApprovalsQuery } from "@/lib/recruiting/query";
 import type { Approval, ApprovalStatus } from "@/lib/recruiting/types";
-import { formatRelative } from "@/lib/utils";
+import { formatRelative } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/approvals")({ component: ApprovalsPage });
 

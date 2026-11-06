@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { parseUploadToResumes } from "./parse.server.ts";
 import { withBoundedRetries, defaultIsRetryable } from "./ai-retry.server.ts";
 import { completeWithLadder, completeWithRouter } from "./providers.server.ts";
 import { routerHistory } from "./model-router.server.ts";
-import { recordModelCost } from "../observability/observability.server.ts";
+import { recordModelCost } from "../../platform/observability/observability.server.ts";
 import { parseAndRank } from "./ai.server.ts";
 import {
   createWorkspaceBackup,

@@ -1,5 +1,5 @@
-import { getSql } from "../db.ts";
-import { parseJson } from "../utils.ts";
+import { getSql } from "../../platform/db.ts";
+import { parseJson } from "../../shared/utils.ts";
 import type { CompanyStage, ParsedProfile, WorkMode } from "./types";
 
 function newId(): string {
@@ -361,7 +361,7 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
   const recordMetric = (status: "completed" | "failed" | "requeued", error: string = "") => {
     void (async () => {
       try {
-        const { recordQueueMetric } = await import("../observability/observability.server.ts");
+        const { recordQueueMetric } = await import("../../platform/observability/observability.server.ts");
         await recordQueueMetric({
           jobId: job.id,
           batchId: job.batch_id,

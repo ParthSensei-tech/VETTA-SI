@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { cancelIngestBatch, getIngestBatch, tickMyQueue } from "@/lib/recruiting/batch";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import type { IngestBatch, IngestJobStatus } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 function isActive(status: IngestBatch["status"]) {
   return status === "queued" || status === "running";

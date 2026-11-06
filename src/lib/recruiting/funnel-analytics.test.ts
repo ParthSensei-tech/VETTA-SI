@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import {
   computeMean,
   computeMedian,

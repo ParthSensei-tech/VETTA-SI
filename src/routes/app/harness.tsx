@@ -17,7 +17,7 @@ import {
 } from "@/lib/recruiting/harness/harness-api";
 import { errorMessage, queryKeys, useHarnessQuery } from "@/lib/recruiting/query";
 import type { EvalRun, FitLevel } from "@/lib/recruiting/types";
-import { cn, formatRelative } from "@/lib/utils";
+import { cn, formatRelative } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/harness")({ component: HarnessPage });
 

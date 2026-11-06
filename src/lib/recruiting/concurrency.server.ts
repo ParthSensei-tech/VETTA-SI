@@ -1,4 +1,4 @@
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { ConcurrencyConflictError } from "./concurrency.ts";
 
 export type OptimisticTable = "roles" | "candidates" | "applications" | "candidate_notes";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { ensureUserOrg } from "./org.server.ts";
 import {
   enqueueCandidateForEmbedding,

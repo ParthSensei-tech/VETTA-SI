@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { copyText, ensureAbsoluteUrl, mailtoUrl } from "@/lib/recruiting/links";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import { sendPackToClient } from "@/lib/recruiting/share";
-import { redirectToLoginIfRequired } from "@/lib/app-data/login";
+import { redirectToLoginIfRequired } from "@/platform/app-data/login";
 import type { Approval } from "@/lib/recruiting/types";
 
 export function SendToClientDialog({

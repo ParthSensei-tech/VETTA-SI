@@ -11,7 +11,7 @@
  *   7. Client Shortlist → Interview → Hire Tracking & Outcome-Driven Calibration Loop
  */
 
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { candidateDocument, cosine, reciprocalRankFusion } from "./retrieve.ts";
 import { embedTexts } from "./embed-text.server.ts";
 import { getActiveEmbeddingModel } from "./embedding-queue.server.ts";

@@ -517,7 +517,7 @@ export type RoutedResult =
  * itself so the ledger can record why. `completeWithLadder` stays for the benchmark's A/B.
  */
 export async function completeWithRouter(args: {
-  task: import("../observability/types.ts").ModelTaskType;
+  task: import("../../platform/observability/types.ts").ModelTaskType;
   system: string;
   user: string;
   maxTokens: number;

@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { VettaWordmark } from "@/components/vetta-mark";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 const NAV = [
   { to: "/app", label: "Desk", icon: LayoutGrid, exact: true, premium: false },

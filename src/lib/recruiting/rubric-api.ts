@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
+import { authMiddleware } from "@/platform/auth/middleware";
 import type { RubricVersion } from "./rubric-types";
 
 const criterionSchema = z.object({

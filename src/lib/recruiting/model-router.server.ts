@@ -6,9 +6,9 @@
  * from its inputs, which is the only way to answer "why did this resume get ranked by that model".
  */
 
-import { getSql } from "../db.ts";
-import { USD_TO_INR_RATE } from "../observability/cost.ts";
-import type { ModelTaskType } from "../observability/types.ts";
+import { getSql } from "../../platform/db.ts";
+import { USD_TO_INR_RATE } from "../../platform/observability/cost.ts";
+import type { ModelTaskType } from "../../platform/observability/types.ts";
 import { MODEL_ARMS, armModel, type CallContext, type ModelCandidate } from "./model-registry.ts";
 import {
   decideRoute,

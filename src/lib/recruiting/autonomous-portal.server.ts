@@ -9,9 +9,9 @@ import type {
   RequirementEvaluation,
   AtsWebhookPayload,
 } from "./types.ts";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { matchCandidateToRole } from "./match-engine.ts";
-import { parseJson } from "../utils.ts";
+import { parseJson } from "../../shared/utils.ts";
 
 // ============================================================================
 // 1. ADVANCED DATA STRUCTURE: Aho-Corasick / Trie for Fast Stack Dictionary

@@ -1,4 +1,4 @@
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import {
   DEFAULT_EMBEDDING_MODEL,
   SUPPORTED_EMBEDDING_MODELS,

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 import { ensureUserOrg } from "./org.server.ts";
 import { hasPermission, ROLE_PERMISSIONS, type OrgRole, type OrgPermission } from "./rbac.ts";
 import {

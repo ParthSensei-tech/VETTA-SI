@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, Moon, Sun } from "lucide-react";
-import { signOut } from "@/lib/auth/client";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { signOut } from "@/platform/auth/client";
+import { useCurrentUserState } from "@/platform/auth/use-current-user";
 import { useTheme } from "@/components/theme-provider";
-import { initials } from "@/lib/utils";
+import { initials } from "@/shared/utils";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

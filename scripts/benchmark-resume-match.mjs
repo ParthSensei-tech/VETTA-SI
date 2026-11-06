@@ -41,13 +41,13 @@ const opts = {
 };
 
 const t_boot_start = performance.now();
-const { getSql, dbSource } = await import("../src/lib/db.ts");
+const { getSql, dbSource } = await import("../src/platform/db.ts");
 await getSql();
 const bootMs = Math.round(performance.now() - t_boot_start);
 
 const P = await import("../src/lib/recruiting/benchmark/phases.server.ts");
 const { calculateModelCost, formatCostSideBySide } =
-  await import("../src/lib/observability/cost.ts");
+  await import("../src/platform/observability/cost.ts");
 
 if (opts.suppressDeepen) P.openAllCircuits();
 if (opts.suppressEmbedding) P.suppressEmbeddingWorker();

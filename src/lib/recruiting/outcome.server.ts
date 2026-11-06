@@ -2,7 +2,7 @@
  * Stores hire outcomes and updates the conditional quality model.
  */
 
-import { getSql } from "@/lib/db";
+import { getSql } from "@/platform/db";
 import type { RankResult } from "./types";
 import {
   OUTCOME_HEADS,

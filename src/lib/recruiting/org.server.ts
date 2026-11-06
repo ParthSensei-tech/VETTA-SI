@@ -1,4 +1,4 @@
-import { getSql } from "../db.ts";
+import { getSql } from "../../platform/db.ts";
 
 function newId(): string {
   return crypto.randomUUID();

@@ -13,7 +13,7 @@ import {
 import { appendIngestItems, createIngestBatch } from "@/lib/recruiting/batch";
 import { chunkItems, prepareBatchFiles, sourceLabel } from "@/lib/recruiting/batch-client";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.zip,.csv,.xlsx";
 

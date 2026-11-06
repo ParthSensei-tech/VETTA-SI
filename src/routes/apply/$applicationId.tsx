@@ -7,7 +7,7 @@ import { StageChip } from "@/components/status-chip";
 import { WORK_MODE_LABEL } from "@/lib/recruiting/constants";
 import { usePortalApplicationQuery } from "@/lib/recruiting/query";
 import type { PortalApplication } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 export const Route = createFileRoute("/apply/$applicationId")({ component: PortalApplicationPage });
 

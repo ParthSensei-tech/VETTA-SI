@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
+import { authMiddleware } from "@/platform/auth/middleware";
 import {
   acknowledgeAlert,
   getObservabilitySummary,
   resolveAlert,
   retryFailedJobs,
-} from "../observability/observability.server.ts";
-import type { ObservabilitySummary } from "../observability/types.ts";
+} from "../../platform/observability/observability.server.ts";
+import type { ObservabilitySummary } from "../../platform/observability/types.ts";
 
 /**
  * Fetches the unified system observability overview:

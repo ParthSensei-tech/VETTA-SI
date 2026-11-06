@@ -6,14 +6,14 @@
  * task, with the priors a choice needs — price source, key requirement, context window, how
  * reliably it emits valid JSON, expected speed and raw quality.
  *
- * Prices are deliberately NOT duplicated here. `modelPriceFor()` in `../observability/cost.ts`
+ * Prices are deliberately NOT duplicated here. `modelPriceFor()` in `../../platform/observability/cost.ts`
  * is the single source, so a routing decision and the `model_cost_logs` row it later writes
  * cannot disagree.
  *
  * Shape mirrors `SUPPORTED_EMBEDDING_MODELS` / `getModelInfo` in `embed-text.server.ts`.
  */
 
-import type { ModelTaskType } from "../observability/types.ts";
+import type { ModelTaskType } from "../../platform/observability/types.ts";
 
 export type ArmProvider = "groq" | "gemini" | "openai" | "ollama" | "xai" | "local" | "xenova";
 

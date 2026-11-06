@@ -11,7 +11,7 @@ import {
 } from "@/lib/recruiting/screen-session";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import type { KnowledgeKind, PortalApplication, ScreenTurn } from "@/lib/recruiting/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 export function ScreenChat({ data, token }: { data: PortalApplication; token?: string }) {
   const qc = useQueryClient();
