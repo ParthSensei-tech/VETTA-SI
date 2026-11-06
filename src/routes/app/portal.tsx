@@ -20,13 +20,13 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/empty-state";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { EmptyState } from "@/shared/components/empty-state";
 import {
   getAutonomousPortalConfig,
   updateAutonomousPortalConfig,

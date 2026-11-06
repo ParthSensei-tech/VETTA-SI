@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin } from "lucide-react";
-import { EmptyState } from "@/components/empty-state";
-import { StageChip } from "@/components/status-chip";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/shared/components/empty-state";
+import { StageChip } from "@/shared/components/status-chip";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EMPLOYMENT_LABEL, STAGE_LABEL, WORK_MODE_LABEL } from "@/lib/recruiting/constants";
 import { useOpenJobsQuery } from "@/lib/recruiting/query";
 import { formatRelative } from "@/shared/utils";

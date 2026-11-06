@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/components/ui/badge";
 import { PIPELINE_LABEL, STAGE_LABEL } from "@/lib/recruiting/constants";
 import type { CompanyStage, PipelineStatus } from "@/lib/recruiting/types";
 

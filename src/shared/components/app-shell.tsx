@@ -9,9 +9,9 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserMenu } from "@/components/user-menu";
-import { VettaWordmark } from "@/components/vetta-mark";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
+import { UserMenu } from "@/shared/components/user-menu";
+import { VettaWordmark } from "@/shared/components/vetta-mark";
 import { cn } from "@/shared/utils";
 
 const NAV = [

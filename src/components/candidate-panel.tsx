@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { PipelineChip, ScoreChip } from "@/components/status-chip";
+import { Button } from "@/shared/components/ui/button";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { PipelineChip, ScoreChip } from "@/shared/components/status-chip";
 import { ProvenanceChip, ProvenanceDetail } from "@/components/provenance-badge";
 import {
   generateAsyncScreen,

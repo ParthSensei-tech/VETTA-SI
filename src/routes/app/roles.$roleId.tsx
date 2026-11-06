@@ -6,21 +6,21 @@ import { FileSpreadsheet, Link2 } from "lucide-react";
 import { BatchIngestDialog } from "@/components/batch-ingest-dialog";
 import { ExportSlateDialog } from "@/components/export-slate-dialog";
 import { RubricEditor } from "@/components/rubric-editor";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/components/ui/dialog";
 import { NightQueue } from "@/components/night-queue";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { CandidatePanel } from "@/components/candidate-panel";
-import { EmptyState } from "@/components/empty-state";
-import { PipelineChip, ScoreChip, StageChip } from "@/components/status-chip";
+import { EmptyState } from "@/shared/components/empty-state";
+import { PipelineChip, ScoreChip, StageChip } from "@/shared/components/status-chip";
 import { StaleBanner } from "@/components/provenance-badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ingestResume, rerankStaleApplications } from "@/lib/recruiting/api";
 import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/lib/recruiting/query";
 import { cn, initials } from "@/shared/utils";

@@ -3,15 +3,15 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { signOut } from "@/platform/auth/client";
 import { useCurrentUserState } from "@/platform/auth/use-current-user";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/shared/components/theme-provider";
 import { initials } from "@/shared/utils";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/components/ui/dropdown-menu";
 
 export function UserMenu() {
   const { user, isPending } = useCurrentUserState();

@@ -2,11 +2,11 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { SOCIAL_PROVIDERS, authClient, authEnabled, signIn } from "@/platform/auth/client";
 import { useCurrentUserState } from "@/platform/auth/use-current-user";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { VettaMark } from "@/components/vetta-mark";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
+import { VettaMark } from "@/shared/components/vetta-mark";
 
 export const Route = createFileRoute("/login")({ component: Login });
 

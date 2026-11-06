@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { VettaMark, VettaWordmark } from "@/components/vetta-mark";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
+import { VettaMark, VettaWordmark } from "@/shared/components/vetta-mark";
 
 export function CandidatePortalShell({ children }: { children: ReactNode }) {
   return (

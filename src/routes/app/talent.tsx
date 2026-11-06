@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/empty-state";
-import { PipelineChip, ScoreChip } from "@/components/status-chip";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/shared/components/ui/input";
+import { EmptyState } from "@/shared/components/empty-state";
+import { PipelineChip, ScoreChip } from "@/shared/components/status-chip";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useTalentQuery } from "@/lib/recruiting/query";
 import { initials } from "@/shared/utils";
 

@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CandidatePortalShell } from "@/components/candidate-portal-shell";
+import { CandidatePortalShell } from "@/shared/components/candidate-portal-shell";
 import { ScreenChat } from "@/components/screen-chat";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { StageChip } from "@/components/status-chip";
+import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { StageChip } from "@/shared/components/status-chip";
 import { WORK_MODE_LABEL } from "@/lib/recruiting/constants";
 import { usePortalApplicationQuery } from "@/lib/recruiting/query";
 import type { PortalApplication } from "@/lib/recruiting/types";

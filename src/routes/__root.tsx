@@ -1,8 +1,8 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { AuthProvider } from "@/platform/auth/provider";
-import { PreviewHostBridge } from "@/components/preview-host-bridge";
-import { AppProviders } from "@/components/providers";
+import { PreviewHostBridge } from "@/shared/components/preview-host-bridge";
+import { AppProviders } from "@/shared/components/providers";
 import { AppErrorComponent } from "@/platform/error-component";
 import { THEME_BOOT_SCRIPT, THEME_DARK } from "@/platform/theme";
 import appCss from "../styles.css?url";

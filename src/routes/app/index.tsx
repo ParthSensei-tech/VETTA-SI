@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import { NightQueue } from "@/components/night-queue";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/empty-state";
-import { StageChip } from "@/components/status-chip";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { EmptyState } from "@/shared/components/empty-state";
+import { StageChip } from "@/shared/components/status-chip";
 import { formatRelative } from "@/shared/utils";
 import { useAllBatchesQuery, useWorkspaceQuery } from "@/lib/recruiting/query";
 

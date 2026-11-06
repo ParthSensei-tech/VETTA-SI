@@ -2,14 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import { FileArchive, FileSpreadsheet, FileText, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/components/ui/dialog";
 import { appendIngestItems, createIngestBatch } from "@/lib/recruiting/batch";
 import { chunkItems, prepareBatchFiles, sourceLabel } from "@/lib/recruiting/batch-client";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";

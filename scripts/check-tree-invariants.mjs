@@ -36,16 +36,32 @@ const { table, errors } = compileTable({ ...map, moves: liveMoves }, diskView);
 errors.forEach(fail);
 
 // --- 1. totality over the files the programme owns --------------------------
-const owned = diskView
-  .list("src")
-  .filter(isCodeFile)
-  .filter((f) => f.startsWith("src/lib/") || f.startsWith("src/components/"));
+// Both ends of the map count. Keyed only on the pre-move prefixes, this check
+// quietly lost every file a batch had already landed — after Batch 5 it would
+// have inspected `src/components/` alone, i.e. the folders the plan is emptying.
+const OWNED_PREFIXES = [
+  "src/lib/",
+  "src/components/",
+  "src/shared/",
+  "src/features/",
+  "src/platform/",
+];
+const owned = diskView.list("src").filter(isCodeFile).filter((f) =>
+  OWNED_PREFIXES.some((p) => f.startsWith(p)),
+);
 const keepPrefixes = Object.keys(map.keep)
   .filter((g) => g.startsWith("src/") && g.includes("**"))
   .map((g) => g.replace(/\/\*\*\/?\*?$/, ""));
+// A landed batch drops its own entry from `liveMoves` (the source is gone), so
+// destinations must be read from the raw map or the check loses them exactly
+// when the move succeeds.
+const destinations = map.moves.map((m) => m.to.replace(/\/+$/, ""));
+const atDestination = (f) => destinations.some((t) => f === t || f.startsWith(t + "/"));
 for (const f of owned) {
   const kept = f in map.keep || keepPrefixes.some((p) => f === p || f.startsWith(p + "/"));
-  if (!table.has(f) && !kept) fail(`map is not total: ${f} is neither moved nor kept`);
+  if (!table.has(f) && !atDestination(f) && !kept) {
+    fail(`map is not total: ${f} is neither moved nor kept`);
+  }
 }
 
 // --- 2. tier honesty, read from file content --------------------------------
@@ -124,7 +140,7 @@ const PROBES = [
   },
   {
     file: "src/features/verification/domain/__probe.ts",
-    code: `import * as a from "@/features/verification/server/evidence.server";\nimport * as c from "@/components/app-shell";\nexport const p = async () => [a, c, await import("../server/evidence.server.ts")];`,
+    code: `import * as a from "@/features/verification/server/evidence.server";\nimport * as c from "@/shared/components/app-shell";\nexport const p = async () => [a, c, await import("../server/evidence.server.ts")];`,
     min: 3,
   },
   {

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/components/ui/badge";
 import type { RankProvenance } from "@/lib/recruiting/types";
 import { cn } from "@/shared/utils";
 
