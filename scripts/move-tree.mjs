@@ -29,7 +29,7 @@ import * as posix from "node:path/posix";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const EXTENSIONS = [".ts", ".tsx", ".mjs", ".cjs", ".js", ".json"];
+export const EXTENSIONS = [".ts", ".tsx", ".mjs", ".cjs", ".js", ".json"];
 // A candidate is any string literal that *looks* like a local module path. The
 // rewrite then requires it to resolve, so being generous here is safe; being
 // narrow here is what loses a `ssrLoadModule("/src/lib/db.ts")`.
@@ -172,6 +172,37 @@ function add(table, errors, from, to) {
   table.set(from, to);
 }
 
+/**
+ * The folders the restructure programme owns. Both ends of the map are in scope
+ * because a landed batch deletes its own source: a check keyed only on the
+ * pre-move folders stops seeing every file it has already moved, which is the
+ * moment a misplacement stops being recoverable. Shared with
+ * `check-tree-invariants.mjs` and `move-tree.test.mjs` on purpose — the two
+ * callers had already drifted once, and the drift looked like a passing gate.
+ */
+export const OWNED_PREFIXES = [
+  "src/lib/",
+  "src/components/",
+  "src/shared/",
+  "src/features/",
+  "src/platform/",
+];
+
+export function totality(files, map, table) {
+  const owned = files.filter((f) => OWNED_PREFIXES.some((p) => f.startsWith(p)));
+  const keepPrefixes = Object.keys(map.keep)
+    .filter((g) => g.startsWith("src/") && g.includes("**"))
+    .map((g) => g.replace(/\/\*\*\/?\*?$/, ""));
+  const destinations = map.moves.map((m) => m.to.replace(/\/+$/, ""));
+  const gaps = owned.filter(
+    (f) =>
+      !table.has(f) &&
+      !destinations.some((t) => f === t || f.startsWith(t + "/")) &&
+      !(f in map.keep || keepPrefixes.some((p) => f === p || f.startsWith(p + "/"))),
+  );
+  return { owned, gaps };
+}
+
 /** Every string literal that could be a local module path, with its quote char. */
 export function findSpecs(text) {
   const out = [];
@@ -192,11 +223,6 @@ export function findSpecs(text) {
     });
   }
   return out;
-}
-
-/** Keep the author's extension choice when turning a path into an alias. */
-function stripExt(rel, oldSpec) {
-  return EXTENSIONS.some((e) => oldSpec.endsWith(e)) ? rel : rel.replace(/\.[a-z]+$/, "");
 }
 
 /** Re-render a specifier for its new location, preserving the author's form. */
@@ -258,24 +284,30 @@ export function planRewrites(map, view, { onlyBatch, consumerDirs, looseFiles } 
       const target = remap(resolvedPath);
       if (!target) {
         // The between-batches trap: a file moving *now* may hold a relative
-        // specifier into a folder that moves in a *later* batch. Its depth
-        // changes, so the import silently breaks until that batch lands — and a
-        // typecheck run between batches would point at the wrong file. Rewrite
-        // those to the canonical `@/` alias instead: same module, resolves the
-        // same from any depth, and the later batch rewrites it for real.
+        // specifier into a module that this batch does not move — either one
+        // that is already final (`src/platform/…`) or one that waits for a
+        // *later* batch (`src/lib/recruiting/…`). Either way the old specifier
+        // was correct only at the old depth, so re-render it for the
+        // destination. The pending case self-heals: while the target still sits
+        // at the path this specifier points to, the batch that moves it finds
+        // the specifier resolving and rewrites it like any other consumer.
         //
-        // The alias only reaches *inside* src, though. A moved file importing
-        // repo tooling (scripts/, server/, migrations/) has to keep a relative
-        // path: `@/../scripts/x` typechecks and bundles, but Node's ESM
-        // resolver rejects it as an invalid package specifier.
+        // Deliberately *not* the `@/` alias. The alias is depth-proof for tsc
+        // and Vite, but `npm test`'s src half is bare
+        // `node --experimental-strip-types --test`, which registers no alias
+        // loader, so every canonicalised specifier silently takes its module
+        // out of the test graph. Batch 6 did exactly that: 210 src tests went
+        // green on the old tree and 6 could not load afterwards.
         if (table.has(file) && r.file && /^\.\.?\//.test(spec)) {
-          const relFromSrc = posix.relative("src", resolvedPath);
-          const next = relFromSrc.startsWith("..")
-            ? renderSpec(spec, resolvedPath, resolvedPath, posix.dirname(table.get(file)))
-            : "@/" + stripExt(relFromSrc, spec);
+          const next = renderSpec(
+            spec,
+            resolvedPath,
+            resolvedPath,
+            posix.dirname(table.get(file)),
+          );
           if (next !== spec) {
             out = out.slice(0, start) + next + out.slice(end);
-            changes.push({ spec, next, to: resolvedPath, canonicalised: true });
+            changes.push({ spec, next, to: resolvedPath, depthfix: true });
           }
         }
         continue;

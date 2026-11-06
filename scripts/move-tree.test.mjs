@@ -8,11 +8,13 @@ import { dirname as nativeDirname, join as nativeJoin, resolve as nativeResolve 
 import {
   compileTable,
   diskView,
+  EXTENSIONS,
   findSpecs,
   isCodeFile,
   makeResolver,
   planRewrites,
   renderSpec,
+  totality,
 } from "./move-tree.mjs";
 
 const ROOT = nativeResolve(nativeDirname(fileURLToPath(import.meta.url)), "..");
@@ -207,7 +209,7 @@ test("regime: alias import in a page route, relative import inside the moved fol
   assert.match(edits.get("src/lib/recruiting/ai.server.ts").text, /from "@\/platform\/db"/);
 });
 
-test("between-batches trap: a moving file keeps a relative import into a folder that moves later", () => {
+test("between-batches trap: a moving file keeps a *relative* import into a folder that moves later", () => {
   const view = memView({
     "src/lib/recruiting/ai.server.ts": `import { o } from "./org.server";\nexport const h = o;`,
     "src/lib/recruiting/org.server.ts": `export const o = 1;`,
@@ -216,12 +218,17 @@ test("between-batches trap: a moving file keeps a relative import into a folder 
   const next = edits.get("src/lib/recruiting/ai.server.ts").text;
   assert.match(
     next,
-    /from "@\/lib\/recruiting\/org\.server"/,
-    "canonicalised, not left at a broken depth",
+    /from "\.\.\/\.\.\/\.\.\/lib\/recruiting\/org\.server"/,
+    "re-rendered for the new depth, not aliased",
+  );
+  assert.ok(
+    !next.includes("@/"),
+    `no alias: npm test's src half is bare node --test, which has no @/ loader`,
   );
   const changes = edits.get("src/lib/recruiting/ai.server.ts").changes;
-  assert.equal(changes[0].canonicalised, true);
-  // And the canonical form is what the later batch then rewrites for real.
+  assert.equal(changes[0].depthfix, true);
+  // And the later batch still finds it, because the specifier resolves until
+  // that batch is exactly what makes the rewrite self-healing.
   const after = memView({
     "src/features/ai/server/ai.server.ts": next,
     "src/lib/recruiting/org.server.ts": `export const o = 1;`,
@@ -233,6 +240,43 @@ test("between-batches trap: a moving file keeps a relative import into a folder 
     after,
   );
   assert.deepEqual(second.errors, []);
+  assert.match(
+    second.edits.get("src/features/ai/server/ai.server.ts").text,
+    /from "\.\.\/\.\.\/people\/server\/org\.server"/,
+  );
+});
+
+test("Batch 6 defect: a moving file importing an ALREADY-MOVED module must stay node-resolvable", () => {
+  // `src/features/ai/domain/model-router.ts` reached `src/platform/observability/`
+  // with a relative specifier. The old canonicalising branch turned it into
+  // `@/platform/observability/cost.ts`, which tsc and Vite both accept and
+  // `node --experimental-strip-types --test` does not — so six tests in the
+  // same batch reported ERR_MODULE_NOT_FOUND while typecheck stayed green.
+  const view = memView({
+    "src/lib/recruiting/model-router.ts":
+      `import { predictCostUsd } from "../../platform/observability/cost.ts";\nexport const m = predictCostUsd;`,
+    "src/platform/observability/cost.ts": `export const predictCostUsd = 1;`,
+  });
+  const { edits, errors } = planRewrites(
+    mapOf([{ to: "src/features/ai/domain", from: ["src/lib/recruiting/model-router.ts"], batch: 6 }]),
+    view,
+  );
+  assert.deepEqual(errors, []);
+  // `src/platform` landed in Batch 4, so it is not in this map at all: final.
+  const text = edits.get("src/lib/recruiting/model-router.ts").text;
+  assert.match(text, /from "\.\.\/\.\.\/\.\.\/platform\/observability\/cost\.ts"/);
+  assert.ok(!text.includes("@/platform"), `got: ${text}`);
+  const emitted = /from "([^"]+)"/.exec(text)[1];
+  assert.ok(
+    makeResolver(view)(emitted, "src/features/ai/domain"),
+    `${emitted} resolves from the destination`,
+  );
+  // Native ESM has no extension guessing: a relative specifier that drops its
+  // `.ts` typechecks under Vite and then fails to load under `node --test`.
+  assert.ok(
+    EXTENSIONS.some((e) => emitted.endsWith(e)),
+    `${emitted} carries its extension, as native ESM requires`,
+  );
 });
 
 test("a moved file importing OUTSIDE src keeps a relative path — the alias cannot reach it", () => {
@@ -296,11 +340,13 @@ test("idempotence: rewriting a rewritten file again changes nothing", () => {
   const again = planRewrites(map, moved);
   assert.equal(again.moved, 0);
   assert.match(again.errors.join(" "), /exists on neither path/);
-  // And the canonical specifiers it left behind still resolve from the new home.
+  // And every specifier it left behind still resolves from the new home — in
+  // the relative form `node --test` can load, not only under the bundler alias.
+  const text = moved.read("src/features/ai/server/ai.server.ts");
+  assert.ok(!text.includes("@/"), `the depth fix must not alias: ${text}`);
   const r = makeResolver(moved);
-  for (const { spec } of findSpecs(moved.read("src/features/ai/server/ai.server.ts")))
-    if (spec.startsWith("@/"))
-      assert.ok(r(spec, "src/features/ai/server"), `${spec} still resolves`);
+  for (const { spec } of findSpecs(text))
+    assert.ok(r(spec, "src/features/ai/server"), `${spec} still resolves`);
 });
 
 test("a prose mention of a moving folder is not treated as a barrel import", () => {
@@ -360,14 +406,6 @@ const liveMap = () => ({
 });
 const srcFiles = () => diskView.list("src").filter(isCodeFile);
 
-function keepMatch(f, keep) {
-  return Object.keys(keep).some((glob) => {
-    const base = glob.replace(/\/\*\*\/?\*?$/, "");
-    if (glob.includes("**")) return f === base || f.startsWith(base + "/");
-    return new RegExp("^" + base.replace(/[.*]/g, (c) => "\\" + c) + "$").test(f);
-  });
-}
-
 test("the real move-map compiles with no refusals and no colliding targets", () => {
   const { table, errors } = compileTable(liveMap(), diskView);
   assert.deepEqual(errors, []);
@@ -381,15 +419,12 @@ test("the real move-map compiles with no refusals and no colliding targets", () 
 
 test("the map is total over the files the restructure owns", () => {
   const { table } = compileTable(liveMap(), diskView);
-  const owned = srcFiles().filter(
-    (f) => f.startsWith("src/lib/") || f.startsWith("src/components/"),
-  );
-  assert.ok(owned.length > 100, `only ${owned.length} owned files — the scan is broken`);
-  for (const f of owned)
-    assert.ok(
-      table.has(f) || keepMatch(f, realMap.keep),
-      `${f} is neither moved nor kept — the map is not total`,
-    );
+  // `totality` is the same function `npm run check:tree` runs, so this test and
+  // the gate cannot disagree about the owned set — they had already drifted, and
+  // the drift looked like a green gate.
+  const { owned, gaps } = totality(srcFiles(), realMap, table);
+  assert.ok(owned.length > 150, `only ${owned.length} owned files — the scan is broken`);
+  assert.deepEqual(gaps, []);
 });
 
 test("resolver parity: every extensionless local specifier resolves to .ts/.tsx, which is all the loader hook can do", () => {

@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname } from "node:path";
 import * as posix from "node:path/posix";
 import { fileURLToPath } from "node:url";
-import { compileTable, diskView, isCodeFile } from "./move-tree.mjs";
+import { compileTable, diskView, isCodeFile, totality } from "./move-tree.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -36,33 +36,10 @@ const { table, errors } = compileTable({ ...map, moves: liveMoves }, diskView);
 errors.forEach(fail);
 
 // --- 1. totality over the files the programme owns --------------------------
-// Both ends of the map count. Keyed only on the pre-move prefixes, this check
-// quietly lost every file a batch had already landed — after Batch 5 it would
-// have inspected `src/components/` alone, i.e. the folders the plan is emptying.
-const OWNED_PREFIXES = [
-  "src/lib/",
-  "src/components/",
-  "src/shared/",
-  "src/features/",
-  "src/platform/",
-];
-const owned = diskView.list("src").filter(isCodeFile).filter((f) =>
-  OWNED_PREFIXES.some((p) => f.startsWith(p)),
-);
-const keepPrefixes = Object.keys(map.keep)
-  .filter((g) => g.startsWith("src/") && g.includes("**"))
-  .map((g) => g.replace(/\/\*\*\/?\*?$/, ""));
-// A landed batch drops its own entry from `liveMoves` (the source is gone), so
-// destinations must be read from the raw map or the check loses them exactly
-// when the move succeeds.
-const destinations = map.moves.map((m) => m.to.replace(/\/+$/, ""));
-const atDestination = (f) => destinations.some((t) => f === t || f.startsWith(t + "/"));
-for (const f of owned) {
-  const kept = f in map.keep || keepPrefixes.some((p) => f === p || f.startsWith(p + "/"));
-  if (!table.has(f) && !atDestination(f) && !kept) {
-    fail(`map is not total: ${f} is neither moved nor kept`);
-  }
-}
+// `totality` lives in the codemod so this gate and move-tree.test.mjs cannot
+// disagree about what "owned" means; they had already drifted once.
+const { owned, gaps } = totality(diskView.list("src").filter(isCodeFile), map, table);
+for (const f of gaps) fail(`map is not total: ${f} is neither moved nor kept`);
 
 // --- 2. tier honesty, read from file content --------------------------------
 const SERVER_SPEC =
