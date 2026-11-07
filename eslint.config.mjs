@@ -24,11 +24,27 @@ const VIEW_SURFACES = [
 // Isomorphic by contract: pure logic, no I/O, no server module, no view.
 const DOMAIN_SURFACES = ["src/features/**/domain/**/*.{ts,tsx}"];
 // Everything below the view: it may reach sideways and down, never up into UI.
+// `src/features/**` minus the two upper tiers, rather than a list of tier folder
+// names — because a feature may hold sub-folders that are not tiers. Batch 8
+// moves `src/lib/recruiting/{harness,benchmark}` whole into `src/features/eval/`,
+// and neither is a tier; probed at each destination, the old `server/**`+`api/**`
+// spelling left every file in them matched by *no* rule object at all, so the
+// boundary went silent on exactly the code the restructure exists to put under it.
+// The subtraction belongs in the rule object's `ignores`, NOT as `!`-entries in
+// this array: measured, negated `files` entries do not un-match here, and because
+// this object is the later one they let it REPLACE the domain/ui restrictions
+// instead of widening its own reach — the precise hazard named above, re-created
+// by the fix and caught only by the probes.
 const LOWER_SURFACES = [
   "src/lib/**/*.{ts,tsx}",
   "src/platform/**/*.{ts,tsx}",
-  "src/features/**/server/**/*.{ts,tsx}",
-  "src/features/**/api/**/*.{ts,tsx}",
+  "src/features/**/*.{ts,tsx}",
+];
+const LOWER_EXEMPTIONS = [
+  "src/**/*.test.ts",
+  "src/**/*.test.tsx",
+  "src/features/**/domain/**",
+  "src/features/**/ui/**",
 ];
 // Exemptions, each measured rather than assumed:
 // - `src/routes/api/**` is the server entrypoint; it is server code.
@@ -161,7 +177,7 @@ export default tseslint.config(
     // above: keyed to where the infrastructure *will* live, not only to where
     // it lives today.
     files: LOWER_SURFACES,
-    ignores: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    ignores: LOWER_EXEMPTIONS,
     rules: {
       "no-restricted-imports": [
         "error",

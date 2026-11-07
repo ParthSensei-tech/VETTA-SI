@@ -130,6 +130,35 @@ const PROBES = [
     code: `import * as fw from "@tanstack/react-start/server";\nexport const p = fw;`,
     min: 0,
   },
+  // Batch 8 hazard: a feature sub-folder that is not a tier. `harness/` and
+  // `benchmark/` land in `src/features/eval/` under exactly those names, and
+  // while LOWER_SURFACES listed only `server/**`+`api/**` NO rule object matched
+  // those paths — probed, all three boundary errors went to zero. Measured, not
+  // inferred: the first fix for this used `!`-negated `files` entries, which do
+  // not un-match, and because this object is the later one it silently REPLACED
+  // the domain and ui restrictions instead of widening itself. The min:3 domain
+  // probe above is what caught that, dropping to 2; keep the counts honest.
+  {
+    file: "src/features/eval/harness/__probe.ts",
+    code: `import * as a from "@/shared/components/app-shell";\nexport const p = a;`,
+    min: 1,
+  },
+  // ...and the same non-tier folder must stay LEGAL doing what an api/ wrapper
+  // does — reaching down into a server module. Guards the opposite direction: a
+  // LOWER that swallowed the client->server restriction would break real code.
+  {
+    file: "src/features/eval/harness/__probe_neg.ts",
+    code: `import * as a from "@/features/people/server/org.server";\nexport const p = a;`,
+    min: 0,
+  },
+  // A feature's ui/ folder is a VIEW surface. If LOWER_SURFACES ever overlaps it
+  // again, the later object replaces the rule and the server edge goes quiet
+  // precisely where a browser bundle is being built.
+  {
+    file: "src/features/pipeline/ui/__probe.tsx",
+    code: `import * as a from "@/features/pipeline/server/queue.server";\nexport const p = a;`,
+    min: 1,
+  },
 ];
 
 function probes() {
