@@ -103,16 +103,37 @@ for (const f of [
 }
 if (stale.length) staleNeedle(`${stale.length} literal path references into the old tree remain`);
 
-// --- 5. do the boundary rules actually fire? ---------------------------------
+// --- 5. the old tree stays gone ---------------------------------------------
+// Batch 10a deleted `src/components/` and dropped its eslint glob with it. A
+// dead glob is invisible, but so is a folder that reappears underneath one:
+// code written into `src/components/` after the drop matches no rule object at
+// all, and the boundary goes silent in the one place a browser bundle is built.
+// Asserting the folder stays empty is the replacement — it fails loudly instead
+// of failing like success.
+for (const gone of ["src/components"]) {
+  const back = diskView.list(gone).filter(isCodeFile);
+  if (back.length)
+    fail(
+      `${gone}/ reappeared with ${back.length} code file(s) (${back.slice(0, 3).join(", ")}) — ` +
+        `its eslint glob was dropped in Batch 10a, so nothing guards it. Move it under src/features/ or src/shared/.`,
+    );
+}
+
+// --- 6. do the boundary rules actually fire? --------------------------------
 const PROBES = [
+  // Batch 10a re-pointed the two legacy probes at modules that exist. They
+  // still proved the rule while it named `@/lib/recruiting/ai.server` because
+  // `no-restricted-imports` matches the specifier STRING and never resolves it
+  // — which is exactly why a probe can pass against a tree that no longer
+  // contains the path it names. A probe must describe the tree as it is.
   {
-    file: "src/components/__probe_tree.tsx",
-    code: `import * as a from "@/lib/recruiting/ai.server";\nexport const p = async () => [a, await import("../lib/recruiting/queue.server.ts")];`,
+    file: "src/shared/components/__probe_tree.tsx",
+    code: `import * as a from "@/features/ai/server/ai.server";\nexport const p = async () => [a, await import("../../features/pipeline/server/queue.server.ts")];`,
     min: 2,
   },
   {
     file: "src/routes/__probe_dir__/p.tsx",
-    code: `import * as a from "../../lib/recruiting/org.server";\nexport const p = a;`,
+    code: `import * as a from "../../features/people/server/org.server";\nexport const p = a;`,
     min: 1,
   },
   {

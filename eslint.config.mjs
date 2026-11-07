@@ -16,7 +16,6 @@ import tseslint from "typescript-eslint";
 // restructure created those folders. Probes caught it; the disjoint split is the
 // fix, and `scripts/check-tree-invariants.mjs` re-runs the probes on demand.
 const VIEW_SURFACES = [
-  "src/components/**/*.{ts,tsx}",
   "src/routes/**/*.{ts,tsx}",
   "src/shared/**/*.{ts,tsx}",
   "src/features/**/ui/**/*.{ts,tsx}",
@@ -35,6 +34,11 @@ const DOMAIN_SURFACES = ["src/features/**/domain/**/*.{ts,tsx}"];
 // this object is the later one they let it REPLACE the domain/ui restrictions
 // instead of widening its own reach — the precise hazard named above, re-created
 // by the fix and caught only by the probes.
+// `src/lib/**` stays listed after Batch 10a dropped `src/components/**`: the
+// folder is empty except for the parked `live-pipeline.ts`, which is still
+// covered by these rails, and it leaves the list only when open audit decision
+// #1 says the file may go. Dropping the glob first would have quietly removed
+// the boundary from a live 543-line module.
 const LOWER_SURFACES = [
   "src/lib/**/*.{ts,tsx}",
   "src/platform/**/*.{ts,tsx}",
@@ -60,16 +64,12 @@ const VIEW_EXEMPTIONS = [
 ];
 const UPPER_VIEW_GLOBS = [
   "@/routes/**",
-  "@/components/**",
   "@/shared/components/**",
   "@/features/**/ui/**",
-  "../routes/**",
-  "../components/**",
-  "../../routes/**",
-  "../../components/**",
 ];
-// `group` globs are matched against the specifier string, so the `../` list above
-// only covers the two depths it enumerates. Batch 9 puts a lower tier at
+// `group` globs match the specifier STRING, so a relative form needs its own
+// depth spelled out — and the list that used to do that enumerated only two.
+// Batch 9 puts a lower tier at
 // `src/features/recruiting/api/` — three levels under `src/` — and the codemod
 // preserves specifier form, so `../../../routes/x` is a shape this tree produces
 // (12 lower-tier files already import `../../../shared/utils.ts`). Probed before
