@@ -68,6 +68,20 @@ const UPPER_VIEW_GLOBS = [
   "../../routes/**",
   "../../components/**",
 ];
+// `group` globs are matched against the specifier string, so the `../` list above
+// only covers the two depths it enumerates. Batch 9 puts a lower tier at
+// `src/features/recruiting/api/` — three levels under `src/` — and the codemod
+// preserves specifier form, so `../../../routes/x` is a shape this tree produces
+// (12 lower-tier files already import `../../../shared/utils.ts`). Probed before
+// the fix: from that folder, `@/routes/app/talent` and
+// `@/features/recruiting/ui/client-card-view` each errored, while
+// `../../../routes/__root` and `../../../shared/components/app-shell` produced
+// nothing. Latent, not exercised — no file reaches up that way today — but the
+// rails must not depend on which spelling an author happens to pick. Depth-agnostic
+// regex, mirroring SERVER_MODULE_REGEX below; `shared/utils` stays legal because
+// only `shared/components` is an upper surface.
+const UPPER_VIEW_REGEX =
+  "^(?:\\.{1,2}/)+(?:routes|components)(?:/|$)|^(?:\\.{1,2}/)+shared/components(?:/|$)|^(?:\\.{1,2}/)+(?:[\\w.@-]+/)*ui(?:/|$)";
 
 // Server-only modules are identified by filename. Both forms are anchored to
 // *local* specifiers on purpose: the previous `**/server.ts` group also matched
@@ -166,6 +180,11 @@ export default tseslint.config(
               message:
                 "domain/ is isomorphic pure logic: it may not depend on the view layer, and importing a feature's ui/ folder inverts the dependency direction.",
             },
+            {
+              regex: UPPER_VIEW_REGEX,
+              message:
+                "domain/ is isomorphic pure logic: it may not depend on the view layer, and importing a feature's ui/ folder inverts the dependency direction.",
+            },
           ],
         },
       ],
@@ -185,6 +204,11 @@ export default tseslint.config(
           patterns: [
             {
               group: UPPER_VIEW_GLOBS,
+              message:
+                "This is the lower layer: it must not depend on routes or components. Move the shared logic down into src/platform or a feature domain.",
+            },
+            {
+              regex: UPPER_VIEW_REGEX,
               message:
                 "This is the lower layer: it must not depend on routes or components. Move the shared logic down into src/platform or a feature domain.",
             },

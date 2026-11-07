@@ -159,6 +159,23 @@ const PROBES = [
     code: `import * as a from "@/features/pipeline/server/queue.server";\nexport const p = a;`,
     min: 1,
   },
+  // Batch 9 hazard: `group` globs match the specifier STRING, so the relative
+  // list in UPPER_VIEW_GLOBS only covered the two depths it enumerated. A
+  // feature api/ folder is three levels under src/ and the codemod preserves
+  // specifier form, so `../../../routes/x` is a shape this tree produces — and
+  // probed, it was silent while the `@/` spelling of the same import errored.
+  // All three spellings must fire, and `../../../shared/utils` — which 12
+  // lower-tier files legitimately import — must not.
+  {
+    file: "src/features/recruiting/api/__probe.ts",
+    code: `import * as a from "../../../routes/__root";\nimport * as b from "../../../shared/components/app-shell";\nimport * as c from "../ui/screen-chat";\nexport const p = [a, b, c];`,
+    min: 3,
+  },
+  {
+    file: "src/features/recruiting/api/__probe_neg.ts",
+    code: `import * as a from "../../../shared/utils";\nimport * as b from "@/features/ranking/domain/match-engine";\nexport const p = [a, b];`,
+    min: 0,
+  },
 ];
 
 function probes() {
