@@ -12,7 +12,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { appendIngestItems, createIngestBatch } from "@/features/ingest/api/batch";
 import { chunkItems, prepareBatchFiles, sourceLabel } from "@/features/ingest/domain/batch-client";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
 import { cn } from "@/shared/utils";
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.zip,.csv,.xlsx";

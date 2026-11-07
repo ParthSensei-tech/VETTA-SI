@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto";
 import { getSql } from "@/platform/db";
-import type { RankResult } from "../../../lib/recruiting/types";
+import type { RankResult } from "../../recruiting/domain/types";
 import {
   EMBED_DIM,
   alignmentScore,

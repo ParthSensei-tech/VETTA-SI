@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg, assertOrgMember } from "../server/org.server.ts";
 import { addOrgMember, assertOrgPermission } from "../server/rbac.server.ts";
-import { loadRoleWorkspaceForUser, loadRoleOrThrow, loadApplicationBundle } from "../../../lib/recruiting/api.ts";
+import { loadRoleWorkspaceForUser, loadRoleOrThrow, loadApplicationBundle } from "../../recruiting/api/api.ts";
 import {
   assignUserToRole,
   assignUserToApplication,

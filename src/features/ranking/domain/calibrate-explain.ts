@@ -4,7 +4,7 @@
  * not from a fixed probability table.
  */
 
-import type { RankResult } from "../../../lib/recruiting/types";
+import type { RankResult } from "../../recruiting/domain/types";
 import { cosine, hashFeatures } from "../../ai/domain/domain-embed.ts";
 
 export const CAL_DIM = 6;

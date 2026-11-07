@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/platform/auth/middleware";
 import { getSql } from "@/platform/db";
-import { ROLE_TEMPLATES } from "./constants";
-import type { PipelineStatus, RankResult, ScreenEvaluation, ScreenQuestion } from "./types";
+import { ROLE_TEMPLATES } from "../../features/recruiting/domain/constants";
+import type { PipelineStatus, RankResult, ScreenEvaluation, ScreenQuestion } from "../../features/recruiting/domain/types";
 
 function nid(): string {
   return crypto.randomUUID();

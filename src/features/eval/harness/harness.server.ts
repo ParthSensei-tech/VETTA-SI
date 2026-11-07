@@ -21,7 +21,7 @@ import type {
   RankResult,
   RankTrace,
   ShadowComparison,
-} from "../../../lib/recruiting/types";
+} from "../../recruiting/domain/types";
 import { GOLD_EVAL_CASES } from "./gold";
 import { regressionGate, scoreCase, summarizeRun } from "./scorer";
 

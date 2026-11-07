@@ -20,7 +20,7 @@ import type {
   ScreenInvite,
   ScreenQuestion,
   ScreenTurn,
-} from "../../../lib/recruiting/types.ts";
+} from "../../recruiting/domain/types.ts";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -516,7 +516,7 @@ export const getScreenInvite = createServerFn({ method: "POST" })
       invite = newId().replace(/-/g, "").slice(0, 16);
       await sql`update screens set invite_token = ${invite} where id = ${row.id}`;
     }
-    const { screenUrl: makeScreenUrl } = await import("../../../lib/recruiting/origin");
+    const { screenUrl: makeScreenUrl } = await import("../../recruiting/domain/origin");
     const url = makeScreenUrl(invite);
     const first = row.full_name.split(" ")[0] || "there";
     const text = `Hi ${first} — quick written screen for ${row.title} at ${row.company_name}. Takes ~45 minutes on your phone. ${url}`;

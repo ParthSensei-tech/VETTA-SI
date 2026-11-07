@@ -3,7 +3,7 @@ import { z } from "zod";
 import { authMiddleware } from "@/platform/auth/middleware";
 import { getSql } from "@/platform/db";
 import { iso } from "@/shared/utils";
-import type { IngestBatch, IngestBatchStatus, IngestJob, IngestJobStatus } from "../../../lib/recruiting/types";
+import type { IngestBatch, IngestBatchStatus, IngestJob, IngestJobStatus } from "../../recruiting/domain/types";
 
 const MAX_ITEMS_PER_APPEND = 25;
 const MAX_JOBS_PER_BATCH = 200;

@@ -1,6 +1,6 @@
 import { getSql } from "../../../platform/db.ts";
 import { parseJson } from "../../../shared/utils.ts";
-import type { CompanyStage, ParsedProfile, WorkMode } from "../../../lib/recruiting/types";
+import type { CompanyStage, ParsedProfile, WorkMode } from "../../recruiting/domain/types";
 
 function newId(): string {
   return crypto.randomUUID();

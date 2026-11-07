@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { KNOWLEDGE_HINT, KNOWLEDGE_LABEL } from "@/lib/recruiting/constants";
+import { KNOWLEDGE_HINT, KNOWLEDGE_LABEL } from "@/features/recruiting/domain/constants";
 import {
   grantScreenVoiceConsent,
   postScreenTurn,
   postScreenVoice,
 } from "@/features/people/api/screen-session";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import type { KnowledgeKind, PortalApplication, ScreenTurn } from "@/lib/recruiting/types";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
+import type { KnowledgeKind, PortalApplication, ScreenTurn } from "@/features/recruiting/domain/types";
 import { cn } from "@/shared/utils";
 
 export function ScreenChat({ data, token }: { data: PortalApplication; token?: string }) {

@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CandidatePortalShell } from "@/shared/components/candidate-portal-shell";
-import { ScreenChat } from "@/components/screen-chat";
+import { ScreenChat } from "@/features/recruiting/ui/screen-chat";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { StageChip } from "@/shared/components/status-chip";
-import { WORK_MODE_LABEL } from "@/lib/recruiting/constants";
-import { useScreenTokenQuery } from "@/lib/recruiting/query";
+import { WORK_MODE_LABEL } from "@/features/recruiting/domain/constants";
+import { useScreenTokenQuery } from "@/features/recruiting/api/query";
 
 export const Route = createFileRoute("/screen/$token")({ component: ScreenByToken });
 

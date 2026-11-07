@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRoleWorkspace, getWorkspace, listApprovals } from "./api";
-import { searchTalent } from "../../features/pipeline/api/search-api";
-import { listIngestBatches } from "../../features/ingest/api/batch";
-import { getPortalApplication, getPublicJob, listOpenJobs } from "../../features/people/api/portal";
-import { getPublicShare } from "../../features/people/api/share";
-import { getScreenByApplication, getScreenByToken } from "../../features/people/api/screen-session";
+import { searchTalent } from "../../pipeline/api/search-api";
+import { listIngestBatches } from "../../ingest/api/batch";
+import { getPortalApplication, getPublicJob, listOpenJobs } from "../../people/api/portal";
+import { getPublicShare } from "../../people/api/share";
+import { getScreenByApplication, getScreenByToken } from "../../people/api/screen-session";
 
 export const queryKeys = {
   workspace: ["workspace"] as const,
@@ -130,7 +130,7 @@ export function useHarnessQuery() {
   return useQuery({
     queryKey: queryKeys.harness,
     queryFn: async () => {
-      const { getHarness } = await import("../../features/eval/harness/harness-api");
+      const { getHarness } = await import("../../eval/harness/harness-api");
       return getHarness();
     },
   });

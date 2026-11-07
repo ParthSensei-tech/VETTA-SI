@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { RankEvidence, StackMatch } from "../../../lib/recruiting/types.ts";
+import type { RankEvidence, StackMatch } from "../../recruiting/domain/types.ts";
 
 export type InjectionRisk = "clean" | "suspicious" | "detected";
 

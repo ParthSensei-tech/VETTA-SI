@@ -3,7 +3,7 @@ import { z } from "zod";
 import { authMiddleware } from "../../../platform/auth/middleware.ts";
 import { getSql } from "../../../platform/db.ts";
 import { iso, parseJson } from "../../../shared/utils.ts";
-import { decideApproval, loadRoleWorkspaceForUser } from "../../../lib/recruiting/api.ts";
+import { decideApproval, loadRoleWorkspaceForUser } from "../../recruiting/api/api.ts";
 import { mailtoUrl, whatsappUrl } from "../domain/links.ts";
 import type {
   Approval,
@@ -15,7 +15,7 @@ import type {
   ShareCandidate,
   ShareKind,
   ShareView,
-} from "../../../lib/recruiting/types.ts";
+} from "../../recruiting/domain/types.ts";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -345,7 +345,7 @@ export const exportRoleSlate = createServerFn({ method: "POST" })
         exportedAt: new Date().toISOString(),
       },
     });
-    const { shareUrl: makeShareUrl } = await import("../../../lib/recruiting/origin");
+    const { shareUrl: makeShareUrl } = await import("../../recruiting/domain/origin");
     const { shareToPdf, toBase64 } = await import("../../ingest/domain/pdf");
     const { shareToNotionMarkdown, shareToXlsxBase64 } = await import("../../ingest/domain/sheet");
     const view = viewFromRow(row);
@@ -474,7 +474,7 @@ export const sendPackToClient = createServerFn({ method: "POST" })
         exportedAt: new Date().toISOString(),
       },
     });
-    const { shareUrl: makeShareUrl } = await import("../../../lib/recruiting/origin");
+    const { shareUrl: makeShareUrl } = await import("../../recruiting/domain/origin");
     const { shareToNotionMarkdown } = await import("../../ingest/domain/sheet");
     const url = makeShareUrl(shareRow.token);
 
@@ -600,7 +600,7 @@ export const listRoleShares = createServerFn({ method: "GET" })
       select id from roles where id = ${data.roleId} and (org_id = ${org.orgId} or (org_id is null and user_id = ${context.userId})) limit 1`;
     if (!roleCheck[0]) throw new Error("Role not found");
 
-    const { shareUrl: makeShareUrl } = await import("../../../lib/recruiting/origin");
+    const { shareUrl: makeShareUrl } = await import("../../recruiting/domain/origin");
     const rows = await sql<ShareRow>`
       select * from client_shares
       where (org_id = ${org.orgId} or (org_id is null and user_id = ${context.userId})) and role_id = ${data.roleId}

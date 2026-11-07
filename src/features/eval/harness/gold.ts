@@ -1,4 +1,4 @@
-import type { FitLevel } from "../../../lib/recruiting/types";
+import type { FitLevel } from "../../recruiting/domain/types";
 
 export type GoldCase = {
   slug: string;

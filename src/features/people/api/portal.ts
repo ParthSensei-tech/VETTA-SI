@@ -13,7 +13,7 @@ import type {
   RankResult,
   ScreenAnswer,
   WorkMode,
-} from "../../../lib/recruiting/types";
+} from "../../recruiting/domain/types";
 
 const applySchema = z.object({
   roleId: z.string().min(1),

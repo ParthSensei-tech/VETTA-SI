@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FileSpreadsheet, Link2 } from "lucide-react";
-import { BatchIngestDialog } from "@/components/batch-ingest-dialog";
-import { ExportSlateDialog } from "@/components/export-slate-dialog";
+import { BatchIngestDialog } from "@/features/recruiting/ui/batch-ingest-dialog";
+import { ExportSlateDialog } from "@/features/recruiting/ui/export-slate-dialog";
 import { RubricEditor } from "@/features/ranking/ui/rubric-editor";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -21,8 +21,8 @@ import { EmptyState } from "@/shared/components/empty-state";
 import { PipelineChip, ScoreChip, StageChip } from "@/shared/components/status-chip";
 import { StaleBanner } from "@/features/ranking/ui/provenance-badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { ingestResume, rerankStaleApplications } from "@/lib/recruiting/api";
-import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/lib/recruiting/query";
+import { ingestResume, rerankStaleApplications } from "@/features/recruiting/api/api";
+import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/features/recruiting/api/query";
 import { cn, initials } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/roles/$roleId")({ component: RoleWorkspace });

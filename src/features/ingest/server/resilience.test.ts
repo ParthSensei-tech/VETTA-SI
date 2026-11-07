@@ -13,7 +13,7 @@ import {
   restoreWorkspaceBackup,
   type WorkspaceBackup,
 } from "../../analytics/server/backup.server.ts";
-import { hashResumeText } from "../../../lib/recruiting/hash.ts";
+import { hashResumeText } from "../../recruiting/domain/hash.ts";
 
 // =========================================================================
 // 1. QUEUE CONCURRENCY & ATOMIC CLAIMING

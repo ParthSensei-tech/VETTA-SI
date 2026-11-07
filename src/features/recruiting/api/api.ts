@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "../../platform/auth/middleware.ts";
-import { getSql } from "../../platform/db.ts";
-import { iso, parseJson } from "../../shared/utils.ts";
+import { authMiddleware } from "../../../platform/auth/middleware.ts";
+import { getSql } from "../../../platform/db.ts";
+import { iso, parseJson } from "../../../shared/utils.ts";
 import type {
   Application,
   Approval,
@@ -26,12 +26,12 @@ import type {
   ScreenStatus,
   WorkMode,
   WorkspaceSnapshot,
-} from "./types.ts";
+} from "../domain/types.ts";
 import {
   answersFromTranscript,
   normalizeQuestions,
   normalizeTranscript,
-} from "../../features/ingest/domain/normalize-screen.ts";
+} from "../../ingest/domain/normalize-screen.ts";
 
 const stageSchema = z.enum(["seed", "series_a", "series_b"]);
 const workModeSchema = z.enum(["onsite", "hybrid", "remote"]);
@@ -431,7 +431,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<WorkspaceSnapshot> => {
     const sql = await getSql();
-    const { ensureUserOrg } = await import("../../features/people/server/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const orgId = org.orgId;
 
@@ -501,7 +501,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
       rate: sent > 0 ? Math.round((completed / sent) * 100) : 0,
     };
 
-    const { describeAi } = await import("../../features/ai/server/ai.server");
+    const { describeAi } = await import("../../ai/server/ai.server");
     const ai = describeAi();
     let domainModel = {
       steps: 0,
@@ -512,9 +512,9 @@ export const getWorkspace = createServerFn({ method: "GET" })
       ready: false,
     };
     try {
-      const { domainModelStatus, refreshMarketSnapshot } = await import("../../features/ai/server/domain-embed.server");
+      const { domainModelStatus, refreshMarketSnapshot } = await import("../../ai/server/domain-embed.server");
       void refreshMarketSnapshot(false).catch(() => undefined);
-      const { refreshHrLexicon } = await import("../../features/ranking/server/calibrate.server");
+      const { refreshHrLexicon } = await import("../../ranking/server/calibrate.server");
       void refreshHrLexicon(false).catch(() => undefined);
       domainModel = await domainModelStatus();
     } catch {
@@ -552,7 +552,7 @@ export const createRole = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<Role> => {
     const sql = await getSql();
     const id = newId();
-    const { ensureUserOrg } = await import("../../features/people/server/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId, data.companyName);
     await sql`
       insert into roles (
@@ -569,7 +569,7 @@ export const createRole = createServerFn({ method: "POST" })
       orgId: org.orgId,
     });
     try {
-      const { generateRubricDraft } = await import("../../features/ranking/server/rubric-version.server");
+      const { generateRubricDraft } = await import("../../ranking/server/rubric-version.server");
       await generateRubricDraft({ userId: context.userId, roleId: id, heuristicOnly: true });
     } catch {
       /* rubric_versions may not exist yet */
@@ -666,13 +666,13 @@ export const ingestResume = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<{ application: Application; warning?: string }> => {
     const roleRow = await loadRoleOrThrow(context.userId, data.roleId);
     const role = mapRole(roleRow);
-    const { ensureUserOrg } = await import("../../features/people/server/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId, role.companyName);
 
     const candidateId = newId();
     const applicationId = newId();
 
-    const { parseAndRank } = await import("../../features/ai/server/ai.server");
+    const { parseAndRank } = await import("../../ai/server/ai.server");
     const ranked = await parseAndRank({
       resumeText: data.resumeText,
       role: {
@@ -729,14 +729,14 @@ export const ingestResume = createServerFn({ method: "POST" })
 
     // Record employer intake under DPDP
     try {
-      const { recordEmployerIntake } = await import("../../features/people/server/privacy.server");
+      const { recordEmployerIntake } = await import("../../people/server/privacy.server");
       await recordEmployerIntake({ orgId: org.orgId, subjectId: candidateId });
     } catch {
       /* best effort intake record */
     }
 
     try {
-      const { indexNewCandidate } = await import("../../features/pipeline/server/search.server");
+      const { indexNewCandidate } = await import("../../pipeline/server/search.server");
       await indexNewCandidate(
         candidateId,
         ranked.ok ? ranked.rank.india.notice_period_days : null,
@@ -797,7 +797,7 @@ export const rerankApplication = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<Application> => {
     const bundle = await loadApplicationBundle(context.userId, data.applicationId);
     const role = mapRole(await loadRoleOrThrow(context.userId, bundle.app.role_id));
-    const { parseAndRank } = await import("../../features/ai/server/ai.server");
+    const { parseAndRank } = await import("../../ai/server/ai.server");
     const ranked = await parseAndRank({
       resumeText: bundle.cand.resume_text,
       role: {
@@ -878,7 +878,7 @@ export const deepenTopCandidates = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("../../features/ranking/server/deepen.server");
+    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -905,7 +905,7 @@ export const rerankStaleApplications = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("../../features/ranking/server/deepen.server");
+    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -981,7 +981,7 @@ export const generateAsyncScreen = createServerFn({ method: "POST" })
       stack_match: [],
       screen_focus: [],
     });
-    const { generateScreen } = await import("../../features/ai/server/ai.server");
+    const { generateScreen } = await import("../../ai/server/ai.server");
     const generated = await generateScreen({
       roleTitle: role.title,
       companyName: role.companyName,
@@ -1045,7 +1045,7 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
       where id = ${screen.id}`;
 
     if (data.evaluate) {
-      const { evaluateScreen } = await import("../../features/ai/server/ai.server");
+      const { evaluateScreen } = await import("../../ai/server/ai.server");
       const app = bundle.app;
       const role = mapRole(await loadRoleOrThrow(context.userId, app.role_id));
       const evaluated = await evaluateScreen({
@@ -1063,10 +1063,10 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
       const verdict = evaluated.evaluation.verdict;
       if (verdict === "advance" || verdict === "reject") {
         try {
-          const { trainOutcome } = await import("../../features/ranking/server/outcome.server");
-          const { ensureUserOrg } = await import("../../features/people/server/org.server");
+          const { trainOutcome } = await import("../../ranking/server/outcome.server");
+          const { ensureUserOrg } = await import("../../people/server/org.server");
           const org = await ensureUserOrg(context.userId);
-          const rank = parseJson<import("./types").RankResult>(app.rank_json, {
+          const rank = parseJson<import("../domain/types").RankResult>(app.rank_json, {
             score: app.rank_score ?? 0,
             level: "maybe",
             summary: "",
@@ -1137,7 +1137,7 @@ export const prepareClientPack = createServerFn({ method: "POST" })
       : null;
 
     if (bundle.app.org_id) {
-      const { assertMayProcess } = await import("../../features/people/server/privacy.server");
+      const { assertMayProcess } = await import("../../people/server/privacy.server");
       await assertMayProcess({
         orgId: bundle.app.org_id,
         subjectId: bundle.cand.id,
@@ -1145,7 +1145,7 @@ export const prepareClientPack = createServerFn({ method: "POST" })
       });
     }
 
-    const { draftClientCard } = await import("../../features/ai/server/ai.server");
+    const { draftClientCard } = await import("../../ai/server/ai.server");
     const drafted = await draftClientCard({
       roleTitle: role.title,
       companyName: role.companyName,
@@ -1194,7 +1194,7 @@ export const prepareClientPack = createServerFn({ method: "POST" })
 
 async function shareUrlByApplication(userId: string, orgId?: string): Promise<Map<string, string>> {
   const sql = await getSql();
-  const { shareUrl: makeShareUrl } = await import("./origin");
+  const { shareUrl: makeShareUrl } = await import("../domain/origin");
   const shares = orgId
     ? await sql<{ token: string; payload_json: string }>`
         select token, payload_json from client_shares
@@ -1228,7 +1228,7 @@ export const listApprovals = createServerFn({ method: "GET" })
   )
   .handler(async ({ context, data }): Promise<Approval[]> => {
     const sql = await getSql();
-    const { ensureUserOrg } = await import("../../features/people/server/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const orgId = org.orgId;
     const rows = data.status
@@ -1305,7 +1305,7 @@ export const decideApproval = createServerFn({ method: "POST" })
     // Lock active rubric when a client pack is stamped (approved or sent).
     if (data.decision === "approved" || data.decision === "sent") {
       try {
-        const { lockRubricForRole } = await import("../../features/ranking/server/rubric-version.server");
+        const { lockRubricForRole } = await import("../../ranking/server/rubric-version.server");
         await lockRubricForRole({ userId: context.userId, roleId: row.role_id });
       } catch {
         /* rubric_versions may not exist until migration */

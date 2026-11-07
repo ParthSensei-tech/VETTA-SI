@@ -26,7 +26,7 @@ import type {
   HitlCheckpointType,
   HitlPolicy,
   AtsWebhookPayload,
-} from "../../../lib/recruiting/types.ts";
+} from "../../recruiting/domain/types.ts";
 import { getSql } from "../../../platform/db.ts";
 import { randomUUID } from "node:crypto";
 import { parseJson } from "../../../shared/utils.ts";

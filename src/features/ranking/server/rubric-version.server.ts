@@ -15,7 +15,7 @@ import {
   type RubricVersion,
 } from "../domain/rubric-types";
 import { validateCriteria } from "../domain/rubric-guardrails";
-import { computeRubricHash } from "../../../lib/recruiting/hash";
+import { computeRubricHash } from "../../recruiting/domain/hash";
 import { routeTelemetry } from "../../ai/domain/model-router.ts";
 
 function newId(): string {

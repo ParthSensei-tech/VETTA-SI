@@ -1,6 +1,6 @@
 import { Badge } from "@/shared/components/ui/badge";
-import { PIPELINE_LABEL, STAGE_LABEL } from "@/lib/recruiting/constants";
-import type { CompanyStage, PipelineStatus } from "@/lib/recruiting/types";
+import { PIPELINE_LABEL, STAGE_LABEL } from "@/features/recruiting/domain/constants";
+import type { CompanyStage, PipelineStatus } from "@/features/recruiting/domain/types";
 
 const pipelineVariant: Record<
   PipelineStatus,

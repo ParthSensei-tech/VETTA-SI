@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RoleForm } from "@/components/role-form";
-import { createRole } from "@/lib/recruiting/api";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import type { RoleInput } from "@/lib/recruiting/types";
+import { RoleForm } from "@/features/recruiting/ui/role-form";
+import { createRole } from "@/features/recruiting/api/api";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
+import type { RoleInput } from "@/features/recruiting/domain/types";
 
 export const Route = createFileRoute("/app/roles/new")({ component: NewRole });
 

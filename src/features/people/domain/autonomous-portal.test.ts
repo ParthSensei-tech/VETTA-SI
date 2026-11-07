@@ -12,7 +12,7 @@ import {
 } from "../server/autonomous-portal.server.ts";
 import { getSql } from "../../../platform/db.ts";
 import { randomUUID } from "node:crypto";
-import type { RequirementEvaluation, AtsWebhookPayload } from "../../../lib/recruiting/types.ts";
+import type { RequirementEvaluation, AtsWebhookPayload } from "../../recruiting/domain/types.ts";
 
 test("Algorithm: SkillTrie provides fast multi-pattern text scanning", () => {
   const trie = buildTechTrie(["Kubernetes", "Apache Kafka", "PostgreSQL", "Next.js"]);

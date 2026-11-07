@@ -20,7 +20,7 @@ import type {
   RubricVersion,
 } from "@/features/ranking/domain/rubric-types";
 import { DEFAULT_HARD_CONSTRAINTS } from "@/features/ranking/domain/rubric-types";
-import { errorMessage } from "@/lib/recruiting/query";
+import { errorMessage } from "@/features/recruiting/api/query";
 import { cn } from "@/shared/utils";
 
 function newLocalId() {

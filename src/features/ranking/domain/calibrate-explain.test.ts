@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { RankResult } from "../../../lib/recruiting/types.ts";
+import type { RankResult } from "../../recruiting/domain/types.ts";
 import {
   explainRank,
   initCalWeights,

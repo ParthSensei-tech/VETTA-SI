@@ -1,4 +1,4 @@
-import type { ShareView } from "../../../lib/recruiting/types";
+import type { ShareView } from "../../recruiting/domain/types";
 import { toBase64 } from "./pdf";
 
 export async function shareToXlsx(view: ShareView): Promise<Uint8Array> {

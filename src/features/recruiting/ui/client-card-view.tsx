@@ -1,4 +1,4 @@
-import type { ClientCard } from "@/lib/recruiting/types";
+import type { ClientCard } from "@/features/recruiting/domain/types";
 
 export function ClientCardView({ card }: { card: ClientCard }) {
   return (

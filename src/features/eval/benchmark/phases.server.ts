@@ -219,7 +219,7 @@ export async function verifyDedupe(
 }> {
   const mem = verifyUniqueness(list);
   const sql = await getSql();
-  const { hashResumeText } = await import("../../../lib/recruiting/hash.ts");
+  const { hashResumeText } = await import("../../recruiting/domain/hash.ts");
   const hashes = new Set(list.map((r) => hashResumeText(r.resumeText)));
   const rows = scopeUserId
     ? await sql<{ c: number }>`

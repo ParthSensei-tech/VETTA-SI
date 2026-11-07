@@ -4,7 +4,7 @@ import { Input } from "@/shared/components/ui/input";
 import { EmptyState } from "@/shared/components/empty-state";
 import { PipelineChip, ScoreChip } from "@/shared/components/status-chip";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { useTalentQuery } from "@/lib/recruiting/query";
+import { useTalentQuery } from "@/features/recruiting/api/query";
 import { initials } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/talent")({ component: TalentPage });

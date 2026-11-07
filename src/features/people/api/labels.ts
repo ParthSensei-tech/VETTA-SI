@@ -8,7 +8,7 @@ import { z } from "zod";
 import { authMiddleware } from "@/platform/auth/middleware";
 import { getSql } from "@/platform/db";
 import { parseJson } from "@/shared/utils";
-import type { RankResult } from "../../../lib/recruiting/types";
+import type { RankResult } from "../../recruiting/domain/types";
 
 const LABEL_VALUES = [
   "shortlist",

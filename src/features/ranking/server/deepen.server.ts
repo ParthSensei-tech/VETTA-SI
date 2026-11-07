@@ -1,6 +1,6 @@
 import { getSql } from "../../../platform/db.ts";
 import { parseJson } from "../../../shared/utils.ts";
-import type { CompanyStage, WorkMode } from "../../../lib/recruiting/types.ts";
+import type { CompanyStage, WorkMode } from "../../recruiting/domain/types.ts";
 
 /**
  * Background deepen: re-rank top N with provider ladder.

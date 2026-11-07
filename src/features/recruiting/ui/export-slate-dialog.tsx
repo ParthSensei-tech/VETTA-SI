@@ -12,60 +12,59 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { copyText, ensureAbsoluteUrl, mailtoUrl } from "@/features/people/domain/links";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import { sendPackToClient } from "@/features/people/api/share";
+import { copyText, downloadBase64, ensureAbsoluteUrl } from "@/features/people/domain/links";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
+import { exportRoleSlate } from "@/features/people/api/share";
 import { redirectToLoginIfRequired } from "@/platform/app-data/login";
-import type { Approval } from "@/lib/recruiting/types";
 
-export function SendToClientDialog({
+export function ExportSlateDialog({
   open,
   onOpenChange,
-  approval,
+  roleId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  approval: Approval;
+  roleId: string;
 }) {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
-  const [includeSlate, setIncludeSlate] = useState(true);
   const [sendEmail, setSendEmail] = useState(true);
-  const [shareUrl, setShareUrl] = useState<string | null>(approval.shareUrl);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: () =>
-      sendPackToClient({
+      exportRoleSlate({
         data: {
-          approvalId: approval.id,
+          roleId,
           recipientEmail: email,
           recipientName: name,
           message,
           sendEmail: sendEmail && Boolean(email),
-          includeSlate,
         },
       }),
     onSuccess: async (res) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.approvals });
-      void qc.invalidateQueries({ queryKey: queryKeys.workspace });
-      void qc.invalidateQueries({ queryKey: queryKeys.role(approval.roleId) });
-      setShareUrl(res.share.shareUrl);
+      void qc.invalidateQueries({ queryKey: queryKeys.shares(roleId) });
+      setResultUrl(res.share.shareUrl);
+      downloadBase64(
+        res.xlsxFilename,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        res.xlsxBase64,
+      );
+      downloadBase64(res.pdfFilename, "application/pdf", res.pdfBase64);
       await copyText(res.share.shareUrl);
-      toast.success("Client page is live — link copied");
-      if (res.loginUrl) {
+      toast.success("Sheet, PDF, and a shareable page are ready");
+      if (res.loginUrl)
         redirectToLoginIfRequired({
           ok: false,
           data: null,
           loginRequired: true,
           loginUrl: res.loginUrl,
         });
-      }
-      if (res.emailed) toast.message("Sent via Gmail");
-      else if (email && !res.emailed) {
-        toast.message("Link copied. Open Email to send from your mail app.");
-      }
+      if (res.emailed) toast.message("Emailed via Gmail");
+      else if (res.emailError && email)
+        toast.message("Link copied — Gmail not connected", { description: res.emailError });
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
@@ -74,38 +73,32 @@ export function SendToClientDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Send to client</DialogTitle>
+          <DialogTitle>Export the slate</DialogTitle>
           <DialogDescription>
-            This creates a shareable page with the client card
-            {includeSlate ? " and the ranked slate" : ""}. Status changes only after the link
-            exists.
+            One click builds a Google-Sheet workbook, a Notion-style page, and a PDF. Send produces
+            a live link — not just a status change.
           </DialogDescription>
         </DialogHeader>
-        {shareUrl && !mut.isPending ? (
+        {resultUrl ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm">Live link</p>
+            <p className="text-sm text-muted">Share this with the hiring manager:</p>
             <p className="break-all rounded-xl bg-elevated px-3 py-2 font-mono text-xs">
-              {ensureAbsoluteUrl(shareUrl)}
+              {ensureAbsoluteUrl(resultUrl)}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
                 onClick={async () => {
-                  const ok = await copyText(shareUrl);
-                  toast.success(ok ? "Copied" : ensureAbsoluteUrl(shareUrl));
+                  const ok = await copyText(resultUrl);
+                  toast.success(ok ? "Link copied" : ensureAbsoluteUrl(resultUrl));
                 }}
               >
                 Copy link
               </Button>
               <Button variant="secondary" asChild>
-                <a href={ensureAbsoluteUrl(shareUrl)} target="_blank" rel="noreferrer">
-                  Open
+                <a href={ensureAbsoluteUrl(resultUrl)} target="_blank" rel="noreferrer">
+                  Open page
                 </a>
               </Button>
-              {email ? (
-                <Button variant="secondary" asChild>
-                  <a href={mailtoUrl(email, approval.title, ensureAbsoluteUrl(shareUrl))}>Email</a>
-                </Button>
-              ) : null}
             </div>
           </div>
         ) : (
@@ -117,34 +110,30 @@ export function SendToClientDialog({
             }}
           >
             <label className="flex flex-col gap-1.5">
-              <Label>Hiring manager</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+              <Label>Client name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Hiring manager"
+              />
             </label>
             <label className="flex flex-col gap-1.5">
-              <Label>Email</Label>
+              <Label>Client email</Label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="founders@…"
+                placeholder="founders@company.com"
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <Label>Cover note</Label>
+              <Label>Note on the page</Label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                placeholder="Why these three, what to probe, what we skipped."
                 className="min-h-24"
               />
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={includeSlate}
-                onChange={(e) => setIncludeSlate(e.target.checked)}
-                className="size-4 accent-accent"
-              />
-              Attach the rest of the ranked slate
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -153,10 +142,10 @@ export function SendToClientDialog({
                 onChange={(e) => setSendEmail(e.target.checked)}
                 className="size-4 accent-accent"
               />
-              Send email (Gmail if connected, else your mail app)
+              Email the link if Gmail is connected
             </label>
             <Button type="submit" disabled={mut.isPending}>
-              {mut.isPending ? "Creating link…" : "Create link and send"}
+              {mut.isPending ? "Building pack…" : "Export sheet + PDF + page"}
             </Button>
           </form>
         )}

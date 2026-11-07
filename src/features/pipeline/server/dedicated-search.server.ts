@@ -16,7 +16,7 @@ import { candidateDocument, cosine, reciprocalRankFusion } from "../../ranking/d
 import { embedTexts } from "../../ai/server/embed-text.server.ts";
 import { getActiveEmbeddingModel } from "./embedding-queue.server.ts";
 import { matchCandidateToRole } from "../../ranking/domain/match-engine.ts";
-import type { FitLevel, PipelineStatus } from "../../../lib/recruiting/types.ts";
+import type { FitLevel, PipelineStatus } from "../../recruiting/domain/types.ts";
 
 // -----------------------------------------------------------------------------
 // 1. Types & Data Structures

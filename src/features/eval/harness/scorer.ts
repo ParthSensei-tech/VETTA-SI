@@ -1,4 +1,4 @@
-import type { FitLevel } from "../../../lib/recruiting/types";
+import type { FitLevel } from "../../recruiting/domain/types";
 
 export const FIT_ORDER: Record<FitLevel, number> = {
   no: 0,

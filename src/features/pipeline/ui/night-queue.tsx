@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
 import { cancelIngestBatch, getIngestBatch, tickMyQueue } from "@/features/ingest/api/batch";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import type { IngestBatch, IngestJobStatus } from "@/lib/recruiting/types";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
+import type { IngestBatch, IngestJobStatus } from "@/features/recruiting/domain/types";
 import { cn } from "@/shared/utils";
 
 function isActive(status: IngestBatch["status"]) {

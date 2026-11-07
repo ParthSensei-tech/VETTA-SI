@@ -17,7 +17,7 @@ import type {
   RequirementEvaluation,
   RequirementStatus,
   StackMatch,
-} from "../../../lib/recruiting/types";
+} from "../../recruiting/domain/types";
 
 // ——— Role / resume family (function alignment) ———
 

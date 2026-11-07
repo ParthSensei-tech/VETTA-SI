@@ -1,4 +1,4 @@
-import type { KnowledgeKind, ScreenFollowUp, ScreenQuestion, ScreenTurn } from "../../../lib/recruiting/types.ts";
+import type { KnowledgeKind, ScreenFollowUp, ScreenQuestion, ScreenTurn } from "../../recruiting/domain/types.ts";
 import { parseJson } from "../../../shared/utils.ts";
 
 const KINDS: KnowledgeKind[] = ["practical", "basic", "common"];

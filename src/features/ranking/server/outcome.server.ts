@@ -3,7 +3,7 @@
  */
 
 import { getSql } from "@/platform/db";
-import type { RankResult } from "../../../lib/recruiting/types";
+import type { RankResult } from "../../recruiting/domain/types";
 import {
   OUTCOME_HEADS,
   deserializeHead,

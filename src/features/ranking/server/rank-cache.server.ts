@@ -1,7 +1,7 @@
 import { getSql } from "../../../platform/db.ts";
 import { parseJson } from "../../../shared/utils.ts";
-import { cacheKey } from "../../../lib/recruiting/hash.ts";
-import type { ParsedProfile, RankResult } from "../../../lib/recruiting/types.ts";
+import { cacheKey } from "../../recruiting/domain/hash.ts";
+import type { ParsedProfile, RankResult } from "../../recruiting/domain/types.ts";
 
 export type CachedRank = {
   profile: ParsedProfile;

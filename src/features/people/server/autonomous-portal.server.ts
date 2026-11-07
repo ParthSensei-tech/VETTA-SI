@@ -8,7 +8,7 @@ import type {
   PortalIntakeSession,
   RequirementEvaluation,
   AtsWebhookPayload,
-} from "../../../lib/recruiting/types.ts";
+} from "../../recruiting/domain/types.ts";
 import { getSql } from "../../../platform/db.ts";
 import { matchCandidateToRole } from "../../ranking/domain/match-engine.ts";
 import { parseJson } from "../../../shared/utils.ts";

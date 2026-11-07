@@ -11,7 +11,7 @@ import {
   reviewAndAdvanceCandidate,
   type DedicatedSearchResponse,
 } from "../server/dedicated-search.server.ts";
-import type { PipelineStatus } from "../../../lib/recruiting/types.ts";
+import type { PipelineStatus } from "../../recruiting/domain/types.ts";
 
 export const dedicatedHybridSearch = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

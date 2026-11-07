@@ -4,7 +4,7 @@ import { authMiddleware } from "@/platform/auth/middleware";
 import { getSql } from "@/platform/db";
 import { parseJson } from "@/shared/utils";
 import { OUTCOME_KINDS } from "../domain/outcome";
-import type { RankResult } from "../../../lib/recruiting/types";
+import type { RankResult } from "../../recruiting/domain/types";
 
 export const recordOutcome = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

@@ -5,13 +5,13 @@ import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { ClientCardView } from "@/components/client-card-view";
+import { ClientCardView } from "@/features/recruiting/ui/client-card-view";
 import { EmptyState } from "@/shared/components/empty-state";
-import { SendToClientDialog } from "@/components/send-to-client-dialog";
+import { SendToClientDialog } from "@/features/recruiting/ui/send-to-client-dialog";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { decideApproval } from "@/lib/recruiting/api";
-import { errorMessage, queryKeys, useApprovalsQuery } from "@/lib/recruiting/query";
-import type { Approval, ApprovalStatus } from "@/lib/recruiting/types";
+import { decideApproval } from "@/features/recruiting/api/api";
+import { errorMessage, queryKeys, useApprovalsQuery } from "@/features/recruiting/api/query";
+import type { Approval, ApprovalStatus } from "@/features/recruiting/domain/types";
 import { formatRelative } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/approvals")({ component: ApprovalsPage });

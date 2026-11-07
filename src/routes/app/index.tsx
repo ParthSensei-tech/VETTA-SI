@@ -6,7 +6,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EmptyState } from "@/shared/components/empty-state";
 import { StageChip } from "@/shared/components/status-chip";
 import { formatRelative } from "@/shared/utils";
-import { useAllBatchesQuery, useWorkspaceQuery } from "@/lib/recruiting/query";
+import { useAllBatchesQuery, useWorkspaceQuery } from "@/features/recruiting/api/query";
 
 export const Route = createFileRoute("/app/")({ component: Desk });
 

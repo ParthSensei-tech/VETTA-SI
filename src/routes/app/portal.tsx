@@ -35,7 +35,7 @@ import {
   simulateAtsRelayPing,
 } from "@/features/people/api/autonomous-portal-api";
 import { formatRelative, cn } from "@/shared/utils";
-import type { AutonomousPortal, HitlDecision, HitlCheckpointType } from "@/lib/recruiting/types";
+import type { AutonomousPortal, HitlDecision, HitlCheckpointType } from "@/features/recruiting/domain/types";
 
 export const Route = createFileRoute("/app/portal")({ component: AutonomousPortalManagement });
 

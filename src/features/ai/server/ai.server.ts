@@ -6,7 +6,7 @@ import type {
   RankResult,
   ScreenEvaluation,
   ScreenQuestion,
-} from "../../../lib/recruiting/types";
+} from "../../recruiting/domain/types";
 import {
   calibrationFromPrompt,
   calibrateRank,
@@ -317,7 +317,7 @@ export async function parseAndRank(input: {
     fallback,
     promptHash,
   });
-  const { hashResumeText, hashRolePayload } = await import("../../../lib/recruiting/hash.ts");
+  const { hashResumeText, hashRolePayload } = await import("../../recruiting/domain/hash.ts");
   const resumeHash = hashResumeText(input.resumeText);
   const roleHash = hashRolePayload(input.role);
 
@@ -367,7 +367,7 @@ export async function parseAndRank(input: {
           compMaxLpa: active.hardConstraints.compMaxLpa,
           strictFilter: active.hardConstraints.strictFilter,
         };
-        const { computeRubricHash } = await import("../../../lib/recruiting/hash.ts");
+        const { computeRubricHash } = await import("../../recruiting/domain/hash.ts");
         rubricHash = active.rubricHash || computeRubricHash(criteria, hardConstraints);
       }
     } catch {
@@ -376,7 +376,7 @@ export async function parseAndRank(input: {
   }
   if (!rubricHash && criteria) {
     try {
-      const { computeRubricHash } = await import("../../../lib/recruiting/hash.ts");
+      const { computeRubricHash } = await import("../../recruiting/domain/hash.ts");
       rubricHash = computeRubricHash(criteria, hardConstraints ?? undefined);
     } catch {
       /* best-effort telemetry — never block the main path */

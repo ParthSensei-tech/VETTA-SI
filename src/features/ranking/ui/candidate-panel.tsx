@@ -12,13 +12,13 @@ import {
   rerankApplication,
   saveScreenAnswers,
   updateApplication,
-} from "@/lib/recruiting/api";
-import { FIT_LABEL, KNOWLEDGE_LABEL } from "@/lib/recruiting/constants";
+} from "@/features/recruiting/api/api";
+import { FIT_LABEL, KNOWLEDGE_LABEL } from "@/features/recruiting/domain/constants";
 import { copyText } from "@/features/people/domain/links";
-import { errorMessage, queryKeys } from "@/lib/recruiting/query";
+import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
 import { recordOutcome } from "@/features/ranking/api/outcome-api";
 import { getScreenInvite, recordScreenReminder } from "@/features/people/api/screen-session";
-import type { Application, PipelineStatus } from "@/lib/recruiting/types";
+import type { Application, PipelineStatus } from "@/features/recruiting/domain/types";
 import { cn } from "@/shared/utils";
 
 const MOVES: Array<{ status: PipelineStatus; label: string }> = [

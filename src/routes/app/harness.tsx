@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { FIT_LABEL } from "@/lib/recruiting/constants";
+import { FIT_LABEL } from "@/features/recruiting/domain/constants";
 import {
   getEvalRun,
   promoteHarnessPrompt,
@@ -15,8 +15,8 @@ import {
   saveHarnessPrompt,
   setHarnessShadow,
 } from "@/features/eval/harness/harness-api";
-import { errorMessage, queryKeys, useHarnessQuery } from "@/lib/recruiting/query";
-import type { EvalRun, FitLevel } from "@/lib/recruiting/types";
+import { errorMessage, queryKeys, useHarnessQuery } from "@/features/recruiting/api/query";
+import type { EvalRun, FitLevel } from "@/features/recruiting/domain/types";
 import { cn, formatRelative } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/harness")({ component: HarnessPage });

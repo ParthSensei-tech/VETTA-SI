@@ -1,5 +1,5 @@
 import { Badge } from "@/shared/components/ui/badge";
-import type { RankProvenance } from "@/lib/recruiting/types";
+import type { RankProvenance } from "@/features/recruiting/domain/types";
 import { cn } from "@/shared/utils";
 
 /** Compact provenance chip for candidate cards in list views. */

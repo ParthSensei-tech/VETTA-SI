@@ -1,5 +1,5 @@
 import { getRequest } from "@tanstack/react-start/server";
-import { sharePath, screenPath } from "../../features/people/domain/links";
+import { sharePath, screenPath } from "../../people/domain/links";
 
 function originFromUrl(raw: string | null | undefined): string {
   if (!raw) return "";

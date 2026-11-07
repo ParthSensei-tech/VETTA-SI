@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClientCardView } from "@/components/client-card-view";
+import { ClientCardView } from "@/features/recruiting/ui/client-card-view";
 import { CandidatePortalShell } from "@/shared/components/candidate-portal-shell";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { usePublicShareQuery } from "@/lib/recruiting/query";
+import { usePublicShareQuery } from "@/features/recruiting/api/query";
 import { cn } from "@/shared/utils";
 
 export const Route = createFileRoute("/share/$token")({ component: SharePage });

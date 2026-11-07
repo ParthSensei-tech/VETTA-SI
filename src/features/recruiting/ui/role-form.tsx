@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { CITIES, ROLE_TEMPLATES, STAGE_LABEL } from "@/lib/recruiting/constants";
-import type { CompanyStage, EmploymentType, RoleInput, WorkMode } from "@/lib/recruiting/types";
+import { CITIES, ROLE_TEMPLATES, STAGE_LABEL } from "@/features/recruiting/domain/constants";
+import type { CompanyStage, EmploymentType, RoleInput, WorkMode } from "@/features/recruiting/domain/types";
 import { cn } from "@/shared/utils";
 
 const empty: RoleInput = {

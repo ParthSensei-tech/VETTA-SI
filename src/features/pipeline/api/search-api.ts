@@ -7,7 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "../../../platform/auth/middleware.ts";
 import { getSql } from "../../../platform/db.ts";
-import type { PipelineStatus, TalentRow } from "../../../lib/recruiting/types.ts";
+import type { PipelineStatus, TalentRow } from "../../recruiting/domain/types.ts";
 import {
   candidateDocument,
   cosine,

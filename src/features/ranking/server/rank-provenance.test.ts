@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeRubricHash, cacheKey } from "../../../lib/recruiting/hash.ts";
+import { computeRubricHash, cacheKey } from "../../recruiting/domain/hash.ts";
 import {
   clearRankCache,
   getRankCache,
   setRankCache,
   invalidateRoleRankCache,
 } from "./rank-cache.server.ts";
-import type { ParsedProfile, RankProvenance, RankResult } from "../../../lib/recruiting/types.ts";
+import type { ParsedProfile, RankProvenance, RankResult } from "../../recruiting/domain/types.ts";
 
 const dummyProfile: ParsedProfile = {
   full_name: "Aarav Patel",
