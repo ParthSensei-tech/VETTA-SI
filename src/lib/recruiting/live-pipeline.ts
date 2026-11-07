@@ -332,7 +332,7 @@ async function processApplicant(opts: {
     niceToHaves: opts.role.niceToHaves,
     jdText: opts.role.jdText,
   };
-  const { rankWithProductionPrompt, safeRecordLiveRank } = await import("./harness/harness.server");
+  const { rankWithProductionPrompt, safeRecordLiveRank } = await import("../../features/eval/harness/harness.server");
   const ranked = await rankWithProductionPrompt(opts.userId, {
     resumeText: resume,
     role: roleInput,
@@ -369,7 +369,7 @@ async function processApplicant(opts: {
   let orgId: string | null = (opts.role as { orgId?: string }).orgId ?? null;
   if (!orgId) {
     try {
-      const { ensureUserOrg } = await import("./org.server");
+      const { ensureUserOrg } = await import("../../features/people/server/org.server");
       orgId = (await ensureUserOrg(opts.userId)).orgId;
     } catch {
       orgId = null;

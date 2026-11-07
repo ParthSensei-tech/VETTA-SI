@@ -12,7 +12,7 @@ import {
   verifyBackupIntegrity,
   restoreWorkspaceBackup,
   type WorkspaceBackup,
-} from "../../../lib/recruiting/backup.server.ts";
+} from "../../analytics/server/backup.server.ts";
 import { hashResumeText } from "../../../lib/recruiting/hash.ts";
 
 // =========================================================================

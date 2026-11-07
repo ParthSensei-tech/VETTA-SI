@@ -14,10 +14,10 @@ import {
   updateApplication,
 } from "@/lib/recruiting/api";
 import { FIT_LABEL, KNOWLEDGE_LABEL } from "@/lib/recruiting/constants";
-import { copyText } from "@/lib/recruiting/links";
+import { copyText } from "@/features/people/domain/links";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import { recordOutcome } from "@/features/ranking/api/outcome-api";
-import { getScreenInvite, recordScreenReminder } from "@/lib/recruiting/screen-session";
+import { getScreenInvite, recordScreenReminder } from "@/features/people/api/screen-session";
 import type { Application, PipelineStatus } from "@/lib/recruiting/types";
 import { cn } from "@/shared/utils";
 
@@ -82,7 +82,7 @@ export function CandidatePanel({
               : null;
       if (label) {
         try {
-          const { submitRankLabel } = await import("@/lib/recruiting/labels");
+          const { submitRankLabel } = await import("@/features/people/api/labels");
           await submitRankLabel({ data: { applicationId: application.id, label } });
         } catch {
           /* labels table may not exist until migration */

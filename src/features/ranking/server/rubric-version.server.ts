@@ -180,7 +180,7 @@ export async function generateRubricDraft(opts: {
   heuristicOnly?: boolean;
 }): Promise<RubricVersion> {
   const role = await loadRoleOwned(opts.userId, opts.roleId);
-  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+  const { ensureUserOrg } = await import("../../people/server/org.server");
   const org = await ensureUserOrg(opts.userId, role.company_name);
   const orgId = role.org_id || org.orgId;
 
@@ -364,7 +364,7 @@ export async function persistRubricEdits(opts: {
   activate: boolean;
 }): Promise<{ rubric: RubricVersion; rerankTriggered: boolean }> {
   const role = await loadRoleOwned(opts.userId, opts.roleId);
-  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+  const { ensureUserOrg } = await import("../../people/server/org.server");
   const org = await ensureUserOrg(opts.userId, role.company_name);
   const orgId = role.org_id || org.orgId;
 

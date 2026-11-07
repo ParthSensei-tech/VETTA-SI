@@ -17,7 +17,7 @@ export const recordOutcome = createServerFn({ method: "POST" })
       data,
     }): Promise<{ ok: true; forecast: import("../domain/outcome").OutcomeForecast }> => {
       const sql = await getSql();
-      const { ensureUserOrg, assertOrgMember } = await import("../../../lib/recruiting/org.server");
+      const { ensureUserOrg, assertOrgMember } = await import("../../people/server/org.server");
       const org = await ensureUserOrg(context.userId);
 
       const apps = await sql<{

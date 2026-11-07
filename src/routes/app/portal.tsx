@@ -33,7 +33,7 @@ import {
   getHitlQueue,
   submitHitlDecision,
   simulateAtsRelayPing,
-} from "@/lib/recruiting/autonomous-portal-api";
+} from "@/features/people/api/autonomous-portal-api";
 import { formatRelative, cn } from "@/shared/utils";
 import type { AutonomousPortal, HitlDecision, HitlCheckpointType } from "@/lib/recruiting/types";
 

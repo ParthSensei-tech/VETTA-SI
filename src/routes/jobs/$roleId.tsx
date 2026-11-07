@@ -8,7 +8,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { StageChip } from "@/shared/components/status-chip";
-import { applyToJob } from "@/lib/recruiting/portal";
+import { applyToJob } from "@/features/people/api/portal";
 import { CITIES, EMPLOYMENT_LABEL, STAGE_LABEL, WORK_MODE_LABEL } from "@/lib/recruiting/constants";
 import { errorMessage, usePublicJobQuery } from "@/lib/recruiting/query";
 import { extractResumeText, resumeFileLabel } from "@/features/ingest/domain/resume-file";

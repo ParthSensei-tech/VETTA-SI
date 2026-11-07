@@ -12,9 +12,9 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { copyText, downloadBase64, ensureAbsoluteUrl } from "@/lib/recruiting/links";
+import { copyText, downloadBase64, ensureAbsoluteUrl } from "@/features/people/domain/links";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import { exportRoleSlate } from "@/lib/recruiting/share";
+import { exportRoleSlate } from "@/features/people/api/share";
 import { redirectToLoginIfRequired } from "@/platform/app-data/login";
 
 export function ExportSlateDialog({

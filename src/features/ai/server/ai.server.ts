@@ -130,7 +130,7 @@ async function complete(args: {
     orgId?: string | null;
     subjectId?: string | null;
     applicationId?: string | null;
-    purpose: import("../../../lib/recruiting/privacy").PurposeId;
+    purpose: import("../../people/domain/privacy").PurposeId;
   };
 }): Promise<
   /** `routedLocal` says the router chose the in-process engine: use your local path, and do not
@@ -141,7 +141,7 @@ async function complete(args: {
     const d = args.disclosure;
     if (!d?.orgId || !d.subjectId) return;
     try {
-      const { recordProviderDisclosure } = await import("../../../lib/recruiting/privacy.server.ts");
+      const { recordProviderDisclosure } = await import("../../people/server/privacy.server.ts");
       await recordProviderDisclosure({
         orgId: d.orgId,
         subjectId: d.subjectId,
@@ -322,8 +322,8 @@ export async function parseAndRank(input: {
   const roleHash = hashRolePayload(input.role);
 
   if (input.orgId && input.candidateId) {
-    const { mayProcess } = await import("../../../lib/recruiting/privacy.server.ts");
-    const { purposeDenied } = await import("../../../lib/recruiting/privacy.ts");
+    const { mayProcess } = await import("../../people/server/privacy.server.ts");
+    const { purposeDenied } = await import("../../people/domain/privacy.ts");
     const allowed = await mayProcess({
       orgId: input.orgId,
       subjectId: input.candidateId,
@@ -436,7 +436,7 @@ export async function parseAndRank(input: {
       let allowModelLearning = true;
       if (input.orgId && input.candidateId) {
         try {
-          const { mayProcess } = await import("../../../lib/recruiting/privacy.server.ts");
+          const { mayProcess } = await import("../../people/server/privacy.server.ts");
           allowModelLearning = await mayProcess({
             orgId: input.orgId,
             subjectId: input.candidateId,
@@ -672,7 +672,7 @@ ${wrappedResume}`,
 
   if (result.ok && !result.routedLocal && input.orgId && input.candidateId) {
     try {
-      const { recordProviderDisclosure } = await import("../../../lib/recruiting/privacy.server.ts");
+      const { recordProviderDisclosure } = await import("../../people/server/privacy.server.ts");
       await recordProviderDisclosure({
         orgId: input.orgId,
         subjectId: input.candidateId,

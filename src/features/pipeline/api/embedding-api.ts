@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "../../../platform/auth/middleware.ts";
-import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
-import { assertOrgPermission } from "../../../lib/recruiting/rbac.server.ts";
+import { ensureUserOrg } from "../../people/server/org.server.ts";
+import { assertOrgPermission } from "../../people/server/rbac.server.ts";
 import {
   getEmbeddingIndexStatus,
   startModelReindex,

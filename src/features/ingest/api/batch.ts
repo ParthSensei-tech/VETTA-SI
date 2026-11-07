@@ -70,7 +70,7 @@ function mapBatch(row: BatchRow, jobs?: IngestJob[]): IngestBatch {
 
 async function loadOwnedBatch(userId: string, batchId: string): Promise<BatchRow> {
   const sql = await getSql();
-  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+  const { ensureUserOrg } = await import("../../people/server/org.server");
   const org = await ensureUserOrg(userId);
   const rows = await sql<BatchRow>`
     select b.*, r.title as role_title, r.company_name
@@ -85,7 +85,7 @@ async function loadOwnedBatch(userId: string, batchId: string): Promise<BatchRow
 
 async function loadJobs(userId: string, batchId: string): Promise<IngestJob[]> {
   const sql = await getSql();
-  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+  const { ensureUserOrg } = await import("../../people/server/org.server");
   const org = await ensureUserOrg(userId);
   const rows = await sql<JobListRow>`
     select j.id, j.filename, j.status, j.error, j.application_id, j.updated_at, a.rank_score
@@ -117,7 +117,7 @@ export const createIngestBatch = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<IngestBatch> => {
     const sql = await getSql();
-    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const roles = await sql<{ id: string }>`
       select id from roles where id = ${data.roleId} and (org_id = ${org.orgId} or (org_id is null and user_id = ${context.userId})) limit 1`;
@@ -233,7 +233,7 @@ export const listIngestBatches = createServerFn({ method: "GET" })
     const { ensureQueueWorker } = await import("../../pipeline/server/queue.server");
     ensureQueueWorker();
     const sql = await getSql();
-    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const rows = data.roleId
       ? await sql<BatchRow>`
@@ -269,7 +269,7 @@ export const cancelIngestBatch = createServerFn({ method: "POST" })
   .validator((input: unknown) => z.object({ batchId: z.string().min(1) }).parse(input))
   .handler(async ({ context, data }): Promise<IngestBatch> => {
     const { refreshBatchStats } = await import("../../pipeline/server/queue.server");
-    const { ensureUserOrg } = await import("../../../lib/recruiting/org.server");
+    const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const sql = await getSql();
     await loadOwnedBatch(context.userId, data.batchId);

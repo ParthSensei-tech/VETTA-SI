@@ -29,7 +29,7 @@ import {
   getRouterOverview,
   resolveAlertAction,
   retryFailedQueueJobs,
-} from "@/lib/recruiting/observability-api";
+} from "@/features/analytics/api/observability-api";
 import {
   formatCostCents,
   formatCostInr,

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
-import { ensureUserOrg } from "../../../lib/recruiting/org.server.ts";
+import { ensureUserOrg } from "../../people/server/org.server.ts";
 import {
   enqueueCandidateForEmbedding,
   enqueueCandidatesBulk,

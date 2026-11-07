@@ -366,7 +366,7 @@ export const searchTalent = createServerFn({ method: "POST" })
         retrievalMode: "hybrid" | "lexical" | "semantic";
       };
     }> => {
-      const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
+      const { ensureUserOrg } = await import("../../people/server/org.server.ts");
       const org = await ensureUserOrg(context.userId);
       return executeTalentSearch({
         userId: context.userId,

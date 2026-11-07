@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getSql } from "@/platform/db";
 import { phonesMatch } from "@/features/ranking/domain/prescreen";
-import { postScreenTurn } from "@/lib/recruiting/screen-session";
+import { postScreenTurn } from "@/features/people/api/screen-session";
 
 /**
  * Optional WhatsApp Cloud API webhook.

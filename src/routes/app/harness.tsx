@@ -14,7 +14,7 @@ import {
   runHarnessEval,
   saveHarnessPrompt,
   setHarnessShadow,
-} from "@/lib/recruiting/harness/harness-api";
+} from "@/features/eval/harness/harness-api";
 import { errorMessage, queryKeys, useHarnessQuery } from "@/lib/recruiting/query";
 import type { EvalRun, FitLevel } from "@/lib/recruiting/types";
 import { cn, formatRelative } from "@/shared/utils";

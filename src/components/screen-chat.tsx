@@ -8,7 +8,7 @@ import {
   grantScreenVoiceConsent,
   postScreenTurn,
   postScreenVoice,
-} from "@/lib/recruiting/screen-session";
+} from "@/features/people/api/screen-session";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
 import type { KnowledgeKind, PortalApplication, ScreenTurn } from "@/lib/recruiting/types";
 import { cn } from "@/shared/utils";

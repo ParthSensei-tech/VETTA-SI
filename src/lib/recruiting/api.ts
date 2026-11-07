@@ -431,7 +431,7 @@ export const getWorkspace = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<WorkspaceSnapshot> => {
     const sql = await getSql();
-    const { ensureUserOrg } = await import("./org.server");
+    const { ensureUserOrg } = await import("../../features/people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const orgId = org.orgId;
 
@@ -552,7 +552,7 @@ export const createRole = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<Role> => {
     const sql = await getSql();
     const id = newId();
-    const { ensureUserOrg } = await import("./org.server");
+    const { ensureUserOrg } = await import("../../features/people/server/org.server");
     const org = await ensureUserOrg(context.userId, data.companyName);
     await sql`
       insert into roles (
@@ -666,7 +666,7 @@ export const ingestResume = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<{ application: Application; warning?: string }> => {
     const roleRow = await loadRoleOrThrow(context.userId, data.roleId);
     const role = mapRole(roleRow);
-    const { ensureUserOrg } = await import("./org.server");
+    const { ensureUserOrg } = await import("../../features/people/server/org.server");
     const org = await ensureUserOrg(context.userId, role.companyName);
 
     const candidateId = newId();
@@ -729,7 +729,7 @@ export const ingestResume = createServerFn({ method: "POST" })
 
     // Record employer intake under DPDP
     try {
-      const { recordEmployerIntake } = await import("./privacy.server");
+      const { recordEmployerIntake } = await import("../../features/people/server/privacy.server");
       await recordEmployerIntake({ orgId: org.orgId, subjectId: candidateId });
     } catch {
       /* best effort intake record */
@@ -1064,7 +1064,7 @@ export const saveScreenAnswers = createServerFn({ method: "POST" })
       if (verdict === "advance" || verdict === "reject") {
         try {
           const { trainOutcome } = await import("../../features/ranking/server/outcome.server");
-          const { ensureUserOrg } = await import("./org.server");
+          const { ensureUserOrg } = await import("../../features/people/server/org.server");
           const org = await ensureUserOrg(context.userId);
           const rank = parseJson<import("./types").RankResult>(app.rank_json, {
             score: app.rank_score ?? 0,
@@ -1137,7 +1137,7 @@ export const prepareClientPack = createServerFn({ method: "POST" })
       : null;
 
     if (bundle.app.org_id) {
-      const { assertMayProcess } = await import("./privacy.server");
+      const { assertMayProcess } = await import("../../features/people/server/privacy.server");
       await assertMayProcess({
         orgId: bundle.app.org_id,
         subjectId: bundle.cand.id,
@@ -1228,7 +1228,7 @@ export const listApprovals = createServerFn({ method: "GET" })
   )
   .handler(async ({ context, data }): Promise<Approval[]> => {
     const sql = await getSql();
-    const { ensureUserOrg } = await import("./org.server");
+    const { ensureUserOrg } = await import("../../features/people/server/org.server");
     const org = await ensureUserOrg(context.userId);
     const orgId = org.orgId;
     const rows = data.status

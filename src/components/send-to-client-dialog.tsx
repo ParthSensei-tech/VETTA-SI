@@ -12,9 +12,9 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { copyText, ensureAbsoluteUrl, mailtoUrl } from "@/lib/recruiting/links";
+import { copyText, ensureAbsoluteUrl, mailtoUrl } from "@/features/people/domain/links";
 import { errorMessage, queryKeys } from "@/lib/recruiting/query";
-import { sendPackToClient } from "@/lib/recruiting/share";
+import { sendPackToClient } from "@/features/people/api/share";
 import { redirectToLoginIfRequired } from "@/platform/app-data/login";
 import type { Approval } from "@/lib/recruiting/types";
 

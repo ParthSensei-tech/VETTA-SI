@@ -50,7 +50,7 @@ export async function deepenRoleTopN(opts: {
   const role = roles[0];
   if (!role) return { deepened: 0, engines: [] };
 
-  const { ensureUserOrg, assertOrgMember } = await import("../../../lib/recruiting/org.server.ts");
+  const { ensureUserOrg, assertOrgMember } = await import("../../people/server/org.server.ts");
   let targetOrgId = role.org_id;
   if (role.org_id) {
     try {

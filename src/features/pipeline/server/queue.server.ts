@@ -143,13 +143,13 @@ export async function persistRanked(job: JobRow): Promise<{ applicationId: strin
   const role = roles[0];
   if (!role) throw new Error("Role not found");
 
-  const { ensureUserOrg } = await import("../../../lib/recruiting/org.server.ts");
+  const { ensureUserOrg } = await import("../../people/server/org.server.ts");
   const org = await ensureUserOrg(job.user_id);
 
   let candidateId = newId();
   const applicationId = newId();
 
-  const { recordEmployerIntake } = await import("../../../lib/recruiting/privacy.server.ts");
+  const { recordEmployerIntake } = await import("../../people/server/privacy.server.ts");
   await recordEmployerIntake({
     orgId: org.orgId,
     subjectId: candidateId,
