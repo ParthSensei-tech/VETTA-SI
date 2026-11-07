@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname } from "node:path";
 import * as posix from "node:path/posix";
 import { fileURLToPath } from "node:url";
-import { compileTable, diskView, isCodeFile, totality } from "./move-tree.mjs";
+import { compileTable, diskView, isCodeFile, SELF_FILES, totality } from "./move-tree.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -88,20 +88,53 @@ if (existsSync(posix.join(ROOT, "src/routeTree.gen.ts"))) {
 }
 
 // --- 4. stale-path report ----------------------------------------------------
+// Read as *text*, not as a dependency graph: the references that break when a
+// folder moves are exactly the ones the typechecker never sees — `ssrLoadModule`
+// ids, `existsSync` literals, and warning strings handed to another agent to
+// act on. But three classes of hit are not hazards, and scoring them as if they
+// were leaves a gate that is red by construction — and a permanently red gate is
+// an ignored gate, which is worse than no gate:
+//   - SELF_FILES (the move map, the codemod, its tests, this script): these MUST
+//     name the old tree. A map that can only spell "where the files are now" has
+//     stopped being a spec, and a rewrite fixture that can't name its source
+//     specifier tests nothing. Counted as `history`.
+//   - server/**: platform-owned, off-limits to this programme (AGENTS.md).
+//     `grok-pwa.ts:13` names `src/lib/og/site.json` in a prose comment; it is a
+//     reported item, not an edit. Counted as `platform`.
+//   - everything else: a live reference into a tree that no longer exists — a
+//     runtime message telling the next reader to import `@/lib/db` sends them to
+//     a deleted folder, and so does a comment saying "see src/lib/db.ts". Hence
+//     NO quote anchors on the pattern: confining it to string literals would
+//     have missed two real ones (migrate.mjs, write-atomic.mjs), found here by
+//     hand-grepping the class the scan could not see.
+// Batch 10b emptied the live bucket; `--final` keeps it empty.
 const staleNeedle = flags.has("--final") ? fail : note;
-const stale = [];
+const STALE_PATH = /(?:src\/lib\/(?:recruiting|auth|observability|og|app-data)\b|@\/lib\/)/g;
+const HISTORY = new Set(SELF_FILES);
+const stale = { history: 0, platform: 0, live: [] };
 for (const f of [
   ...diskView.list("src"),
   ...diskView.list("scripts"),
   ...diskView.list("server"),
 ].filter(isCodeFile)) {
   const text = diskView.read(f);
-  for (const m of text.matchAll(
-    /["'`]([^"'`]*(?:src\/lib\/(?:recruiting|auth|observability|og|app-data)\b|@\/lib\/)[^"'`]*)["'`]/g,
-  ))
-    if (!/^src\/lib\/recruiting\/README/.test(f)) stale.push(`${f}: ${m[1]}`);
+  const hits = [...text.matchAll(STALE_PATH)];
+  if (!hits.length) continue;
+  if (HISTORY.has(f)) stale.history += hits.length;
+  else if (f.startsWith("server/")) stale.platform += hits.length;
+  else
+    for (const m of hits)
+      stale.live.push(`${f}:${1 + (text.slice(0, m.index).match(/\n/g) ?? []).length}: ${m[0]}`);
 }
-if (stale.length) staleNeedle(`${stale.length} literal path references into the old tree remain`);
+note(
+  `old-tree path refs — history=${stale.history} (map + codemod, by design) ` +
+    `platform=${stale.platform} (server/**, reported not edited) live=${stale.live.length}`,
+);
+for (const f of stale.live.slice(0, 5)) note(`stale live path ref: ${f}`);
+if (stale.live.length)
+  staleNeedle(
+    `${stale.live.length} reference(s) into the old tree remain outside map/codemod/server`,
+  );
 
 // --- 5. the old tree stays gone ---------------------------------------------
 // Batch 10a deleted `src/components/` and dropped its eslint glob with it. A

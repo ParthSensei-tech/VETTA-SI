@@ -8,8 +8,8 @@
 //    path is not named in move-map.json this script refuses to guess.
 // 2. Resolution is real, not textual. A specifier is rewritten only after it
 //    resolves to a file that the table moves. That is what makes `./api`,
-//    `../server/x` and `@/lib/recruiting/api` all correct without a per-form
-//    hack, and it is why the alias/extension rules mirror
+//    `../server/x` and `@/features/recruiting/api/query` all correct without a
+//    per-form hack, and it is why the alias/extension rules mirror
 //    scripts/bench-resolve-hooks.mjs (there is a test pinning that parity).
 // 3. Fail closed. An unmappable local specifier, a directory import with no
 //    index file, or a file parked inside a directory that otherwise moves is an
@@ -32,7 +32,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 export const EXTENSIONS = [".ts", ".tsx", ".mjs", ".cjs", ".js", ".json"];
 // A candidate is any string literal that *looks* like a local module path. The
 // rewrite then requires it to resolve, so being generous here is safe; being
-// narrow here is what loses a `ssrLoadModule("/src/lib/db.ts")`.
+// narrow here is what loses a `ssrLoadModule("/src/platform/db.ts")`.
 const SPEC_STARTS = ["./", "../", "@/", "/src/", "src/"];
 // Docs and prose are not rewritten by regex; they get updated by hand in the
 // batch that changes what they describe (Batch 10).
@@ -111,8 +111,8 @@ export const diskView = {
     return out;
   },
   // The consumers that are not inside a directory tree: `vite.config.ts` holds
-  // three `ssrLoadModule("/src/lib/...")` calls, which is exactly the class of
-  // reference a src-only codemod would miss and the app would only discover at
+  // three `ssrLoadModule("/src/platform/...")` calls, which is exactly the class
+  // of reference a src-only codemod would miss and the app would only discover at
   // runtime, in the one place (dev SSR) that cannot be typechecked.
   looseFiles: [
     "vite.config.ts",
@@ -253,7 +253,7 @@ export function planRewrites(map, view, { onlyBatch, consumerDirs, looseFiles } 
   for (const d of dirs) consumers.push(...view.list(d).filter(isCodeFile));
   for (const f of looseFiles ?? view.looseFiles ?? []) if (view.isFile(f)) consumers.push(f);
   // Directory entries map by prefix, which is what lets a literal that *names a
-  // folder* move too — brand-check.test.mjs asserts existsSync("src/lib/og").
+  // folder* move too — brand-check.test.mjs mkdirSyncs "src/platform/og".
   const dirOwners = owners
     .filter((o) => view.isDir(o.from))
     .sort((a, b) => b.from.length - a.from.length);

@@ -39,7 +39,7 @@ function linkDirSync(target, linkPath) {
   symlinkSync(target, linkPath, process.platform === "win32" ? "junction" : "dir");
 }
 
-test("the flag predicate matches src/lib/auth", () => {
+test("the flag predicate matches src/platform/auth", () => {
   assert.equal(authEnabledFromEnvValue("false"), false);
   assert.equal(authEnabledFromEnvValue("true"), true);
   assert.equal(authEnabledFromEnvValue(undefined), true);
