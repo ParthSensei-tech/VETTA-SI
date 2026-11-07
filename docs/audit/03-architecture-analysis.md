@@ -144,6 +144,13 @@ Rules that make it worth having (and that are already true today):
 
 ## 5. Why the move is deferred
 
+> **Superseded 2026-11-07, on purpose — the reasoning stays as written.** Point 2 below was the load-bearing
+> premise, and `git init` (restructure Batch 0) removed it: a revertible batch is a different risk class from
+> a tar.gz. The move has since been executed as its own programme — feature-modular monolith, one commit per
+> batch, `npm run check:tree` as the restructure's gate — so the tree described in §3–§4 and the paths in the
+> rest of this file are the *pre-move* tree. Read §6 as history. Point 4 aged well: `live-pipeline.ts` is
+> still parked in `src/lib/recruiting/`, undecided, exactly the wasted risk this section predicted.
+
 1. The brief's own condition: *"Do not perform large-scale file movement unless the resulting structure offers a demonstrable maintainability benefit."* §2 shows the benefit of moving is **~0 for correctness** (0 violations today) and **modest for navigation** (one flat list becomes seven). The benefit of *enforcing* is large and costs one lint rule.
 2. **There is no git.** Every `git mv` here is a copy + delete + 60 import rewrites with no `git diff -M` and no bisectable rollback; the safety net is a 97 MB tar.gz. A 100-file move under those conditions is exactly the "plausibly affects product behaviour" case the brief says to stop and report.
 3. Rewriting imports touches `routeTree.gen.ts`-adjacent files, `tsconfigPaths` resolution, `.server.ts` runtime gating and the `npm test` whitelist — four mechanisms where a typo is a silent runtime failure, not a compile error. `getSql()` and the `*-api.ts` reachability rule both fail *quietly*.

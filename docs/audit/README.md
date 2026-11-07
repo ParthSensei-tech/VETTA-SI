@@ -39,6 +39,18 @@ whole tree, taken before any audit change), then `10-pre-batch/`, `20-batch3-rem
 git repository, so those directories are the only rollback path and no file in the tree was overwritten
 without one.
 
+> **Two things above are no longer true, and both changed on purpose.** As of 2026-11-07 this **is** a git
+> repository — `git init` was Batch 0 of the restructure, whose 10 batches (rails → prettier → tier fixes →
+> `platform/` → `shared/components/` → nine `features/` folders) are one commit each, so `git revert` is now
+> the primary rollback and `.bak` files are not being made. That is what made the deferral in
+> `03-architecture-analysis.md` §5 obsolete; its numbers still hold. And the gate line above is the _audit's_
+> final state, not the current one: `npm test` is now **419 = 211 scripts + 208 src** (the restructure added
+> `move-tree.test.mjs` and the codemod's fixtures), with `npm run check:tree` — the restructure's own gate,
+> which re-runs the boundary-rule probes and would fail if any glob stopped matching — added on top. Same
+> 0 typecheck errors, same 0 errors / 46 warnings from lint, same build, same eight `200`s on dev `:8080` and
+> built `:8081`. Nothing in this section was edited to match, because these nine documents are dated records
+> of what was measured when they were written.
+
 ## What the audit changed
 
 **Removed:** 1,096 lines and 80 unused package entries, plus whole files proven dead — the template
