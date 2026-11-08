@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ReportClaim } from "../domain/report.ts";
+import { VERIFICATION_ENGINE_VERSION } from "../domain/checks/registry.ts";
 import {
   claimNarrative,
   claimsInReportOrder,
@@ -12,6 +13,9 @@ import {
   verdictLabel,
   verdictTone,
 } from "./verdict-presentation.ts";
+
+/** The ladder's own words for a check this engine never had. */
+const engineGapNote = `Not enabled in engine ${VERIFICATION_ENGINE_VERSION}.`;
 
 const claim = (over: Partial<ReportClaim>): ReportClaim => ({
   claimId: over.claimId ?? "c1",
@@ -115,7 +119,7 @@ test("the arms that did not speak are listed once each, with the reason a reader
         {
           checkId: "credential.issuer_lookup",
           observation: "skipped",
-          note: "Not enabled in engine vetta-verify-1.",
+          note: engineGapNote,
         },
       ],
     }),
@@ -141,7 +145,7 @@ test("the sentence under a claim is what the checks that ran said", () => {
       "Its own start date, 2027-03, is 4 months after the reference month 2026-11. " +
       "Outside this workspace's verification plan (paid arm). " +
       "Outside this workspace's verification plan (paid arm). " +
-      "Not enabled in engine vetta-verify-1.",
+      "Needs the original document bytes, which are not retained for this candidate.",
     outcomes: [
       {
         checkId: "dates.dated_in_future",
@@ -160,8 +164,8 @@ test("the sentence under a claim is what the checks that ran said", () => {
       },
       {
         checkId: "document.orphaned_text",
-        observation: "error",
-        note: "Not enabled in engine vetta-verify-1.",
+        observation: "skipped",
+        note: "Needs the original document bytes, which are not retained for this candidate.",
       },
     ],
   });

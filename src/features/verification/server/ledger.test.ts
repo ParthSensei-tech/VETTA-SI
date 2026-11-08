@@ -14,12 +14,15 @@
  *     a `select` on `applications` can actually falsify.
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
 import { extractClaims, normalizeText } from "../domain/claims.ts";
 import { isAccusingVerdict, type Verdict } from "../domain/adjudicate.ts";
 import { DEFINITIVE_CHECK_IDS } from "../domain/checks/registry.ts";
+import { fixtureById } from "../domain/fixtures.ts";
+import { analyzeDocument } from "../domain/forensics.ts";
 import {
   ensureReport,
   insertEvidence,
@@ -59,6 +62,9 @@ const FABRICATED = HONEST.replace("Jun 2016 - Feb 2019", "Aug 2019 - Feb 2017");
 
 let seq = 0;
 const uid = () => `vlt-${Date.now().toString(36)}-${(seq += 1)}`;
+
+/** The store's own identity for a file, so the test salts the key the same way. */
+const sha256Hex = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 /**
  * A user, an org, a role, a candidate and the application between them.
@@ -173,6 +179,44 @@ test("different claims are a different report, not an amendment", async () => {
   const stillThere = await f.sql<{ status: string }>`
     select status from verification_reports where id = ${first.reportId}`;
   assert.equal(stillThere[0].status, "completed");
+});
+
+/**
+ * The file is part of the claim set, because for these arms it is the evidence.
+ *
+ * `resume-classic` and `resume-edited` are built to have the same visible prose —
+ * that is what an incremental update *is* — so the claims hash is identical and
+ * the only thing that can tell the two runs apart is the digest of what the byte
+ * arms were handed. Without it the second candidate is served the first one's
+ * verdict, which is not staleness but a report about a document nobody read.
+ */
+test("the same sentences over two different files are two reports", async () => {
+  const f = await fixture(HONEST);
+  const classic = fixtureById("resume-classic");
+  const edited = fixtureById("resume-edited");
+  const over = (file: typeof classic) => ({
+    hasRawBytes: true,
+    documents: [
+      analyzeDocument({ bytes: file.build(), filename: file.filename, docClass: "resume" as const }),
+    ],
+    documentFingerprint: sha256Hex(file.build()),
+  });
+
+  const first = await runFor(f, over(classic));
+  const second = await runFor(f, over(edited));
+  assert.equal(first.fromCache, false);
+  assert.notEqual(second.reportId, first.reportId, "the forged file cannot inherit the clean run");
+  assert.equal(second.fromCache, false);
+
+  // Each file still hits its own report, so the salt is a key and not a rerun.
+  const again = await runFor(f, over(classic));
+  assert.equal(again.reportId, first.reportId);
+  assert.equal(again.fromCache, true);
+
+  const reports = await f.sql<{ n: string }>`
+    select count(*)::text as n from verification_reports
+    where org_id = ${f.orgId} and candidate_id = ${f.candidateId}`;
+  assert.equal(reports[0].n, "2");
 });
 
 test("a half-written report is never served as a finished one", async () => {

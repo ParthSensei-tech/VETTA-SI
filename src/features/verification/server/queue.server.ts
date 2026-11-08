@@ -23,12 +23,15 @@
  *     explicitly paid slice claims, and even that one is capped by what
  *     `availableDependencies` says is configured.
  *  3. **The queue decides entitlement; the ledger decides truth.** This file may
- *     choose which check ids reach `runVerification`, and nothing else — it
- *     cannot make a verdict, and `adjudicate()` cannot tell whether it was run
+ *     choose which check ids and which already-gated documents reach
+ *     `runVerification`, and nothing else — it cannot make a verdict, cannot open
+ *     a file itself (only `documents.server.ts` decides what is readable, and it
+ *     hands over the reading), and `adjudicate()` cannot tell whether it was run
  *     from a worker or from a button.
  */
 import { getSql } from "../../../platform/db.ts";
 import { CHECK_REGISTRY } from "../domain/checks/registry.ts";
+import type { DocumentForensics } from "../domain/forensics.ts";
 import { runVerification } from "./ledger.server.ts";
 
 /** The plan every workspace has, whether or not anybody bought anything. */
@@ -241,11 +244,23 @@ async function processOneVerification(
     // no files to forensicate, and a ladder that read the settings table instead
     // would record checks that no arm was ever handed a document for.
     let hasRawBytes = false;
+    // Read apart from the gate below, because the gate answers "is there a file"
+    // from the state column alone and this pulls the file: a workspace that never
+    // opted into retention must not pay a byte read per resume for the answer
+    // `false`. The arms take the list they are handed, so an empty list with
+    // `hasRawBytes` still true is the honest shape of a store that would not open.
+    let documents: readonly DocumentForensics[] = [];
+    let documentFingerprint = "";
     try {
-      const { documentBytesAvailableForApplication } =
+      const { documentBytesAvailableForApplication, analyzeDocumentsForApplication } =
         await import("./documents.server.ts");
       hasRawBytes = (await documentBytesAvailableForApplication(job.application_id))
         .available;
+      if (hasRawBytes) {
+        const read = await analyzeDocumentsForApplication(job.application_id);
+        documents = read.documents;
+        documentFingerprint = read.documentFingerprint;
+      }
     } catch (err) {
       // A store that cannot be read is a store that holds nothing, which is the
       // same verdict the row would carry and the safe one to run the ladder with.
@@ -259,6 +274,8 @@ async function processOneVerification(
       roleId: job.role_id,
       resumeText,
       hasRawBytes,
+      documents,
+      documentFingerprint,
       // No external arm is wired yet, so even a paid plan reads this as
       // "waiting on dns / registry / issuer". Configuring one is a deliberate
       // act, not a default a tick inherits.

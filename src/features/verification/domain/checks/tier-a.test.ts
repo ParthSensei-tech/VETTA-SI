@@ -84,14 +84,15 @@ test("no two checks share an id and every kind resolves to at least one row", ()
 
 test("a kind with no free check is a paid arm waiting, not a hole", () => {
   // `credential` is the one claim class nothing can settle from the document
-  // alone, so its ladder is a `skipped` row that names the issuer lookup. Assert
-  // the reason is registered rather than asserting the shape of the report.
+  // alone, so its ladder is a `skipped` row that names the issuer lookup. The
+  // forensic arms do register for it — a rewritten certificate is evidence about
+  // a certificate — but none of them is both inline and decisive, which is the
+  // thing this assertion is about.
   const credential = checksForKind("credential");
-  assert.equal(
-    credential.filter((c) => c.run).length,
-    0,
-    "nothing inline can resolve a credential id",
+  const inlineAndDecisive = credential.filter(
+    (c) => c.definitiveWhenMismatch && !c.requiresRawBytes && c.externalDependency === "",
   );
+  assert.equal(inlineAndDecisive.length, 0, "nothing inline can resolve a credential id");
   assert.ok(
     credential.some((c) => c.id === "credential.issuer_lookup" && c.definitiveWhenMismatch),
     "the issuer lookup is the arm that would settle it, and it is allowed to accuse",
@@ -307,11 +308,13 @@ test("a scale claim is recorded as un-sourceable rather than as a finding", () =
 /* -------------------------------------------------------------- ladder */
 
 test("an arm that cannot run is a row saying so, never a blank", () => {
-  // Two of the ladder's four skip gates are reachable in this engine — every
-  // forensic arm is registered without an implementation, so `not enabled` is
-  // what a candidate's report says today, and it says it per arm rather than
-  // omitting the arm. The bytes and dependency gates below it take over as V4
-  // and V6 land, which is why they are asserted on the registry, not here.
+  // Three of the ladder's four skip gates are now reachable, and which one a row
+  // gets is the difference between "we did not look" and "we could not look": the
+  // forensic arms are implemented, so with no bytes they say so at the *bytes*
+  // gate, and the V6 arms are still unregistered implementations, so they say so
+  // at the *engine* gate. `document.*` is registered `requiresRawBytes` precisely
+  // so that a candidate whose file was purged gets the true reason and not a
+  // verdict that no check spoke.
   const claim = period("2019-03", "present", { employer: "Nimbus Technologies" });
   const outcomes = runLadder({
     claim,
@@ -325,12 +328,43 @@ test("an arm that cannot run is a row saying so, never a blank", () => {
   for (const check of checksForKind(claim.kind)) {
     const row = byId.get(check.id);
     assert.ok(row, `${check.id} produced no row`);
-    if (check.run) continue;
-    assert.equal(row.observation, "skipped", check.id);
-    assert.match(row.note ?? "", /Not enabled in engine/, check.id);
+    if (!check.run) {
+      assert.equal(row.observation, "skipped", check.id);
+      assert.match(row.note ?? "", /Not enabled in engine/, check.id);
+      continue;
+    }
+    // An implemented arm that was stopped at the bytes gate is still a `skipped`
+    // row — the gate runs before the check, so a byte-level rule can never reach
+    // a conclusion over an empty buffer and report it as a finding.
+    if (check.requiresRawBytes) {
+      assert.equal(row.observation, "skipped", check.id);
+      assert.match(row.note ?? "", /original document bytes/, check.id);
+    }
   }
   assert.ok(byId.get("document.orphaned_text"));
   assert.ok(byId.get("registry.employer_incorporation"));
+  // With the bytes present, the same arms run, and the engine gate is the only
+  // one left standing: this is what a real report on a retained file looks like.
+  const withBytes = runLadder({
+    claim,
+    siblings: [],
+    now: NOW,
+    hasRawBytes: true,
+    documents: [],
+    availableDependencies: new Set(),
+  });
+  const forensic = withBytes.filter((o) => o.checkId.startsWith("document."));
+  assert.equal(forensic.length, 4, "an arm was not reached once the file existed");
+  for (const row of forensic)
+    assert.ok(
+      row.observation === "silent" || row.observation === "skipped",
+      `${row.checkId} claimed something about a claim with no bytes behind it`,
+    );
+  assert.ok(
+    withBytes
+      .find((o) => o.checkId === "registry.employer_incorporation")
+      ?.note?.includes("Not enabled in engine"),
+  );
 });
 
 test("an entitlement outside the plan is a row, not a blank", () => {
@@ -399,14 +433,23 @@ test("a check that cannot read its input says nothing rather than accusing", () 
   );
 });
 
-test("the ladder's Tier A rows are free and need nothing", () => {
-  const tierA = CHECK_REGISTRY.filter((c) => c.run);
-  for (const check of tierA) {
-    assert.equal(check.costPaise, 0, `${check.id} is a paid arm with an implementation`);
-    assert.equal(check.externalDependency, "");
-    assert.equal(check.includedInFreeTier, true);
-    assert.equal(check.requiresRawBytes, false, `${check.id} needs bytes but runs inline`);
+test("the ladder's free half is free in every dimension at once", () => {
+  // Keyed on entitlement rather than on `run`, because an implemented arm is not
+  // automatically a free one: the forensic arms have implementations and are the
+  // paid product. The three properties — costs nothing, needs no bytes, needs no
+  // service — have to agree with the flag that decides what a free workspace sees,
+  // or the plan gate would be selling a ₹0 row that quietly spends a provider call.
+  for (const check of CHECK_REGISTRY.filter((c) => c.includedInFreeTier)) {
+    assert.equal(check.costPaise, 0, `${check.id} is free but costs`);
+    assert.equal(check.externalDependency, "", `${check.id} is free but calls a provider`);
+    assert.equal(check.requiresRawBytes, false, `${check.id} is free but needs the bytes`);
+    assert.ok(check.run, `${check.id} is free but cannot run`);
   }
+  assert.equal(
+    CHECK_REGISTRY.filter((c) => c.includedInFreeTier).length,
+    8,
+    "the free set grew without this test being read",
+  );
   for (const check of CHECK_REGISTRY.filter((c) => !c.run)) {
     assert.equal(
       check.includedInFreeTier,

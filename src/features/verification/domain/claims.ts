@@ -607,9 +607,21 @@ export function canonicalClaimKey(claim: ExtractedClaim): string {
   ].join("|");
 }
 
-/** Stable for the same claim set whatever order they were found in. */
-export async function claimsSetHash(claims: readonly ExtractedClaim[]): Promise<string> {
+/**
+ * Stable for the same claim set whatever order they were found in.
+ *
+ * The optional `salt` is what the ledger mixes the retained files' digests into,
+ * so that a candidate who re-uploads the same text over different bytes gets a
+ * new report instead of the cached verdict the first file earned. Empty leaves
+ * the hash exactly what it was before the document store existed, which is why
+ * the parameter is a salt on this function and not a new column on the table.
+ */
+export async function claimsSetHash(
+  claims: readonly ExtractedClaim[],
+  salt = "",
+): Promise<string> {
   const keys = [...new Set(claims.map(canonicalClaimKey))].sort();
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(keys.join("\n")));
+  const preimage = salt ? `${keys.join("\n")}\n#${salt}` : keys.join("\n");
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(preimage));
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

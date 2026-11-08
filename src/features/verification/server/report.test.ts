@@ -19,6 +19,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
+import { VERIFICATION_ENGINE_VERSION } from "../domain/checks/registry.ts";
 import { readLedger } from "./ledger.server.ts";
 import { enqueueVerification, processVerificationSlice } from "./queue.server.ts";
 import { reportForUser, slateVerdictsFor } from "./report.server.ts";
@@ -246,7 +247,11 @@ test("a failed report is never the one the drawer opens", async () => {
 
   const view = await reportForUser(w.userId, w.applicationId);
   assert.ok(view.claims.length > 0, "the completed generation is still what opens");
-  assert.equal(view.engineVersion, "vetta-verify-1", "and not the failed one that came after it");
+  assert.equal(
+    view.engineVersion,
+    VERIFICATION_ENGINE_VERSION,
+    "and not the failed one that came after it",
+  );
 });
 
 test("a skipped job leaves the drawer able to say why there is no report", async () => {

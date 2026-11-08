@@ -20,6 +20,14 @@
 
 import type { ClaimKind, ExtractedClaim } from "../claims.ts";
 import type { CheckOutcome, CheckTier } from "../adjudicate.ts";
+import type { DocumentForensics } from "../forensics.ts";
+import {
+  checkAnachronism,
+  checkCgpaDocumentMismatch,
+  checkDocxEditHistory,
+  checkIncrementalUpdate,
+  checkOrphanedText,
+} from "./document-forensics.ts";
 import {
   checkEducationTimeline,
   checkEmailDomainEmployer,
@@ -37,8 +45,12 @@ import {
  * Bump when extraction or a check's logic changes. It is part of the report's
  * cache key, so an old verdict can never be served against new rules — and an
  * engine bump therefore re-grades every candidate, which is the intended cost.
+ *
+ * `vetta-verify-2` is the five byte-level arms: an engine that could not read a
+ * file would otherwise be served, from the same cache key, a report that reads
+ * like it looked and found nothing.
  */
-export const VERIFICATION_ENGINE_VERSION = "vetta-verify-1";
+export const VERIFICATION_ENGINE_VERSION = "vetta-verify-2";
 
 export type RegisteredCheck = CheckTier & {
   /** Absent means registered and not implemented: the runner skips it, visibly. */
@@ -164,10 +176,20 @@ const TIER_A: RegisteredCheck[] = [
 ];
 
 /**
- * Registered, declared, not yet runnable — V4's document forensics and V6's
- * external arms. Each is a `skipped` row with its reason until `run` exists, and
- * the definitive flags are already what they will be, so the cap on accusing is
- * set by the same table a future check has to be added to.
+ * The arms that read the file rather than the prose.
+ *
+ * `document.*` and the grade comparison are implemented and run whenever the
+ * store holds bytes; `registry.*`, `credential.*`, `identity.*` and
+ * `template.*` are V6's and stay `skipped` rows with their reason. Registering
+ * the unbuilt arms anyway is the product decision: a report that omits the
+ * registry check reads the same as one that ran it and found nothing, and the
+ * difference between those two sentences is what a recruiter is paying for.
+ *
+ * Four of the five forensic arms are NON-definitive, which the corpus decided
+ * rather than taste — see `checks/document-forensics.ts` for the fixtures that
+ * make an honest file look like a re-save, a flattening or a zero-minute editing
+ * life. `document.orphaned_text` and `education.cgpa_document_mismatch` keep the
+ * power to accuse because both of their sides are the candidate's own bytes.
  */
 const FORENSIC: RegisteredCheck[] = [
   {
@@ -179,6 +201,7 @@ const FORENSIC: RegisteredCheck[] = [
     externalDependency: "",
     definitiveWhenMismatch: true,
     kinds: ALL_KINDS,
+    run: checkOrphanedText,
     includedInFreeTier: false,
   },
   {
@@ -190,6 +213,7 @@ const FORENSIC: RegisteredCheck[] = [
     externalDependency: "",
     definitiveWhenMismatch: false,
     kinds: ALL_KINDS,
+    run: checkIncrementalUpdate,
     includedInFreeTier: false,
   },
   {
@@ -201,6 +225,7 @@ const FORENSIC: RegisteredCheck[] = [
     externalDependency: "",
     definitiveWhenMismatch: false,
     kinds: ALL_KINDS,
+    run: checkAnachronism,
     includedInFreeTier: false,
   },
   {
@@ -212,6 +237,7 @@ const FORENSIC: RegisteredCheck[] = [
     externalDependency: "",
     definitiveWhenMismatch: false,
     kinds: ALL_KINDS,
+    run: checkDocxEditHistory,
     includedInFreeTier: false,
   },
   {
@@ -223,6 +249,7 @@ const FORENSIC: RegisteredCheck[] = [
     externalDependency: "",
     definitiveWhenMismatch: true,
     kinds: ["education"],
+    run: checkCgpaDocumentMismatch,
     includedInFreeTier: false,
   },
   {
@@ -292,6 +319,17 @@ export type LadderInput = {
   now: string;
   /** The document store holds original bytes for this candidate, consented and unexpired. */
   hasRawBytes: boolean;
+  /**
+   * What those bytes said about themselves, read once per application by the
+   * runner and shared by every claim in it.
+   *
+   * Optional because the ladder is also the seam a caller without a file can use
+   * — a slate preview, a test, a candidate who never consented. `hasRawBytes` is
+   * what the byte gate reads, so a caller that sets it true and passes no
+   * documents gets arms that report "no readable document was retained", which is
+   * a `silent` row and not a clean bill of health.
+   */
+  documents?: readonly DocumentForensics[];
   /** Dependencies actually configured and permitted for this run, e.g. `new Set(["dns"])`. */
   availableDependencies: ReadonlySet<string>;
   /** Only these check ids may run; anything else is skipped as out of entitlement. */
@@ -344,7 +382,12 @@ export function runLadder(input: LadderInput): CheckOutcome[] {
       });
       continue;
     }
-    const ctx: CheckContext = { now: input.now, claim: input.claim, siblings: input.siblings };
+    const ctx: CheckContext = {
+      now: input.now,
+      claim: input.claim,
+      siblings: input.siblings,
+      documents: input.documents ?? [],
+    };
     let outcome: CheckOutcome;
     try {
       outcome = check.run(ctx);

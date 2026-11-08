@@ -22,6 +22,12 @@ import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
 import { CHECK_REGISTRY } from "../domain/checks/registry.ts";
+import { fixtureById } from "../domain/fixtures.ts";
+import {
+  bindDocumentToApplication,
+  captureUploadedDocument,
+  setByteRetention,
+} from "./documents.server.ts";
 import {
   checkIdsForPlan,
   enqueueVerification,
@@ -55,6 +61,20 @@ Credential ID: AWS-11223344`;
 
 let seq = 0;
 const uid = () => `vq-${Date.now().toString(36)}-${(seq += 1)}`;
+
+/**
+ * The prose `resume-edited` was saved over.
+ *
+ * The byte arms compare a claim against the file the claim came from, so a test
+ * that wants them to speak has to extract its claims from the same sentences the
+ * fixture's page shows — which is the real shape anyway: the text the parser
+ * pulled out of the file a candidate uploaded.
+ */
+const EDITED_RESUME_TEXT = `Priya Sharma
+Senior Backend Engineer - Bengaluru
+Five years building distributed systems in Node.js and Postgres.
+Led the ingest pipeline that ranks 200 resumes per batch, including a rewrite in Rust.
+B.Tech Computer Science, NIT Trichy, 2016.`;
 
 /** The chain the ingest queue leaves behind: org, role, candidate, application. */
 async function fixture(resumeText: string = HONEST) {
@@ -308,6 +328,148 @@ test("a paid job waits for a paid slice, then discloses what it still could not 
   const cost = await sql<{ total: number | string }>`
     select coalesce(sum(cost_paise), 0) as total from claim_evidence where report_id = ${reportId}`;
   assert.equal(Number(cost[0].total), 0, "an arm that never called out still bills nothing");
+});
+
+/**
+ * The upload path's ending, without the upload path.
+ *
+ * A file captured and bound is exactly what the ingest queue leaves behind by the
+ * time a verification job exists, so the byte arms can be tested through the real
+ * worker rather than through a hand-passed array.
+ */
+async function attachFile(f: Awaited<ReturnType<typeof fixture>>, fileId: string) {
+  const file = fixtureById(fileId);
+  await setByteRetention({
+    orgId: f.orgId,
+    userId: f.userId,
+    byteRetention: true,
+    nowMs: Date.now(),
+  });
+  const jobId = uid();
+  await captureUploadedDocument({
+    userId: f.userId,
+    orgId: f.orgId,
+    filename: file.filename,
+    mediaType: "application/pdf",
+    bytes: file.build(),
+    ingestJobId: jobId,
+    roleId: f.roleId,
+    nowMs: Date.now(),
+  });
+  await bindDocumentToApplication({
+    ingestJobId: jobId,
+    candidateId: f.candidateId,
+    applicationId: f.applicationId,
+  });
+  return file;
+}
+
+/** One row per claim, as the drawer would read it. */
+async function verdictRows(reportId: string) {
+  const sql = await getSql();
+  const rows = await sql<{
+    claim_kind: string;
+    status: string;
+    note: string;
+    definitive: boolean;
+    cost_paise: number;
+    detail_json: string;
+  }>`
+    select c.claim_kind, e.status, e.note, e.definitive, e.cost_paise, e.detail_json
+    from claim_evidence e join candidate_claims c on c.id = e.claim_id
+    where e.report_id = ${reportId} order by c.claim_kind, c.quote`;
+  return rows.map((r) => ({
+    kind: r.claim_kind,
+    status: r.status,
+    definitive: r.definitive,
+    cost: r.cost_paise,
+    cappedFrom: String(JSON.parse(r.detail_json).cappedFrom ?? ""),
+  }));
+}
+
+/**
+ * The byte arms, reached through the worker rather than through a test.
+ *
+ * `resume-edited` is a resume whose visible page was rewritten by a later save
+ * that left the old page in the file, with the same prose as every other fixture.
+ * So the only way this row can appear is if the store's bytes travelled through
+ * `processVerificationSlice` into `runVerification` into the ladder: the queue
+ * read the file, the ledger ran the arm, and the cap on the accusation is the
+ * registry's, not the caller's.
+ */
+test("a retained file reaches the ladder through the worker, on the plan that bought it", async () => {
+  const f = await fixture(EDITED_RESUME_TEXT);
+  await attachFile(f, "resume-edited");
+  await handoff(f, PLAN_TIER_PAID);
+  const paid = await processVerificationSlice({ userId: f.userId, planTier: PLAN_TIER_PAID });
+  assert.equal(paid.completed, 1);
+
+  const reportId = await reportIdFor(f.applicationId);
+  const seen = await outcomesFor(reportId);
+  const rewritten = seen.filter(
+    (o) => o.checkId === "document.incremental_update" && o.observation === "inconsistent",
+  );
+  assert.ok(
+    rewritten.length > 0,
+    `expected the rewrite arm to fire, saw ${JSON.stringify(
+      seen.filter((o) => o.checkId.startsWith("document.")),
+    )}`,
+  );
+
+  const rows = await verdictRows(reportId);
+  const capped = rows.filter((r) => r.cappedFrom === "contradicted");
+  assert.ok(capped.length > 0, "a non-definitive arm cannot accuse on its own");
+  assert.ok(
+    capped.every((r) => r.status === "unverifiable"),
+    JSON.stringify(capped, null, 1),
+  );
+  assert.ok(capped.some((r) => r.kind === "metric"));
+
+  const sql = await getSql();
+  const cost = await sql<{ total: number | string }>`
+    select coalesce(sum(cost_paise), 0) as total from claim_evidence where report_id = ${reportId}`;
+  assert.equal(Number(cost[0].total), 0, "the byte arms cost the pool time and the org nothing");
+});
+
+/**
+ * What a free workspace can see of a file it never paid to read.
+ *
+ * The comparison is with the same document over a twin that never uploaded
+ * anything, claim for claim, because "the feature is display-only" is only true
+ * if adding the file changes no verdict, no cost and no denominator — and the
+ * queue still has to disclose the arms it declined to run, rather than leaving
+ * the blind spot silent.
+ */
+test("attaching the file changes nothing a free workspace can see", async () => {
+  const withFile = await fixture(EDITED_RESUME_TEXT);
+  const withoutFile = await fixture(EDITED_RESUME_TEXT);
+  await attachFile(withFile, "resume-edited");
+
+  await handoff(withFile);
+  await handoff(withoutFile);
+  await processVerificationSlice({ userId: withFile.userId });
+  await processVerificationSlice({ userId: withoutFile.userId });
+
+  assert.deepEqual(
+    await verdictRows(await reportIdFor(withFile.applicationId)),
+    await verdictRows(await reportIdFor(withoutFile.applicationId)),
+    "the same prose, with a file attached, grades exactly as it did without one",
+  );
+
+  const seen = await outcomesFor(await reportIdFor(withFile.applicationId));
+  assert.ok(
+    seen.some(
+      (o) =>
+        o.checkId.startsWith("document.") &&
+        o.observation === "skipped" &&
+        /verification plan/i.test(o.note),
+    ),
+    "capped by entitlement, and said out loud",
+  );
+  assert.ok(
+    !seen.some((o) => o.checkId.startsWith("document.") && o.observation === "inconsistent"),
+    "and the arm the plan does not include never ran",
+  );
 });
 
 test("a document that is no longer there is skipped, not retried forever", async () => {

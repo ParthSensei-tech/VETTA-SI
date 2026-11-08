@@ -26,6 +26,7 @@ import {
   VERIFICATION_ENGINE_VERSION,
   runLadder,
 } from "../domain/checks/registry.ts";
+import type { DocumentForensics } from "../domain/forensics.ts";
 
 /**
  * The ledger's write side.
@@ -146,9 +147,10 @@ async function appendVerdictHistory(args: {
  * one.
  *
  * This is the cache, and the key is the thing that actually determines the
- * answer — the claims and the rules, not a timestamp. A re-run after a partial
- * failure therefore costs nothing, and a candidate cannot accumulate two
- * contradictory verdicts for the same document while the engine sits still.
+ * answer — the claims, the rules, and the files the byte arms were handed, not a
+ * timestamp. A re-run after a partial failure therefore costs nothing, and a
+ * candidate cannot accumulate two contradictory verdicts for the same document
+ * while the engine sits still.
  */
 export async function ensureReport(args: {
   orgId: string;
@@ -157,8 +159,18 @@ export async function ensureReport(args: {
   applicationId?: string | null;
   roleId?: string | null;
   claims: readonly ExtractedClaim[];
+  /**
+   * A digest of the files the byte arms were handed, if any.
+   *
+   * Without it, the same extracted text over two different documents — the
+   * honest resume and the forged one, whose prose can be identical because only
+   * the object table changed — would be one cache key, and the second upload
+   * would be served the first file's verdict. That is not a staleness bug, it is
+   * a verdict about a document the engine never read.
+   */
+  documentFingerprint?: string;
 }): Promise<{ reportId: string; isNew: boolean }> {
-  const hash = await claimsSetHash(args.claims);
+  const hash = await claimsSetHash(args.claims, args.documentFingerprint ?? "");
   const sql = await getSql();
   const found = await sql<{ id: string }>`
     select id from verification_reports
@@ -244,6 +256,16 @@ export async function runVerification(opts: {
   roleId?: string | null;
   resumeText: string;
   hasRawBytes?: boolean;
+  /**
+   * The byte arms' reading of this application's retained files, done by the
+   * caller and passed in — see `CheckContext.documents` for why the analysis
+   * cannot live here. An empty array with `hasRawBytes: true` is the honest
+   * shape of "the store says there is a file and the reader could not open it",
+   * and the arms say that rather than going quiet.
+   */
+  documents?: readonly DocumentForensics[];
+  /** Digest of the files behind `documents`; "" when there were none. */
+  documentFingerprint?: string;
   availableDependencies?: ReadonlySet<string>;
   allowedCheckIds?: ReadonlySet<string>;
   referenceMonth?: string;
@@ -257,6 +279,7 @@ export async function runVerification(opts: {
     applicationId: opts.applicationId ?? null,
     roleId: opts.roleId ?? null,
     claims: kept.kept,
+    documentFingerprint: opts.documentFingerprint ?? "",
   });
 
   if (!isNew) {
@@ -296,6 +319,7 @@ export async function runVerification(opts: {
       siblings: siblingsOf(claim.claimId).map((c) => c.source),
       now,
       hasRawBytes: opts.hasRawBytes ?? false,
+      documents: opts.documents ?? [],
       availableDependencies: opts.availableDependencies ?? new Set<string>(),
       allowedCheckIds: opts.allowedCheckIds,
     });

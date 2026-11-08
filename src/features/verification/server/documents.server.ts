@@ -48,6 +48,7 @@ import {
   type ContentState,
   type DocClass,
 } from "../domain/documents.ts";
+import { analyzeDocument, type DocumentForensics } from "../domain/forensics.ts";
 
 export type DocumentRecord = {
   id: string;
@@ -86,6 +87,16 @@ export type ByteRetention = {
 
 /** What a consent-withdrawal or a retention sweep did to one person's files. */
 export type PurgeResult = { purged: number };
+
+/**
+ * How many files one verification run reads.
+ *
+ * A real application is a resume and two or three certificates. The cap is not a
+ * performance knob — it is what keeps a candidate who uploaded forty files from
+ * having forty of them opened and read into a verdict, and it is why the arms
+ * take a *list* and reason about the ones in it rather than assuming one.
+ */
+const MAX_DOCUMENTS_PER_ANALYSIS = 8;
 
 function newId(): string {
   return crypto.randomUUID();
@@ -442,6 +453,141 @@ export async function loadDocumentForAnalysis(
     return { document, bytes: null, unavailableReason: bytesUnavailableReason("purged") };
   }
   return { document, bytes: content, unavailableReason: "" };
+}
+
+/** One file that got through all three doors, with the identity it was stored under. */
+type HeldDocument = {
+  filename: string;
+  docClass: DocClass;
+  sha256: string;
+  bytes: Uint8Array;
+};
+
+/**
+ * Every file the byte arms may read for one application, read, or the reason there are none.
+ *
+ * `loadDocumentForAnalysis` answers for the newest file; this answers for the
+ * application, because the certificate and the resume that quotes it are two
+ * documents and the grade comparison is meaningless with only one of them in
+ * front of it. The same three doors apply per row — the state column, the wall
+ * clock, the person's refusal — and the cap is here because a 200-resume slate is
+ * not a licence to pull a gigabyte through the pool for one candidate's verdict.
+ *
+ * A row that fails a door is dropped silently and the reason returned is the
+ * first one that applied, because the arms take the file list they are given: a
+ * certificate that was refused simply is not in the list, and the grade arm's own
+ * note says "no certificate was retained", which is the true sentence.
+ *
+ * The reading happens here rather than in the ledger so that the only code that
+ * can hand the engine a byte buffer is the code that also decides whether it is
+ * allowed to — a caller that could analyze bytes itself would be a caller that
+ * could analyze bytes nobody consented to.
+ */
+export async function analyzeDocumentsForApplication(
+  applicationId: string,
+  nowMs: number = Date.now(),
+  limit: number = MAX_DOCUMENTS_PER_ANALYSIS,
+): Promise<{
+  documents: DocumentForensics[];
+  documentFingerprint: string;
+  unavailableReason: string;
+}> {
+  const rows = await documentsForApplication(applicationId);
+  if (rows.length === 0)
+    return {
+      documents: [],
+      documentFingerprint: "",
+      unavailableReason: bytesUnavailableReason("absent"),
+    };
+
+  const held = rows.filter((document) =>
+    bytesReadable({
+      contentState: document.contentState,
+      expiresAtMs: document.expiresAtMs,
+      nowMs,
+    }),
+  );
+  if (held.length === 0) {
+    // A `stored` row whose clock has run out is reported as purged, for the same
+    // reason the single-file read gives: the sweep's schedule is not allowed to
+    // change what a candidate is told about their own file.
+    const why = rows[0].contentState === "stored" ? "purged" : rows[0].contentState;
+    return {
+      documents: [],
+      documentFingerprint: "",
+      unavailableReason: bytesUnavailableReason(why),
+    };
+  }
+
+  // One consent check per (org, person) and not per file — the promise was made
+  // about the person's data, not about one upload of it — and it runs before any
+  // bytes are asked for.
+  const sql = await getSql();
+  const refusedCache = new Map<string, boolean>();
+  const heldDocs: HeldDocument[] = [];
+  let withdrawn = false;
+  for (const document of held) {
+    if (heldDocs.length >= Math.max(1, limit)) break;
+    const key = `${document.orgId}:${document.candidateId ?? ""}`;
+    let refused = refusedCache.get(key);
+    if (refused === undefined) {
+      refused = await bytesRefusedBySubject(document.orgId, document.candidateId);
+      refusedCache.set(key, refused);
+    }
+    if (refused) {
+      withdrawn = true;
+      continue;
+    }
+    const contentRows = await sql<{ content: Uint8Array | null }>`
+      select content from documents where id = ${document.id} limit 1`;
+    const content = contentRows[0]?.content ?? null;
+    // The state says held and the column says otherwise: a row lying about having
+    // a file is dropped, so no arm reaches a conclusion over an empty buffer.
+    if (!content || content.length === 0) continue;
+    heldDocs.push({
+      filename: document.filename,
+      docClass: document.docClass,
+      sha256: document.sha256,
+      bytes: content,
+    });
+  }
+  return {
+    documents: heldDocs.map((document) =>
+      analyzeDocument({
+        bytes: document.bytes,
+        filename: document.filename,
+        docClass: document.docClass,
+      }),
+    ),
+    documentFingerprint: fingerprintOf(heldDocs),
+    unavailableReason: heldDocs.length === 0
+      ? bytesUnavailableReason(withdrawn ? "withdrawn" : "purged")
+      : "",
+  };
+}
+
+/**
+ * What this set of files *is*, as one short string.
+ *
+ * The ledger caches a report by the claims it read, and two candidates can type
+ * the identical sentence into two different documents — or one candidate can
+ * re-save the identical prose over a forged object table. Without the file in
+ * the key, the second run is served the first run's verdict and the engine ends
+ * up reporting on bytes it never opened. Sorting the digests is what keeps the
+ * answer the same when the upload order is not.
+ *
+ * No files, no fingerprint: an empty string is the value that leaves the old
+ * cache keys alone, so a workspace that never turned byte retention on does not
+ * re-run every report it already has.
+ */
+function fingerprintOf(documents: readonly HeldDocument[]): string {
+  if (documents.length === 0) return "";
+  return createHash("sha256")
+    .update(documents
+      .map((d) => d.sha256)
+      .sort()
+      .join("\n"))
+    .digest("hex");
 }
 
 /**

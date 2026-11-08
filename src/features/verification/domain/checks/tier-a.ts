@@ -21,6 +21,7 @@
 
 import { monthsBetween, parseMonthKey, type ExtractedClaim } from "../claims.ts";
 import type { CheckOutcome } from "../adjudicate.ts";
+import type { DocumentForensics } from "../forensics.ts";
 
 /**
  * Everything a check is allowed to know.
@@ -38,6 +39,18 @@ export type CheckContext = {
   claim: ExtractedClaim;
   /** Every claim extracted from the same subject, for cross-claim arithmetic. */
   siblings: readonly ExtractedClaim[];
+  /**
+   * What the candidate's files say about their own making, already read.
+   *
+   * Absent (or empty) whenever there were no bytes to read, which is why every
+   * arm that uses it is registered `requiresRawBytes` and is skipped by the ladder
+   * before this field is ever consulted. The analysis is passed in rather than
+   * computed here because the ladder runs one analysis per application and many
+   * claims per analysis: a check that re-parsed the file would multiply the cost
+   * of a 200-resume slate by the number of claims on it, and the pure core may
+   * not do IO to do so in the first place.
+   */
+  documents?: readonly DocumentForensics[];
 };
 
 export type PureCheck = (ctx: CheckContext) => CheckOutcome;

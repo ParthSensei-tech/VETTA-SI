@@ -263,6 +263,24 @@ test("the claim set hash ignores order and notices a changed claim", async () =>
   assert.equal((await claimsSetHash([])).length, 64);
 });
 
+/**
+ * The document salt, and the reason it is a suffix rather than a field.
+ *
+ * Every report row written before the byte arms exists was hashed without one,
+ * so an empty salt must reproduce that hash exactly — otherwise turning the
+ * feature on invalidates a ledger nobody asked to re-grade. A real salt has to
+ * split it, because the honest file and the forged one can carry the same
+ * sentences.
+ */
+test("the document salt splits the key without moving the unsalted one", async () => {
+  const a = extractClaims(HONEST);
+  const unsalted = await claimsSetHash(a);
+  assert.equal(await claimsSetHash(a, ""), unsalted, "no salt is the old key, byte for byte");
+  assert.notEqual(await claimsSetHash(a, "deadbeef"), unsalted);
+  assert.notEqual(await claimsSetHash(a, "deadbee0"), await claimsSetHash(a, "deadbeef"));
+  assert.equal((await claimsSetHash([], "deadbeef")).length, 64);
+});
+
 test("canonicalClaimKey distinguishes two stints that share their dates", () => {
   const one = claim({
     quote: "Jan 2020 - Present",

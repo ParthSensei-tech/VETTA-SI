@@ -36,7 +36,9 @@ import {
 } from "../../people/server/privacy.server.ts";
 import { processQueueSlice } from "../../pipeline/server/queue.server.ts";
 import { DEFAULT_RETENTION_DAYS } from "../domain/documents.ts";
+import { fixtureById, type ForensicFixture } from "../domain/fixtures.ts";
 import {
+  analyzeDocumentsForApplication,
   bindDocumentToApplication,
   byteRetentionForOrg,
   captureUploadedDocument,
@@ -747,6 +749,89 @@ test("the cheap gate and the heavy door give the same answer, in every state", a
     "stored",
     "an expired row is unreadable before it is swept: the clock gates reads, the sweep reclaims disk",
   );
+});
+
+/**
+ * The reading the byte arms are handed, and the identity of what was read.
+ *
+ * Three things only this door can prove. A grade comparison needs the resume
+ * *and* the marksheet, so the answer is per application rather than per file; the
+ * fingerprint has to describe the set, unchanged by upload order, because it is
+ * what splits one candidate's cache key when the prose did not change and the
+ * file did; and a workspace that never opted in gets `""` rather than a hash of
+ * nothing, because `""` is the value that leaves every pre-forensics report
+ * readable instead of re-grading it.
+ */
+test("the byte arms are handed every readable file, with the set's own identity", async () => {
+  const f = await retainingWorkspace("Analysis Door Co");
+  const resume = fixtureById("resume-classic");
+  const certificate = fixtureById("certificate-reprint");
+
+  const shelf = async (applicationId: string, files: readonly ForensicFixture[]) => {
+    for (const file of files) {
+      const jobId = uid();
+      const captured = await captureUploadedDocument({
+        ...f,
+        filename: file.filename,
+        mediaType: "application/pdf",
+        ingestJobId: jobId,
+        bytes: file.build(),
+        nowMs: NOW,
+      });
+      assert.ok(captured);
+      await bindDocumentToApplication({ ingestJobId: jobId, applicationId });
+    }
+    return applicationId;
+  };
+
+  const both = await shelf(uid(), [certificate, resume]);
+  const read = await analyzeDocumentsForApplication(both, NOW);
+  assert.equal(read.unavailableReason, "");
+  assert.deepEqual(
+    read.documents.map((d) => d.filename).sort(),
+    ["acme-certificate-reprint.pdf", "priya-resume-classic.pdf"],
+    "the certificate is in the list the grade arm reads",
+  );
+  assert.deepEqual(
+    read.documents.map((d) => [d.filename.slice(0, 4), d.docClass, d.format, d.readError]).sort(),
+    [["acme", "certificate", "pdf", ""], ["priy", "resume", "pdf", ""]],
+    "classified by the store, read by the domain",
+  );
+  assert.match(read.documentFingerprint, /^[0-9a-f]{64}$/);
+
+  // The same two files in the other order, for another candidate: same key.
+  const reversed = await shelf(uid(), [resume, certificate]);
+  assert.equal(
+    (await analyzeDocumentsForApplication(reversed, NOW)).documentFingerprint,
+    read.documentFingerprint,
+    "upload order is not evidence",
+  );
+
+  // One more file, one more key — and the cap decides which file is in it.
+  const withEdit = await shelf(uid(), [resume, certificate, fixtureById("resume-edited")]);
+  const three = await analyzeDocumentsForApplication(withEdit, NOW);
+  assert.notEqual(three.documentFingerprint, read.documentFingerprint);
+  assert.equal(three.documents.length, 3);
+  const capped = await analyzeDocumentsForApplication(withEdit, NOW, 1);
+  assert.equal(capped.documents.length, 1, "a slate of two hundred is not a licence to read gigabytes");
+  assert.notEqual(capped.documentFingerprint, three.documentFingerprint, "of one file, or of three");
+
+  const plain = await workspace("No Door Co");
+  const plainApp = uid();
+  const plainJob = uid();
+  await captureUploadedDocument({
+    ...plain,
+    filename: resume.filename,
+    mediaType: "application/pdf",
+    ingestJobId: plainJob,
+    bytes: resume.build(),
+    nowMs: NOW,
+  });
+  await bindDocumentToApplication({ ingestJobId: plainJob, applicationId: plainApp });
+  const nothing = await analyzeDocumentsForApplication(plainApp, NOW);
+  assert.deepEqual(nothing.documents, []);
+  assert.equal(nothing.documentFingerprint, "", "no files, no salt");
+  assert.match(nothing.unavailableReason, /does not retain document bytes/i);
 });
 
 test("the shelf tells the workspace what is on it", async () => {
