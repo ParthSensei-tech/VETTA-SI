@@ -16,28 +16,30 @@
  *  1. **The handoff cannot break ingestion.** `enqueueVerification` is called
  *     from inside the rank path's success branch, and every caller of it treats
  *     a throw as a lost verdict, never a lost application. Verification is a
- *     display feature; the slate still has to be ranked when it is down.
- *  2. **A tick cannot spend money.** `/api/queue/tick` requires a session and
- *     claims only that caller's jobs, and the default slice is `tier_a` — the
- *     free, local, zero-cost ladder. A paid arm is queued work that only an
- *     explicitly paid slice claims, and even that one is capped by what
- *     `availableDependencies` says is configured.
+ *     display feature; the slate still has to be ranked when it is down. The
+ *     entitlement read on the way in obeys the same rule: a meter nobody can
+ *     read asks for the free ladder, never for the expensive one.
+ *  2. **A tick cannot spend the workspace's trial.** `/api/queue/tick` requires a
+ *     session and claims only that caller's jobs, and the default slice is
+ *     `tier_a` — the free, local, zero-cost ladder. The arms outside it are
+ *     claimed by the background worker, and each of those jobs is authorised
+ *     against the meter again immediately before it runs: the job row is a
+ *     request, the charge is the decision, and the gap between them is what a
+ *     200-resume drop is made of.
  *  3. **The queue decides entitlement; the ledger decides truth.** This file may
  *     choose which check ids and which already-gated documents reach
  *     `runVerification`, and nothing else — it cannot make a verdict, cannot open
  *     a file itself (only `documents.server.ts` decides what is readable, and it
- *     hands over the reading), and `adjudicate()` cannot tell whether it was run
- *     from a worker or from a button.
+ *     hands over the reading), cannot charge for a report (only
+ *     `quota.server.ts` writes the meter), and `adjudicate()` cannot tell
+ *     whether it was run from a worker or from a button.
  */
 import { getSql } from "../../../platform/db.ts";
 import { CHECK_REGISTRY } from "../domain/checks/registry.ts";
 import type { DocumentForensics } from "../domain/forensics.ts";
+import { PLAN_TIER_FREE, PLAN_TIER_PAID } from "../domain/quota.ts";
+import { chargeVerificationUse, entitlementForOrg } from "./quota.server.ts";
 import { runVerification } from "./ledger.server.ts";
-
-/** The plan every workspace has, whether or not anybody bought anything. */
-export const PLAN_TIER_FREE = "tier_a";
-/** Reserved for V5: the only plan whose ladder includes the arms that cost. */
-export const PLAN_TIER_PAID = "paid";
 
 type VerificationJobRow = {
   id: string;
@@ -84,6 +86,27 @@ export function checkIdsForPlan(planTier: string): ReadonlySet<string> {
   return new Set(CHECK_REGISTRY.filter((c) => paid || c.includedInFreeTier).map((c) => c.id));
 }
 
+/**
+ * Which ladder this workspace's next job should ask for.
+ *
+ * A read that fails asks for the free ladder. That is the only failure shape
+ * available: the alternative is that a meter which cannot be reached becomes a
+ * licence to run the expensive arms, and the workspace finds out from an invoice.
+ *
+ * This is the *request*, not the permission — see rule 2 above. A slate of two
+ * hundred jobs resolved here can outspend a trial of four, and does, until each
+ * job meets the meter again on its way into the ladder.
+ */
+export async function planTierForOrg(orgId: string): Promise<string> {
+  try {
+    const { entitlement } = await entitlementForOrg(orgId);
+    return entitlement.planTier;
+  } catch (err) {
+    console.error("[vetta-verification-plan]", err);
+    return PLAN_TIER_FREE;
+  }
+}
+
 export type EnqueueResult = {
   jobId: string;
   /** False when the application already has a job queued or in flight. */
@@ -102,6 +125,11 @@ export type EnqueueResult = {
  * row that failed three times in March must still get three tries in September.
  * `runVerification` is then a cache hit whenever the claims did not change, so
  * the refresh costs the ladder but not the ledger.
+ *
+ * A caller that names no plan gets the one the workspace's meter supports: four
+ * candidate reports with the byte arms switched on, and the free ladder after
+ * that unless the workspace has a plan. The row records what was asked for;
+ * `processOneVerification` is where it is checked against what is still owed.
  */
 export async function enqueueVerification(args: {
   userId: string;
@@ -112,7 +140,7 @@ export async function enqueueVerification(args: {
   planTier?: string;
 }): Promise<EnqueueResult> {
   const sql = await getSql();
-  const planTier = args.planTier ?? PLAN_TIER_FREE;
+  const planTier = args.planTier ?? (await planTierForOrg(args.orgId ?? ""));
 
   const touched = await sql<{ id: string; status: string }>`
     insert into verification_jobs (
@@ -239,6 +267,30 @@ async function processOneVerification(
   }
 
   try {
+    // Which arms this run may attempt. The job row records what the handoff
+    // asked for; the meter decides what is still owed, and it is read here
+    // because the two are separated by a whole slate — 200 jobs enqueued against
+    // four free uses all ask for the paid ladder, and the four that get the byte
+    // arms are the four the workspace was actually sold. A job that outran the
+    // trial degrades to the free ladder rather than failing, and the report it
+    // writes says which arms it could not run and why.
+    //
+    // A meter that cannot be read is the same case as a meter that says no: the
+    // free ladder, no charge, and a verdict the recruiter still gets.
+    let allowedCheckIds = checkIdsForPlan(PLAN_TIER_FREE);
+    let mayCharge = false;
+    if (job.plan_tier === PLAN_TIER_PAID) {
+      try {
+        const { entitlement } = await entitlementForOrg(job.org_id ?? "");
+        if (entitlement.entitled) {
+          allowedCheckIds = checkIdsForPlan(PLAN_TIER_PAID);
+          mayCharge = true;
+        }
+      } catch (err) {
+        console.error("[vetta-verification-meter]", err);
+      }
+    }
+
     // Whether a byte-level arm *could* run is the store's answer, not the org's
     // intention: a workspace that turned retention on at 4pm and off at 4:30 has
     // no files to forensicate, and a ladder that read the settings table instead
@@ -251,20 +303,25 @@ async function processOneVerification(
     // `hasRawBytes` still true is the honest shape of a store that would not open.
     let documents: readonly DocumentForensics[] = [];
     let documentFingerprint = "";
-    try {
-      const { documentBytesAvailableForApplication, analyzeDocumentsForApplication } =
-        await import("./documents.server.ts");
-      hasRawBytes = (await documentBytesAvailableForApplication(job.application_id))
-        .available;
-      if (hasRawBytes) {
-        const read = await analyzeDocumentsForApplication(job.application_id);
-        documents = read.documents;
-        documentFingerprint = read.documentFingerprint;
+    // And only when the run is entitled to read it: opening a candidate's file
+    // to answer questions this workspace's plan has already switched off is a
+    // privacy cost with no verdict on the other side of it.
+    if (mayCharge) {
+      try {
+        const { documentBytesAvailableForApplication, analyzeDocumentsForApplication } =
+          await import("./documents.server.ts");
+        hasRawBytes = (await documentBytesAvailableForApplication(job.application_id))
+          .available;
+        if (hasRawBytes) {
+          const read = await analyzeDocumentsForApplication(job.application_id);
+          documents = read.documents;
+          documentFingerprint = read.documentFingerprint;
+        }
+      } catch (err) {
+        // A store that cannot be read is a store that holds nothing, which is the
+        // same verdict the row would carry and the safe one to run the ladder with.
+        console.error("[vetta-documents]", err);
       }
-    } catch (err) {
-      // A store that cannot be read is a store that holds nothing, which is the
-      // same verdict the row would carry and the safe one to run the ladder with.
-      console.error("[vetta-documents]", err);
     }
     const run = await runVerification({
       orgId: job.org_id ?? "",
@@ -280,12 +337,30 @@ async function processOneVerification(
       // "waiting on dns / registry / issuer". Configuring one is a deliberate
       // act, not a default a tick inherits.
       availableDependencies: new Set<string>(),
-      allowedCheckIds: checkIdsForPlan(job.plan_tier),
+      allowedCheckIds,
     });
     await sql`
       update verification_jobs
       set status = 'completed', report_id = ${run.reportId}, error = '', updated_at = now()
       where id = ${job.id}`;
+    // Charged after the verdict is safely on disk, and never instead of it: a
+    // meter that will not write costs the workspace a free report, not the
+    // recruiter an absent one. A retry of this job re-reads the same report id,
+    // so the unique key makes the second charge a no-op rather than a duplicate.
+    if (mayCharge) {
+      try {
+        await chargeVerificationUse({
+          orgId: job.org_id ?? "",
+          userId: job.user_id,
+          candidateId: job.candidate_id ?? "",
+          reportId: run.reportId,
+          engineVersion: run.engineVersion,
+          costPaise: run.costPaise,
+        });
+      } catch (err) {
+        console.error("[vetta-verification-meter]", err);
+      }
+    }
     return "completed";
   } catch (err) {
     const message = err instanceof Error ? err.message : "Verification run failed";
@@ -361,13 +436,31 @@ export async function processVerificationSlice(opts?: {
  * Idle delay is deliberately longer than the rank loop's 400 ms: verdicts are
  * read a minute later by a page that is already open, and the queue that shares
  * this event loop is the one the recruiter is watching.
+ *
+ * Two drains, in this order, and the order is the whole point. The free slice
+ * first: it is what `/api/queue/tick` also serves, it spends nothing, and a
+ * recruiter watching a slate wants its rows filled before anything else. The
+ * paid slice second and slower — the byte arms read and parse whole files, so
+ * concurrency costs the rank loop far more than it buys here. The paid slice
+ * belongs to this worker and nowhere else: a request that arrives from outside
+ * can only ever claim the free ladder, so the trial is spent by a process the
+ * workspace owns, never by whoever can reach a route.
  */
 export function ensureVerificationWorker() {
   if (g.__vettaVerificationTimer__) return;
   const loop = () => {
-    void processVerificationSlice({ maxJobs: 8, concurrency: 4, budgetMs: 20_000 }).finally(() => {
-      g.__vettaVerificationTimer__ = setTimeout(loop, 900);
-    });
+    void processVerificationSlice({ maxJobs: 8, concurrency: 4, budgetMs: 20_000 })
+      .then(() =>
+        processVerificationSlice({
+          planTier: PLAN_TIER_PAID,
+          maxJobs: 4,
+          concurrency: 2,
+          budgetMs: 20_000,
+        }),
+      )
+      .finally(() => {
+        g.__vettaVerificationTimer__ = setTimeout(loop, 900);
+      });
   };
   g.__vettaVerificationTimer__ = setTimeout(loop, 300);
 }

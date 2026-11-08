@@ -21,6 +21,7 @@ import { EmptyState } from "@/shared/components/empty-state";
 import { PipelineChip, ScoreChip, StageChip } from "@/shared/components/status-chip";
 import { VerificationChip } from "@/features/verification/ui/verification-chip";
 import { DocumentStorePanel } from "@/features/verification/ui/document-store-panel";
+import { VerificationQuotaStrip } from "@/features/verification/ui/verification-quota-strip";
 import { VerificationReport } from "@/features/verification/ui/verification-report";
 import { useSlateVerdictsQuery, verificationQueryKeys } from "@/features/verification/api/query";
 import { StaleBanner } from "@/features/ranking/ui/provenance-badge";
@@ -182,6 +183,8 @@ function RoleWorkspace() {
         onRerankAll={() => rerankStaleMut.mutate()}
         isReranking={rerankStaleMut.isPending}
       />
+
+      <VerificationQuotaStrip />
 
       <DocumentStorePanel />
 

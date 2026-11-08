@@ -411,9 +411,10 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
     // strict sense: the await is inside its own try, so a ledger that is down,
     // a migration that has not applied, or a queue row that will not insert can
     // cost this candidate a verdict and nothing else. The rank path does not
-    // learn from it, does not wait on it beyond one insert, and does not change
-    // what it wrote — which is the same firewall the rail enforces in the other
-    // direction, kept honest here by `features/verification/server/queue.test.ts`.
+    // learn from it, does not wait on it beyond one insert and the two indexed
+    // reads that ask which ladder this workspace is entitled to, and does not
+    // change what it wrote — which is the same firewall the rail enforces in the
+    // other direction, kept honest here by `features/verification/server/queue.test.ts`.
     try {
       const { enqueueVerification } = await import("../../verification/server/queue.server.ts");
       await enqueueVerification({

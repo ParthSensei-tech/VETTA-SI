@@ -20,6 +20,7 @@ import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
 import { VERIFICATION_ENGINE_VERSION } from "../domain/checks/registry.ts";
+import { PLAN_TIER_FREE } from "../domain/quota.ts";
 import { readLedger } from "./ledger.server.ts";
 import { enqueueVerification, processVerificationSlice } from "./queue.server.ts";
 import { reportForUser, slateVerdictsFor } from "./report.server.ts";
@@ -74,7 +75,16 @@ async function workspace(resumeText: string = HONEST) {
   return { userId, orgId: org.orgId, roleId, candidateId, applicationId };
 }
 
-/** The handoff the ingest queue performs, then the slice that finishes it. */
+/**
+ * The handoff the ingest queue performs, then the slice that finishes it.
+ *
+ * Named `tier_a` rather than resolved from the meter, because these tests are
+ * about who can *read* a verdict, and the reads must see the same ledger shape
+ * they saw before the plan existed. The job row carrying an explicit ladder is
+ * also what lets a plain slice in a test finish what the handoff started: the
+ * arms the trial would add are claimed by the background worker, and no worker
+ * runs here.
+ */
 async function verified(w: Awaited<ReturnType<typeof workspace>>) {
   await enqueueVerification({
     userId: w.userId,
@@ -82,6 +92,7 @@ async function verified(w: Awaited<ReturnType<typeof workspace>>) {
     candidateId: w.candidateId,
     roleId: w.roleId,
     orgId: w.orgId,
+    planTier: PLAN_TIER_FREE,
   });
   await processVerificationSlice({ userId: w.userId });
   return w;

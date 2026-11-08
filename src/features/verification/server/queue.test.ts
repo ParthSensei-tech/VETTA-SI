@@ -10,11 +10,15 @@
  *  2. a tick belongs to the caller who asked for it, and claims only the free
  *     ladder, so "verification is in the pipeline" cannot also mean "anybody with
  *     a curl can spend the owner's quota — or anyone else's";
- *  3. a job whose document is gone is `skipped`, and a job that throws is retried
+ *  3. the trial is *asked* for at the handoff and *spent* at the job, one use per
+ *     candidate report, so a 200-resume slate cannot walk through a door that was
+ *     only checked once — and cannot lose a verdict for wanting an arm it has not
+ *     been sold;
+ *  4. a job whose document is gone is `skipped`, and a job that throws is retried
  *     with a bounded budget — the two failure shapes that decide whether a 200-
  *     resume slate converges or churns;
- *  4. one tenant's slice never writes another tenant's verdict;
- *  5. the whole handoff cannot move a ranking input, and cannot fail a rank.
+ *  5. one tenant's slice never writes another tenant's verdict;
+ *  6. the whole handoff cannot move a ranking input, and cannot fail a rank.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -23,6 +27,7 @@ import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
 import { CHECK_REGISTRY } from "../domain/checks/registry.ts";
 import { fixtureById } from "../domain/fixtures.ts";
+import { PLAN_TIER_FREE, PLAN_TIER_PAID } from "../domain/quota.ts";
 import {
   bindDocumentToApplication,
   captureUploadedDocument,
@@ -31,10 +36,9 @@ import {
 import {
   checkIdsForPlan,
   enqueueVerification,
-  PLAN_TIER_FREE,
-  PLAN_TIER_PAID,
   processVerificationSlice,
 } from "./queue.server.ts";
+import { setVerificationPlan, verificationQuotaSummary } from "./quota.server.ts";
 
 const HONEST = `PRIYA RAMESH
 Senior Backend Engineer | Bengaluru, Karnataka
@@ -76,28 +80,46 @@ Five years building distributed systems in Node.js and Postgres.
 Led the ingest pipeline that ranks 200 resumes per batch, including a rewrite in Rust.
 B.Tech Computer Science, NIT Trichy, 2016.`;
 
-/** The chain the ingest queue leaves behind: org, role, candidate, application. */
-async function fixture(resumeText: string = HONEST) {
+/**
+ * The chain the ingest queue leaves behind: org, role, candidate, application.
+ *
+ * `owner` puts the second application in the *same* workspace, which is the only
+ * way to test a meter: a slate of one resume per org spends an allowance of four
+ * on four different workspaces and proves nothing.
+ */
+async function fixture(resumeText: string = HONEST, owner?: { userId: string; orgId: string }) {
   const sql = await getSql();
-  const userId = uid();
-  const org = await ensureUserOrg(userId, "Vetta Queue Test Co");
+  const userId = owner?.userId ?? uid();
+  const orgId = owner?.orgId ?? (await ensureUserOrg(userId, "Vetta Queue Test Co")).orgId;
   const roleId = uid();
   await sql`
     insert into roles (id, user_id, company_name, company_stage, title, location, status, org_id)
-    values (${roleId}, ${userId}, 'Nimbus', 'growth', 'Senior Backend Engineer', 'Bengaluru', 'open', ${org.orgId})`;
+    values (${roleId}, ${userId}, 'Nimbus', 'growth', 'Senior Backend Engineer', 'Bengaluru', 'open', ${orgId})`;
   const candidateId = uid();
   await sql`
     insert into candidates (id, user_id, full_name, email, resume_text, org_id)
-    values (${candidateId}, ${userId}, 'Priya Ramesh', 'priya@nimbus.example', ${resumeText}, ${org.orgId})`;
+    values (${candidateId}, ${userId}, 'Priya Ramesh', 'priya@nimbus.example', ${resumeText}, ${orgId})`;
   const applicationId = uid();
   await sql`
     insert into applications (id, user_id, role_id, candidate_id, pipeline_status, rank_score,
                               rank_json, recruiter_notes, org_id)
     values (${applicationId}, ${userId}, ${roleId}, ${candidateId}, 'ranked', 42, '{"score":42}',
-            'shortlisted', ${org.orgId})`;
-  return { sql, userId, orgId: org.orgId, roleId, candidateId, applicationId };
+            'shortlisted', ${orgId})`;
+  return { sql, userId, orgId, roleId, candidateId, applicationId };
 }
 
+/**
+ * The handoff, in the two shapes the product has.
+ *
+ * With no tier named it is what the ingest queue actually does: the ladder is
+ * read off the workspace's meter, so a fresh workspace — four reports of
+ * allowance, nothing bought — asks for the paid one, and a tick cannot finish
+ * the job it started. With `PLAN_TIER_FREE` named, the job is the free ladder's
+ * and the default slice claims it. The tests below that are about the queue's
+ * own mechanics — dedupe, retry, skip, watchdog, tenant scope — name the free
+ * ladder, because the promise they hold is the same on both and they must not
+ * depend on a meter they are not testing.
+ */
 const handoff = (f: Awaited<ReturnType<typeof fixture>>, planTier?: string) =>
   enqueueVerification({
     userId: f.userId,
@@ -189,7 +211,7 @@ test("five handoffs for one application are one queued job", async () => {
 
 test("a finished job is re-queued with its retry budget, not duplicated", async () => {
   const f = await fixture();
-  const first = await handoff(f);
+  const first = await handoff(f, PLAN_TIER_FREE);
   const slice = await processVerificationSlice({ userId: f.userId });
   assert.equal(slice.completed, 1);
 
@@ -198,7 +220,7 @@ test("a finished job is re-queued with its retry budget, not duplicated", async 
   // next life already out of retries.
   await sql`update verification_jobs set attempts = 3, error = 'stale' where id = ${first.jobId}`;
 
-  const requeued = await handoff(f);
+  const requeued = await handoff(f, PLAN_TIER_FREE);
   assert.equal(requeued.queued, true, "a completed job asked about again is re-queued");
   assert.equal(requeued.jobId, first.jobId);
   const rows = await jobRows(f.applicationId);
@@ -210,7 +232,7 @@ test("a finished job is re-queued with its retry budget, not duplicated", async 
 
 test("the queue turns a ranked application into a ledger and a chip", async () => {
   const f = await fixture();
-  await handoff(f);
+  await handoff(f, PLAN_TIER_FREE);
   const slice = await processVerificationSlice({ userId: f.userId });
   assert.deepEqual(
     { processed: slice.processed, completed: slice.completed, failed: slice.failed },
@@ -240,7 +262,7 @@ test("the queue turns a ranked application into a ledger and a chip", async () =
 test("verification through the pipeline still cannot move a ranking input", async () => {
   const f = await fixture();
   const before = await rankInputs(f.applicationId);
-  await handoff(f);
+  await handoff(f, PLAN_TIER_FREE);
   await processVerificationSlice({ userId: f.userId });
 
   assert.deepEqual(await rankInputs(f.applicationId), before);
@@ -258,7 +280,7 @@ test("verification through the pipeline still cannot move a ranking input", asyn
 
 test("a tick spends nothing, and records which arms its plan capped", async () => {
   const f = await fixture();
-  await handoff(f);
+  await handoff(f, PLAN_TIER_FREE);
   await processVerificationSlice({ userId: f.userId });
   const reportId = await reportIdFor(f.applicationId);
 
@@ -328,6 +350,130 @@ test("a paid job waits for a paid slice, then discloses what it still could not 
   const cost = await sql<{ total: number | string }>`
     select coalesce(sum(cost_paise), 0) as total from claim_evidence where report_id = ${reportId}`;
   assert.equal(Number(cost[0].total), 0, "an arm that never called out still bills nothing");
+});
+
+/** How many arms this report had switched off by the plan, by name of the reason. */
+const planCapped = (seen: { observation: string; note: string }[]) =>
+  seen.filter((o) => o.observation === "skipped" && /verification plan/i.test(o.note)).length;
+
+/**
+ * The meter, reached through the queue rather than through `quota.server.ts`.
+ *
+ * `quota.test.ts` proves the arithmetic and a server-door test can prove one
+ * insert. What only the running queue can prove is the two-step the whole
+ * monetisation rests on: the handoff reads the meter to decide what to *ask*
+ * for, and the job reads it again to decide what it is *owed* — with the tick
+ * deliberately unable to reach the second ladder, so a trial is spent by the
+ * workspace's own worker and not by whoever can hit a route.
+ */
+test("a workspace in its trial is handed the paid ladder, and one report is one use", async () => {
+  const f = await fixture();
+  await handoff(f);
+
+  const [row] = await jobRows(f.applicationId);
+  assert.equal(
+    row.plan_tier,
+    PLAN_TIER_PAID,
+    "an allowance nobody has spent is not a reason to ask for the free ladder",
+  );
+
+  // The door cannot claim it, and that is the promise rather than a stall: the
+  // verdict arrives from the worker a moment later, in the same process.
+  const tick = await processVerificationSlice({ userId: f.userId });
+  assert.equal(tick.processed, 0, "a tick spends nothing, including the trial");
+
+  const paid = await processVerificationSlice({ userId: f.userId, planTier: PLAN_TIER_PAID });
+  assert.equal(paid.completed, 1);
+
+  const summary = await verificationQuotaSummary(f.orgId);
+  assert.equal(summary.usesSpent, 1, "one candidate report is one use, not one per claim");
+  assert.equal(summary.entitled, true, "and three are left");
+  assert.equal(summary.measuredCostPaise, 0, "the byte arms cost the pool CPU and the org nothing");
+
+  // The recruiter asks again for the same application: same job, same report,
+  // and the meter does not tick twice for one verdict.
+  await handoff(f);
+  await processVerificationSlice({ userId: f.userId, planTier: PLAN_TIER_PAID });
+  const after = await verificationQuotaSummary(f.orgId);
+  assert.equal(after.usesSpent, 1, "a re-run of the same report is not a second sale");
+  assert.equal((await jobRows(f.applicationId)).length, 1, "and not a second job");
+});
+
+test("a workspace that has used its trial is handed the free ladder at the door", async () => {
+  const f = await fixture();
+  await setVerificationPlan({
+    orgId: f.orgId,
+    userId: f.userId,
+    plan: "free",
+    freeQuota: 0,
+  });
+
+  await handoff(f);
+  const [row] = await jobRows(f.applicationId);
+  assert.equal(
+    row.plan_tier,
+    PLAN_TIER_FREE,
+    "no allowance and no plan is a free-ladder ask, not a failure to enqueue",
+  );
+
+  const tick = await processVerificationSlice({ userId: f.userId });
+  assert.equal(tick.completed, 1, "the recruiter still gets a verdict, on what costs nothing");
+
+  const seen = await outcomesFor(await reportIdFor(f.applicationId));
+  assert.ok(planCapped(seen) > 0, "and the arms the plan switched off are named in the ledger");
+  const summary = await verificationQuotaSummary(f.orgId);
+  assert.equal(summary.entitled, false);
+  assert.equal(summary.usesSpent, 0, "a run that was never entitled charges nothing");
+});
+
+test("a slate that outruns the trial is verified anyway, on the ladder it can still pay for", async () => {
+  const a = await fixture();
+  const b = await fixture(HONEST, a);
+  await setVerificationPlan({
+    orgId: a.orgId,
+    userId: a.userId,
+    plan: "free",
+    freeQuota: 1,
+  });
+
+  await handoff(a);
+  await handoff(b);
+  const rows = [...(await jobRows(a.applicationId)), ...(await jobRows(b.applicationId))];
+  assert.ok(
+    rows.every((r) => r.plan_tier === PLAN_TIER_PAID),
+    "both ask for the paid ladder: the door read is a request, not a receipt",
+  );
+
+  // One job per slice, so the second meets a meter the first already spent —
+  // which is the gap the design lives in, and the only way to show it closing.
+  const firstRun = await processVerificationSlice({
+    userId: a.userId,
+    planTier: PLAN_TIER_PAID,
+    maxJobs: 1,
+    concurrency: 1,
+  });
+  assert.equal(firstRun.completed, 1);
+  const secondRun = await processVerificationSlice({
+    userId: a.userId,
+    planTier: PLAN_TIER_PAID,
+    maxJobs: 1,
+    concurrency: 1,
+  });
+  assert.equal(secondRun.completed, 1, "a meter that has run out fails nobody's verdict");
+
+  const summary = await verificationQuotaSummary(a.orgId);
+  assert.equal(summary.usesSpent, 1, "and exactly one report was sold");
+  assert.equal(summary.entitled, false, "with nothing left for the next one");
+
+  const capped = [
+    planCapped(await outcomesFor(await reportIdFor(a.applicationId))),
+    planCapped(await outcomesFor(await reportIdFor(b.applicationId))),
+  ].map((n) => n > 0);
+  assert.equal(
+    capped.filter(Boolean).length,
+    1,
+    "one ran the full ladder, the other was capped by the meter and says so",
+  );
 });
 
 /**
@@ -432,21 +578,23 @@ test("a retained file reaches the ladder through the worker, on the plan that bo
 });
 
 /**
- * What a free workspace can see of a file it never paid to read.
+ * What a workspace on the free ladder can see of a file it never paid to read.
  *
  * The comparison is with the same document over a twin that never uploaded
  * anything, claim for claim, because "the feature is display-only" is only true
  * if adding the file changes no verdict, no cost and no denominator — and the
  * queue still has to disclose the arms it declined to run, rather than leaving
- * the blind spot silent.
+ * the blind spot silent. The ladder is named, not resolved from the meter: this
+ * is the V4 proof that the free tier is exactly what it was before the paid
+ * arms existed, and a trial workspace is no longer on it.
  */
 test("attaching the file changes nothing a free workspace can see", async () => {
   const withFile = await fixture(EDITED_RESUME_TEXT);
   const withoutFile = await fixture(EDITED_RESUME_TEXT);
   await attachFile(withFile, "resume-edited");
 
-  await handoff(withFile);
-  await handoff(withoutFile);
+  await handoff(withFile, PLAN_TIER_FREE);
+  await handoff(withoutFile, PLAN_TIER_FREE);
   await processVerificationSlice({ userId: withFile.userId });
   await processVerificationSlice({ userId: withoutFile.userId });
 
@@ -474,7 +622,7 @@ test("attaching the file changes nothing a free workspace can see", async () => 
 
 test("a document that is no longer there is skipped, not retried forever", async () => {
   const f = await fixture();
-  await handoff(f);
+  await handoff(f, PLAN_TIER_FREE);
   const sql = await getSql();
   await sql`update candidates set resume_text = '' where id = ${f.candidateId}`;
 
@@ -492,8 +640,8 @@ test("a document that is no longer there is skipped, not retried forever", async
 test("one tenant's slice does not write another tenant's verdict", async () => {
   const a = await fixture();
   const b = await fixture();
-  await handoff(a);
-  await handoff(b);
+  await handoff(a, PLAN_TIER_FREE);
+  await handoff(b, PLAN_TIER_FREE);
 
   const slice = await processVerificationSlice({ userId: a.userId });
   assert.equal(slice.completed, 1, "only the scoped user's job ran");
@@ -551,7 +699,7 @@ test("a run that throws is retried with backoff, and the budget is finite", asyn
 
 test("a job stuck mid-run is reclaimed by the watchdog", async () => {
   const f = await fixture();
-  const { jobId } = await handoff(f);
+  const { jobId } = await handoff(f, PLAN_TIER_FREE);
   const sql = await getSql();
   // A worker that was killed between the claim and the write leaves the row
   // owned by a process that no longer exists.

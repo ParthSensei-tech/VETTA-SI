@@ -61,6 +61,11 @@ export const VERDICT_READS = [
   "claim_evidence",
   "verification_verdict_history",
   "verification_checks_cache",
+  // The plan and its meter are on this list for the same reason the verdicts
+  // are: "check the paid workspace's candidates harder" is the first thing a
+  // ranker would learn to want, and it makes the score a function of the invoice.
+  "org_verification_plans",
+  "verification_uses",
   "verification_status",
   "verification_summary_json",
 ];
@@ -70,6 +75,11 @@ export const VERDICT_TABLES = [
   "candidate_claims",
   "claim_evidence",
   "verification_verdict_history",
+  // The plan and its meter are writes too, and belong behind the same door: the
+  // queue may not raise its own entitlement, and nothing outside the feature may
+  // edit what a workspace was charged for.
+  "org_verification_plans",
+  "verification_uses",
 ];
 
 /** Tables whose rows are decided once and never amended, by any caller at all. */
@@ -77,6 +87,9 @@ const IMMUTABLE_ROWS = new Set([
   "claim_evidence",
   "candidate_claims",
   "verification_verdict_history",
+  // A billing row that anybody can UPDATE is not evidence about anything, and
+  // "we corrected the meter" is how a disputed charge becomes an undisputed one.
+  "verification_uses",
 ]);
 
 const LEDGER_DOOR = /^src\/features\/verification\/(server|api)\//;
