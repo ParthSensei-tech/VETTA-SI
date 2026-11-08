@@ -992,6 +992,23 @@ test("the upload path captures bytes as a witness, not as a step", () => {
   assert.match(source("../../recruiting/ui/batch-ingest-dialog.tsx"), /captureBytes: true/);
 });
 
+/**
+ * The two handoffs in the queue's success branch, in the order the worker needs.
+ *
+ * A functional test cannot pin this one: the verification worker polls on its own
+ * timer, so the interleaving that breaks is a tick claiming a job in the few
+ * milliseconds before the store is told whose file came with it. That candidate
+ * gets a verdict saying "needs the original file" about a file already in the
+ * database, and the report is cached, so nothing about them ever heals.
+ */
+test("the store is told whose file it is before the verdict is queued", () => {
+  const queue = source("../../pipeline/server/queue.server.ts");
+  const bind = queue.indexOf("await bindDocumentToApplication({");
+  const enqueue = queue.indexOf("await enqueueVerification({");
+  assert.ok(bind > -1 && enqueue > -1, "both handoffs run from the ranked job's success branch");
+  assert.ok(bind < enqueue, "the worker cannot ask the store about a binding it has not made");
+});
+
 test("the ladder is told about bytes by the store, not by the settings row", () => {
   const queue = source("./queue.server.ts");
   const gate = queue.indexOf("let hasRawBytes = false");

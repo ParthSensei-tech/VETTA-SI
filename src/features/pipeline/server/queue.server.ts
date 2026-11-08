@@ -407,6 +407,27 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
   }
   try {
     const saved = await persistRanked(job);
+    // Tell the document store whose file this turned out to be. The capture at
+    // upload time only ever knew the ingest job; a forensic check later needs the
+    // person and the application, and this is the only place that has both. Same
+    // firewall, same reason: it can cost a byte-level check and nothing else.
+    //
+    // It runs before the handoff below for a reason: the verification worker
+    // polls on its own clock, so a tick that claims the job it just queued would
+    // otherwise ask the store for a file the store has not yet been told about,
+    // and the candidate's byte-level checks would report "needs the original
+    // file" about a file sitting in the same request.
+    try {
+      const { bindDocumentToApplication } =
+        await import("../../verification/server/documents.server.ts");
+      await bindDocumentToApplication({
+        ingestJobId: job.id,
+        candidateId: saved.candidateId,
+        applicationId: saved.applicationId,
+      });
+    } catch (err) {
+      console.error("[vetta-documents]", err);
+    }
     // Hand the ranked application to the verification queue. Best-effort in the
     // strict sense: the await is inside its own try, so a ledger that is down,
     // a migration that has not applied, or a queue row that will not insert can
@@ -426,21 +447,6 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
       });
     } catch (err) {
       console.error("[vetta-verification]", err);
-    }
-    // Tell the document store whose file this turned out to be. The capture at
-    // upload time only ever knew the ingest job; a forensic check later needs the
-    // person and the application, and this is the only place that has both. Same
-    // firewall, same reason: it can cost a byte-level check and nothing else.
-    try {
-      const { bindDocumentToApplication } =
-        await import("../../verification/server/documents.server.ts");
-      await bindDocumentToApplication({
-        ingestJobId: job.id,
-        candidateId: saved.candidateId,
-        applicationId: saved.applicationId,
-      });
-    } catch (err) {
-      console.error("[vetta-documents]", err);
     }
     await sql`
       update ingest_jobs
