@@ -132,12 +132,14 @@ for (const f of docxFixtures) {
 test("a fixture outlives being parsed, because the corpus is built and not cached", async () => {
   const f: ForensicFixture = fixtureById("resume-modern");
   const first = f.build();
+  const built = first.byteLength;
   const parsed = await parseUploadToResumes(f.filename, first);
   assert.ok(parsed[0].resumeText.includes("Priya Sharma"));
-  // Measured, not assumed: pdf.js transfers the buffer it is given, so a cached
-  // fixture would read back as nothing for every caller after the first.
-  assert.equal(first.byteLength, 0);
-  assert.ok(readPdfStructure(f.build()).objects.length > 0);
+  // pdf.js transfers the buffer it is handed, which is why `extractPdf` hands it a
+  // copy: a fixture kept for a second reader — or an upload handed on to the
+  // document store straight after its text was read — has to still be a file.
+  assert.equal(first.byteLength, built, "the caller still owns every byte of it");
+  assert.ok(readPdfStructure(first).objects.length > 0, "and a later reader gets the same object");
 });
 
 test("the untouched modern file has the same history as the untouched classic one", () => {

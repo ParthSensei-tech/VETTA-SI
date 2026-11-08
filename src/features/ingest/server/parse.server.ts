@@ -47,7 +47,10 @@ function looksLikeZip(bytes: Uint8Array): boolean {
 async function extractPdf(bytes: Uint8Array): Promise<string> {
   try {
     const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: bytes });
+    // pdf.js transfers the buffer it is handed, which detaches the caller's own
+    // view of it: an upload that passes these bytes to the document store after
+    // parsing would arrive there as zero-length. Hand it a copy instead.
+    const parser = new PDFParse({ data: bytes.slice() });
     try {
       const result = await parser.getText();
       return String(result.text ?? "");
