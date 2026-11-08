@@ -18,11 +18,13 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 import { getSql } from "../../../platform/db.ts";
 import { ensureUserOrg } from "../../people/server/org.server.ts";
+import { parseUploadToResumes } from "../../ingest/server/parse.server.ts";
 import { extractClaims, normalizeText } from "../domain/claims.ts";
 import { isAccusingVerdict, type Verdict } from "../domain/adjudicate.ts";
 import { DEFINITIVE_CHECK_IDS } from "../domain/checks/registry.ts";
 import { fixtureById } from "../domain/fixtures.ts";
 import { analyzeDocument } from "../domain/forensics.ts";
+import { PLAN_TIER_PAID } from "../domain/quota.ts";
 import {
   ensureReport,
   insertEvidence,
@@ -31,6 +33,7 @@ import {
   runVerification,
   VERDICTLESS_CHECK_ID,
 } from "./ledger.server.ts";
+import { checkIdsForPlan } from "./queue.server.ts";
 
 const NOW = "2026-11";
 
@@ -217,6 +220,59 @@ test("the same sentences over two different files are two reports", async () => 
     select count(*)::text as n from verification_reports
     where org_id = ${f.orgId} and candidate_id = ${f.candidateId}`;
   assert.equal(reports[0].n, "2");
+});
+
+/**
+ * The certificate half of the feature, at the layer that writes verdicts.
+ *
+ * The arms are tested against both certificate fixtures where they live; what
+ * they cannot prove there is what the ledger says about a real one.
+ * `certificate-reprint` is a university document pushed through a print driver:
+ * one generation, no lineage, a producer string that says so. Reading that as a
+ * forgery is the failure mode this feature was scoped to make impossible, since
+ * it is true of most certificates India has ever issued — so the guarantee held
+ * here is the accusation cap and the colour of the slate chip, not a particular
+ * verdict word.
+ *
+ * It also has to arrive as a document the pipeline can read at all, so the text
+ * below comes from the parser rather than a fixture string: that makes the claim
+ * set the one a batch upload really produces, and hands the byte arms the bytes
+ * that same parse left behind.
+ */
+test("a printed certificate reaches the ledger and accuses nobody", async () => {
+  const file = fixtureById("certificate-reprint");
+  const bytes = file.build();
+  const parsed = await parseUploadToResumes(file.filename, bytes);
+  const text = parsed[0].resumeText;
+  // The pipeline's own door: below this the ingest queue calls the file
+  // unreadable and no application, so no ledger, would ever exist.
+  assert.ok(text.trim().length >= 40, "and it clears the ingest guard, so the ladder is reached");
+  assert.equal(bytes.byteLength > 0, true, "the parse left the file intact for the store");
+
+  const f = await fixture(text);
+  const run = await runFor(f, {
+    hasRawBytes: true,
+    allowedCheckIds: checkIdsForPlan(PLAN_TIER_PAID),
+    documents: [
+      analyzeDocument({ bytes, filename: file.filename, docClass: "certificate" as const }),
+    ],
+    documentFingerprint: sha256Hex(bytes),
+  });
+
+  assert.ok(run.claims.length > 0, `no claims extracted from ${JSON.stringify(text)}`);
+  assert.ok(
+    !verdicts(run.claims).some(isAccusingVerdict),
+    JSON.stringify(run.claims.map((c) => [c.kind, c.verdict, c.note])),
+  );
+  assert.ok(
+    run.claims.some((c) => c.outcomes.some((o) => o.checkId.startsWith("document."))),
+    "the byte arms ran, so the verdict was earned on the file and not merely unattempted",
+  );
+  assert.notEqual(
+    run.headline,
+    "flagged",
+    "the slate chip is what a recruiter reads first, and a print driver must not colour it",
+  );
 });
 
 test("a half-written report is never served as a finished one", async () => {
