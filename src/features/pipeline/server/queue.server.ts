@@ -426,6 +426,21 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
     } catch (err) {
       console.error("[vetta-verification]", err);
     }
+    // Tell the document store whose file this turned out to be. The capture at
+    // upload time only ever knew the ingest job; a forensic check later needs the
+    // person and the application, and this is the only place that has both. Same
+    // firewall, same reason: it can cost a byte-level check and nothing else.
+    try {
+      const { bindDocumentToApplication } =
+        await import("../../verification/server/documents.server.ts");
+      await bindDocumentToApplication({
+        ingestJobId: job.id,
+        candidateId: saved.candidateId,
+        applicationId: saved.applicationId,
+      });
+    } catch (err) {
+      console.error("[vetta-documents]", err);
+    }
     await sql`
       update ingest_jobs
       set status = 'completed', application_id = ${saved.applicationId}, error = '', updated_at = now()

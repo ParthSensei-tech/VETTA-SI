@@ -8,11 +8,12 @@
  * who arrived while the recruiter was reading the first ten.
  */
 import { useQuery } from "@tanstack/react-query";
-import { getSlateVerdicts, getVerificationReport } from "./verification-api";
+import { getDocumentStore, getSlateVerdicts, getVerificationReport } from "./verification-api";
 
 export const verificationQueryKeys = {
   slate: (roleId: string) => ["verification-slate", roleId] as const,
   report: (applicationId: string) => ["verification-report", applicationId] as const,
+  store: ["verification-document-store"] as const,
 };
 
 export function useSlateVerdictsQuery(roleId: string) {
@@ -36,5 +37,20 @@ export function useVerificationReportQuery(applicationId: string | null) {
       const status = q.state.data?.job?.status;
       return status === "queued" || status === "running" ? 2_000 : false;
     },
+  });
+}
+
+/**
+ * The workspace's file-shelf.
+ *
+ * No key argument, because there is nothing for the browser to name: the org is
+ * derived from the session server-side, so a stale or hand-edited query key
+ * cannot ask about another tenant's counts. It does not poll — a retention
+ * posture changes when a person changes it, and the mutation invalidates this.
+ */
+export function useDocumentStoreQuery() {
+  return useQuery({
+    queryKey: verificationQueryKeys.store,
+    queryFn: () => getDocumentStore(),
   });
 }

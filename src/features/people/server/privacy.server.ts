@@ -152,6 +152,30 @@ export async function hasActiveConsent(opts: {
   });
 }
 
+/**
+ * Has this person actually said no — as opposed to nobody having asked yet?
+ *
+ * The distinction is the whole reason this function exists separate from
+ * `hasActiveConsent`. `mayProcess` answers "may we", which is false for a person
+ * with no rows at all; a store that read that as a refusal would purge every
+ * document in the workspace the moment it was bound, because the portal never
+ * asks about files. A recorded `granted = false` is a decision somebody made; an
+ * empty table is the absence of one, and only the first one stops us.
+ */
+export async function isPurposeWithdrawn(opts: {
+  orgId: string;
+  subjectId: string;
+  purpose: PurposeId;
+}): Promise<boolean> {
+  const sql = await getSql();
+  const rows = await sql<{ id: string }>`
+    select id from consent_records
+    where org_id = ${opts.orgId} and subject_id = ${opts.subjectId}
+      and purpose = ${opts.purpose} and granted = false
+    limit 1`;
+  return rows.length > 0;
+}
+
 async function applicationIdsFor(subjectId: string): Promise<{
   userId: string;
   orgId: string | null;
@@ -327,11 +351,14 @@ export async function eraseSubject(opts: {
 
   const ids = scope.applicationIds;
   const entityIds = [opts.subjectId, ...ids, ...scope.screenIds, ...scope.approvalIds];
+  /** The uploads this person's file arrived under — the only handle on an unbound capture. */
+  const jobIds: string[] = [];
 
   if (ids.length) {
-    const jobs = await sql`
-      delete from ingest_jobs where application_id = any(${ids}) returning 1`;
+    const jobs = await sql<{ id: string }>`
+      delete from ingest_jobs where application_id = any(${ids}) returning id`;
     stores.ingest_jobs = jobs.length;
+    for (const job of jobs) jobIds.push(job.id);
     const labels =
       await sql`delete from rank_labels where application_id = any(${ids}) returning 1`;
     stores.rank_labels = labels.length;
@@ -380,10 +407,11 @@ export async function eraseSubject(opts: {
   stores.embeddings = embeddings.length;
 
   if (scope.resumeText.trim().length >= 40) {
-    const leftover = await sql`
+    const leftover = await sql<{ id: string }>`
       delete from ingest_jobs
-      where (user_id = ${scope.userId} or ${scope.userId} = '') and resume_text = ${scope.resumeText} returning 1`;
+      where (user_id = ${scope.userId} or ${scope.userId} = '') and resume_text = ${scope.resumeText} returning id`;
     stores.ingest_jobs = (stores.ingest_jobs ?? 0) + leftover.length;
+    for (const job of leftover) jobIds.push(job.id);
     await sql`delete from eval_cases where resume_text = ${scope.resumeText}`;
     try {
       const { forgetObservedDocument } = await import("../../ai/server/domain-embed.server");
@@ -391,6 +419,26 @@ export async function eraseSubject(opts: {
     } catch {
       stores.embed_seen = 0;
     }
+  }
+
+  // The original file, if we were ever holding one. This is the only store on
+  // the list that holds bytes rather than a derivation of them, and it is the
+  // only one whose rows can be reachable through a job that has already been
+  // deleted above — hence `jobIds`, collected from both `returning id` reads.
+  // It is best-effort for the same reason the embedder forget is: a store that
+  // cannot be reached must not turn a deletion request into a partial one that
+  // the recruiter sees as a failure and retries against a different candidate.
+  try {
+    const { forgetCandidateDocuments } =
+      await import("../../verification/server/documents.server.ts");
+    stores.documents = await forgetCandidateDocuments({
+      orgId,
+      candidateId: opts.subjectId,
+      applicationIds: ids,
+      jobIds,
+    });
+  } catch {
+    stores.documents = 0;
   }
 
   stores.client_shares = await stripShares(orgId, scope.userId, ids);
@@ -501,6 +549,37 @@ export async function withdrawConsent(opts: {
         ${purpose}, ${"consent"}, ${false}, ${"withdrawal"},
         ${"{}"}, ${NOTICE_VERSION}, now(), now()
       )`;
+  }
+  if (purpose === "document_forensics") {
+    // The file goes; the verdict stays. `purgeDocumentBytesForSubject` nulls the
+    // bytes and the two derived digests and leaves the row, because a person who
+    // says no to being scanned does not thereby unmake the arithmetic already
+    // done on their text — and the drawer has to be able to say, afterwards, on
+    // what basis they were assessed.
+    const scope = await applicationIdsFor(opts.subjectId);
+    const jobRows = scope.applicationIds.length
+      ? await sql<{ id: string }>`
+          select id from ingest_jobs where application_id = any(${scope.applicationIds})`
+      : [];
+    const textRows =
+      scope.resumeText.trim().length >= 40
+        ? await sql<{ id: string }>`
+            select id from ingest_jobs
+            where (user_id = ${scope.userId} or ${scope.userId} = '')
+              and resume_text = ${scope.resumeText}`
+        : [];
+    try {
+      const { purgeDocumentBytesForSubject } =
+        await import("../../verification/server/documents.server.ts");
+      await purgeDocumentBytesForSubject({
+        orgId: opts.orgId,
+        candidateId: opts.subjectId,
+        applicationIds: scope.applicationIds,
+        jobIds: [...new Set([...jobRows, ...textRows].map((row) => row.id))],
+      });
+    } catch {
+      /* the bytes are still refused on every read, because the read checks consent too */
+    }
   }
   if (purpose === "client_disclosure") {
     const scope = await applicationIdsFor(opts.subjectId);
@@ -635,6 +714,17 @@ export async function purgeExpiredCandidateData(orgId?: string): Promise<{ purge
       where created_at < now() - (${String(days)} || ' days')::interval
         and entity_type in ('application', 'candidate', 'screen', 'approval', 'share')
         and user_id in (select user_id from organization_members where org_id = ${org.id})`;
+    // The document store's clock is its own and shorter than this org's general
+    // retention, so it runs here rather than being folded into the candidate
+    // sweep above: a file reaches its expiry whether or not the person it belongs
+    // to has, and the row that survives is the explanation, not the resume.
+    try {
+      const { purgeExpiredDocumentBytes } =
+        await import("../../verification/server/documents.server.ts");
+      await purgeExpiredDocumentBytes(org.id);
+    } catch {
+      /* byte clock; every read refuses an expired row whether this ran or not */
+    }
     await sql`
       update ingest_jobs
       set resume_text = '', filename = ''

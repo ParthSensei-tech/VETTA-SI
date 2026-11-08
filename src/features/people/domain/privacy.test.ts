@@ -97,6 +97,10 @@ test("withdrawal of evaluation erases; narrower purposes only stop that use", ()
   assert.equal(withdrawalEffect("client_disclosure"), "shares");
   assert.equal(withdrawalEffect("voice_prescreen"), "voice");
   assert.equal(withdrawalEffect("model_improvement"), "learning");
+  // Not `erase`: the file goes and the verdict that was reached from it stays,
+  // because the person who says no to a scan is not thereby un-verifying the
+  // arithmetic already done on their text.
+  assert.equal(withdrawalEffect("document_forensics"), "bytes");
   assert.ok(PRIVACY_STORES.includes("embed_seen"));
 });
 
@@ -108,7 +112,11 @@ test("deletion names every store, and vendors cannot be told to forget a chat pr
   assert.ok(PRIVACY_STORES.includes("rank_traces"));
   assert.ok(PRIVACY_STORES.includes("eval_cases"));
   assert.ok(PRIVACY_STORES.includes("embed_seen"));
-  assert.equal(PRIVACY_STORES.length, 19);
+  // The only store on this list that holds the person's file rather than a parse
+  // of it, which is why `eraseSubject` has to reach it through the ingest job as
+  // well as through the candidate and the application.
+  assert.ok(PRIVACY_STORES.includes("documents"));
+  assert.equal(PRIVACY_STORES.length, 20);
   assert.equal(providerForgetResult("ollama").status, "local_only");
   assert.equal(providerForgetResult("groq").status, "no_delete_api");
   assert.equal(
@@ -117,9 +125,18 @@ test("deletion names every store, and vendors cannot be told to forget a chat pr
       .join(),
     "recruitment_evaluation",
   );
+  // The file purpose is the workspace's decision, not a question the portal can
+  // ask a person at apply time — so it must never grow an apply-time ask.
+  assert.equal(
+    PURPOSES.filter((p) => p.askOnApply)
+      .map((p) => p.id)
+      .join(),
+    "recruitment_evaluation,client_disclosure,voice_prescreen,model_improvement",
+  );
   assert.match(purposeDenied("voice_prescreen"), /Voice/);
   assert.match(purposeDenied("client_disclosure"), /shared/);
   assert.match(purposeDenied("model_improvement"), /model learning/);
+  assert.match(purposeDenied("document_forensics"), /original document/);
 });
 
 test("in-memory rank cache eviction purges specific resume hashes and clears completely", () => {

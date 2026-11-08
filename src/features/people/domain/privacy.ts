@@ -40,6 +40,21 @@ export const PURPOSES = [
     requiredOnApply: false,
     employerInstructionOk: true,
   },
+  {
+    // The fifth purpose is not a portal question: it is the workspace's own
+    // decision, recorded in `org_document_settings`, about a file the employer
+    // already holds. What a person can do with it is withdraw it — and the
+    // withdrawal is a purge, not an argument. The ask stays false so the
+    // candidate flow does not grow a question nobody can answer at apply time,
+    // and `employerInstructionOk` stays true because that is the honest basis.
+    id: "document_forensics",
+    label: "Keep the original file to check it for tampering",
+    detail:
+      "The uploaded document is kept for up to 90 days so byte-level checks can re-read it. Identity documents are never kept, and nothing is kept after you say no.",
+    askOnApply: false,
+    requiredOnApply: false,
+    employerInstructionOk: true,
+  },
 ] as const;
 
 export type PurposeId = (typeof PURPOSES)[number]["id"];
@@ -50,6 +65,9 @@ export const PRIVACY_STORES = [
   "screens",
   "approvals",
   "ingest_jobs",
+  // The uploaded file itself — the only store here that holds bytes rather than
+  // a parse, which is why it is on this list at all.
+  "documents",
   "rank_cache",
   "embeddings",
   "rank_labels",
@@ -72,10 +90,16 @@ export function purposeById(id: string): (typeof PURPOSES)[number] | undefined {
   return PURPOSES.find((p) => p.id === id);
 }
 
-export function withdrawalEffect(purpose: PurposeId): "erase" | "shares" | "voice" | "learning" {
+export function withdrawalEffect(purpose: PurposeId): "erase" | "shares" | "voice" | "learning" | "bytes" {
   if (purpose === "recruitment_evaluation") return "erase";
   if (purpose === "client_disclosure") return "shares";
   if (purpose === "voice_prescreen") return "voice";
+  // Not "erase": withdrawing the file purpose takes the document, the digest and
+  // the derived ids, and leaves the verdict that was already reached — a person
+  // who says no to being scanned does not thereby unmake the arithmetic that was
+  // done on their text, and pretending otherwise would lose the explanation they
+  // are entitled to read back.
+  if (purpose === "document_forensics") return "bytes";
   return "learning";
 }
 
@@ -89,6 +113,12 @@ export function purposeDenied(id: PurposeId): string {
   }
   if (id === "model_improvement") {
     return "This person has not agreed to be used for model learning.";
+  }
+  if (id === "document_forensics") {
+    // Its own sentence because the generic one would be wrong: stopping this
+    // purpose does not stop any processing of the person's text, it deletes the
+    // file their checks were run against.
+    return "This person has asked us not to keep their original document, so the byte-level checks cannot run.";
   }
   return purpose ? `Processing is stopped for “${purpose.label}”.` : "Processing is stopped.";
 }

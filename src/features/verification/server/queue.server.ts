@@ -17,11 +17,11 @@
  *     from inside the rank path's success branch, and every caller of it treats
  *     a throw as a lost verdict, never a lost application. Verification is a
  *     display feature; the slate still has to be ranked when it is down.
- *  2. **A tick cannot spend money.** `/api/queue/tick` is unauthenticated, so the
- *     default slice claims only `tier_a` jobs — the free, local, zero-cost
- *     ladder. A paid arm is queued work that only an explicitly paid slice
- *     claims, and even that one is capped by what `availableDependencies` says
- *     is configured.
+ *  2. **A tick cannot spend money.** `/api/queue/tick` requires a session and
+ *     claims only that caller's jobs, and the default slice is `tier_a` — the
+ *     free, local, zero-cost ladder. A paid arm is queued work that only an
+ *     explicitly paid slice claims, and even that one is capped by what
+ *     `availableDependencies` says is configured.
  *  3. **The queue decides entitlement; the ledger decides truth.** This file may
  *     choose which check ids reach `runVerification`, and nothing else — it
  *     cannot make a verdict, and `adjudicate()` cannot tell whether it was run
@@ -236,6 +236,21 @@ async function processOneVerification(
   }
 
   try {
+    // Whether a byte-level arm *could* run is the store's answer, not the org's
+    // intention: a workspace that turned retention on at 4pm and off at 4:30 has
+    // no files to forensicate, and a ladder that read the settings table instead
+    // would record checks that no arm was ever handed a document for.
+    let hasRawBytes = false;
+    try {
+      const { documentBytesAvailableForApplication } =
+        await import("./documents.server.ts");
+      hasRawBytes = (await documentBytesAvailableForApplication(job.application_id))
+        .available;
+    } catch (err) {
+      // A store that cannot be read is a store that holds nothing, which is the
+      // same verdict the row would carry and the safe one to run the ladder with.
+      console.error("[vetta-documents]", err);
+    }
     const run = await runVerification({
       orgId: job.org_id ?? "",
       userId: job.user_id,
@@ -243,10 +258,7 @@ async function processOneVerification(
       applicationId: job.application_id,
       roleId: job.role_id,
       resumeText,
-      // V3 owns the document store; until a candidate's bytes are consented and
-      // retained this is honestly false, and the ladder's rows say why the
-      // forensic arms did not run rather than leaving them out.
-      hasRawBytes: false,
+      hasRawBytes,
       // No external arm is wired yet, so even a paid plan reads this as
       // "waiting on dns / registry / issuer". Configuring one is a deliberate
       // act, not a default a tick inherits.

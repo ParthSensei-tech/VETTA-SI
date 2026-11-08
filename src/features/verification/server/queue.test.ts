@@ -7,9 +7,9 @@
  *  1. the pipeline may mention an application five times and get one job, then
  *     re-run that job when asked again — because a queue that grows while nobody
  *     watches is a queue that eventually runs out of money;
- *  2. an unauthenticated tick claims only the free ladder, so "verification is in
- *     the pipeline" cannot also mean "anybody with a curl can spend the owner's
- *     quota";
+ *  2. a tick belongs to the caller who asked for it, and claims only the free
+ *     ladder, so "verification is in the pipeline" cannot also mean "anybody with
+ *     a curl can spend the owner's quota — or anyone else's";
  *  3. a job whose document is gone is `skipped`, and a job that throws is retried
  *     with a bounded budget — the two failure shapes that decide whether a 200-
  *     resume slate converges or churns;
@@ -414,8 +414,40 @@ test("the ingest handoff cannot fail a rank", () => {
 
   assert.match(after, /try\s*\{/, "the handoff is inside its own try");
   assert.match(after, /console\.error\("\[vetta-verification\]"/, "and its failure is logged");
+  assert.match(after, /bindDocumentToApplication/, "the document store is handed the same job");
+  assert.match(after, /console\.error\("\[vetta-documents\]"/, "in its own try, on its own");
   assert.ok(
     !/update ingest_jobs[\s\S]*?status = 'failed'/.test(after),
     "nothing between the rank and the queue row may mark the ingest job failed",
   );
+});
+
+/**
+ * The route that lets anything outside the app ask for a verdict.
+ *
+ * `processVerificationSlice({ userId })` is proved scoped four tests above; what
+ * a unit test of the queue cannot see is the one line in the HTTP layer that
+ * either passes it the verified caller or passes it nothing. The second is a
+ * public endpoint that runs every tenant's ladder, and the first is the reason
+ * this file exists.
+ */
+test("a tick belongs to whoever asked for it", () => {
+  const source = readFileSync(
+    new URL("../../../routes/api/queue/tick.ts", import.meta.url),
+    "utf8",
+  ).replace(/\s+/g, " ");
+  assert.match(source, /requireUserId/, "the caller is authenticated, not assumed");
+  assert.ok(/const userId = await requireUserId/.test(source), "before either queue is touched");
+  assert.ok(
+    source.indexOf("const userId = await requireUserId") <
+      source.indexOf("await processQueueSlice"),
+    "and not after a slice has already run",
+  );
+  assert.match(source, /processQueueSlice\(\{ userId/, "the ingest half is scoped");
+  assert.match(source, /processVerificationSlice\(\{ userId/, "and so is the ladder");
+  assert.ok(
+    !/processVerificationSlice\(\{\s*maxJobs/.test(source),
+    "no call in this file runs the unscoped slice",
+  );
+  assert.match(source, /assertSameSiteRequest/, "a cross-site page cannot drive it");
 });

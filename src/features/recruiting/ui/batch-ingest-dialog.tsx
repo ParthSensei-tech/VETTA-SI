@@ -75,6 +75,11 @@ export function BatchIngestDialog({
         const result = await appendIngestItems({
           data: {
             batchId: batch.id,
+            // A real file, so the document store may be consulted for it. This is
+            // an intent signal, not a permission: the workspace's own retention
+            // setting is read server-side, and an org that has not turned it on
+            // keeps nothing no matter what this call says.
+            captureBytes: true,
             items: chunk.map((item) => ({
               filename: item.filename,
               contentBase64: item.contentBase64,

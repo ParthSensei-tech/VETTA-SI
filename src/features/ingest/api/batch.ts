@@ -137,6 +137,13 @@ export const appendIngestItems = createServerFn({ method: "POST" })
     z
       .object({
         batchId: z.string().min(1),
+        // The upload path is the only moment a candidate's original file exists
+        // anywhere in this product, so this is the only place the document store
+        // can be fed. It defaults to false so that every caller that predates the
+        // store keeps getting exactly the writes it got before: nothing here
+        // decides whether the workspace *may* keep the file — `org_document_settings`
+        // does, below — this flag only decides whether to consult it at all.
+        captureBytes: z.boolean().optional().default(false),
         items: z
           .array(
             z.object({
@@ -171,6 +178,29 @@ export const appendIngestItems = createServerFn({ method: "POST" })
       let added = 0;
       let failed = 0;
 
+      // Whether this workspace is allowed to hold a candidate's file at all is
+      // the org's decision, never the caller's: a request that sets the flag and
+      // an org that has not turned retention on must store nothing. Read once —
+      // an append is one person dropping one folder, and a mid-append settings
+      // change must not split a drop across two postures.
+      let mayRetainBytes = false;
+      let captureOrgId = "";
+      if (data.captureBytes) {
+        try {
+          const { ensureUserOrg } = await import("../../people/server/org.server");
+          const { byteRetentionForOrg } =
+            await import("../../verification/server/documents.server.ts");
+          const org = await ensureUserOrg(context.userId);
+          mayRetainBytes = (await byteRetentionForOrg(org.orgId)).byteRetention;
+          captureOrgId = org.orgId;
+        } catch (err) {
+          // A settings read that fails is a store that is not listening, not an
+          // upload that failed: the resumes below are parsed and queued as if
+          // this table had never been proposed.
+          console.error("[vetta-documents]", err);
+        }
+      }
+
       for (const item of data.items) {
         if (used >= MAX_JOBS_PER_BATCH) {
           errors.push("Batch is full (200 resumes). Start another drop for the rest.");
@@ -178,10 +208,11 @@ export const appendIngestItems = createServerFn({ method: "POST" })
         }
         try {
           let resumes: Array<{ filename: string; resumeText: string }> = [];
+          let bytes: Uint8Array | null = null;
           if (item.resumeText && item.resumeText.trim().length >= 40) {
             resumes = [{ filename: item.filename, resumeText: item.resumeText.trim() }];
           } else if (item.contentBase64) {
-            const bytes = decodeBase64(item.contentBase64);
+            bytes = decodeBase64(item.contentBase64);
             resumes = await parseUploadToResumes(item.filename, bytes);
           } else {
             throw new Error("Missing file contents");
@@ -189,8 +220,10 @@ export const appendIngestItems = createServerFn({ method: "POST" })
           if (resumes.length === 0) throw new Error(`No resumes found in ${item.filename}`);
           const room = MAX_JOBS_PER_BATCH - used;
           const slice = resumes.slice(0, room);
+          const jobIds: string[] = [];
           for (const resume of slice) {
             const id = newId();
+            jobIds.push(id);
             await sql`
             insert into ingest_jobs (
               id, user_id, batch_id, role_id, filename, resume_text, status
@@ -200,6 +233,27 @@ export const appendIngestItems = createServerFn({ method: "POST" })
             )`;
             added += 1;
             used += 1;
+          }
+          // The store is a witness to this upload, not a step of it: it is bound
+          // to the first job the file produced, it runs only when the org has
+          // opted in, and it is swallowed here rather than in the catch below
+          // because a store that is down must not turn a parsed resume into a
+          // `failed` job or a second row into an error the recruiter sees.
+          if (mayRetainBytes && bytes && jobIds.length) {
+            try {
+              const { captureUploadedDocument } =
+                await import("../../verification/server/documents.server.ts");
+              await captureUploadedDocument({
+                orgId: captureOrgId,
+                userId: context.userId,
+                filename: item.filename,
+                bytes,
+                ingestJobId: jobIds[0],
+                roleId: batch.role_id,
+              });
+            } catch (err) {
+              console.error("[vetta-documents]", err);
+            }
           }
         } catch (err) {
           failed += 1;
