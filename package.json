@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "node scripts/with-app-env.mjs vite dev",
-    "build": "node scripts/with-app-env.mjs vite build && npm run db:migrate",
+    "build": "npm run check:verification && node scripts/with-app-env.mjs vite build && npm run db:migrate",
     "db:migrate": "node scripts/migrate.mjs",
     "build:dev": "node scripts/with-app-env.mjs vite build --mode development",
     "preview": "node scripts/with-app-env.mjs vite preview",
@@ -16,6 +16,7 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
+    "check:verification": "node scripts/check-verification.mjs",
     "check:tree": "node scripts/check-tree-invariants.mjs --probes",
     "check:neutral": "node scripts/check-format-neutral.mjs && node scripts/check-jsx-render.mjs",
     "test": "node --test \"scripts/**/*.test.mjs\" && node --experimental-strip-types --test \"src/**/*.test.ts\"",
