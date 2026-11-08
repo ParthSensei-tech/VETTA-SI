@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * npm run check:verification — the five rules this feature is made of, as a
+ * npm run check:verification — the six rules this feature is made of, as a
  * build gate rather than as prose in a header comment.
  *
  * The product promise is that a verdict is defensible: it came from arithmetic
@@ -24,6 +24,11 @@
  *     each other — the veto plumbing in `match-engine` is the obvious temptation.
  *  5. Verification cannot write a rank input, so a flagged resume still ranks
  *     exactly as it did before the check existed.
+ *  6. The orchestrator that hands work to the queue cannot read the answer back.
+ *     `features/pipeline/server/` is the one place allowed to write
+ *     `verification_jobs` — that is the handoff — and it may not name a verdict,
+ *     because an application queue row that reads a verdict is a score that reads
+ *     a verdict one refactor away.
  *
  * Exit 0 = clean, 1 = violations, 2 = the checker itself is blind.
  */
@@ -78,6 +83,16 @@ const LEDGER_DOOR = /^src\/features\/verification\/(server|api)\//;
 const DECIDING_CORE = /^src\/features\/verification\/domain\//;
 const VERIFICATION_TREE = /^src\/features\/verification\//;
 const RANK_PATH = /^src\/features\/(ranking|recruiting\/domain)\//;
+/**
+ * The orchestrator: it owns `ingest_jobs`, calls the ranker, and hands the
+ * ranked application to the verification queue.
+ *
+ * That handoff is the only edge the two features are allowed to share, and it
+ * goes one way. The pipeline may enqueue; it may not read a verdict back,
+ * because a verdict that reaches the pipeline reaches the score by the next
+ * Tuesday. This is the rule that keeps the exemption above honest.
+ */
+const ORCHESTRATOR = /^src\/features\/pipeline\/server\//;
 
 /**
  * An I/O module reached any of the three ways it can be reached.
@@ -242,6 +257,16 @@ export function scanFile({ path, source }) {
       );
   }
 
+  // 6 — the orchestrator hands off; it never reads a verdict back.
+  if (ORCHESTRATOR.test(path) && !isTest) {
+    const seen = VERDICT_READS.filter((name) => new RegExp(`\\b${name}\\b`).test(code));
+    if (seen.length)
+      add(
+        "orchestrator-read",
+        `names ${seen.join(", ")}: the pipeline enqueues verification and must not consume it`,
+      );
+  }
+
   return findings;
 }
 
@@ -250,7 +275,7 @@ export function scanFile({ path, source }) {
  *
  * These run on every invocation, not only in a `--probes` mode someone forgets
  * to pass: a rail that nobody can demonstrate failing is not evidence of
- * anything, and three of the five rules guard against exactly one future commit.
+ * anything, and five of the six rules guard against exactly one future commit.
  */
 export const PROBES = [
   {
@@ -305,21 +330,44 @@ export const PROBES = [
     source:
       "const q = sql`update applications set rank_score = 0 where id = 'x'`;\nexport default q;",
   },
+  {
+    rule: "orchestrator-read",
+    path: "src/features/pipeline/server/probe.ts",
+    source:
+      "const q = sql`select verification_status, verification_summary_json from applications`;\nexport default q;",
+  },
 ];
 
-/** A file that must never be flagged, so the rules cannot be widened into noise. */
-export const CLEAN_PROBE = {
-  path: "src/features/verification/server/ledger.server.ts",
-  source: [
-    "// The rank columns (rank_score, pipeline_status) are never touched here.",
-    'import { CHECK_REGISTRY } from "../domain/checks/registry.ts";',
-    "const a = sql`insert into claim_evidence (id, status) values (1, 'verified')`;",
-    "const b = sql`update verification_reports set status = 'completed' where id = 1`;",
-    "const c = sql`insert into verification_verdict_history (id) values (1)`;",
-    "const d = sql`select quote from candidate_claims where report_id = 1`;",
-    "export { a, b, c, d, CHECK_REGISTRY };",
-  ].join("\n"),
-};
+/**
+ * Files that must never be flagged, so the rules cannot be widened into noise.
+ *
+ * The second one is the handoff itself: an ingest queue that enqueues a
+ * verification job is legal by construction, and if the rail ever starts
+ * calling it a violation, the fix is the rail's — not the queue's.
+ */
+export const CLEAN_PROBES = [
+  {
+    path: "src/features/verification/server/ledger.server.ts",
+    source: [
+      "// The rank columns (rank_score, pipeline_status) are never touched here.",
+      'import { CHECK_REGISTRY } from "../domain/checks/registry.ts";',
+      "const a = sql`insert into claim_evidence (id, status) values (1, 'verified')`;",
+      "const b = sql`update verification_reports set status = 'completed' where id = 1`;",
+      "const c = sql`insert into verification_verdict_history (id) values (1)`;",
+      "const d = sql`select quote from candidate_claims where report_id = 1`;",
+      "export { a, b, c, d, CHECK_REGISTRY };",
+    ].join("\n"),
+  },
+  {
+    path: "src/features/pipeline/server/queue.server.ts",
+    source: [
+      'const { enqueueVerification } = await import("../../verification/server/queue.server.ts");',
+      "await enqueueVerification({ userId, applicationId, candidateId, orgId });",
+      "const q = sql`update ingest_jobs set status = 'completed' where id = 1`;",
+      "export { q };",
+    ].join("\n"),
+  },
+];
 
 export function probeRules() {
   const failures = [];
@@ -329,8 +377,11 @@ export function probeRules() {
       failures.push(`rule "${probe.rule}" did not fire on its probe — the pattern matches nothing`);
     }
   }
-  const clean = scanFile(CLEAN_PROBE);
-  if (clean.length) failures.push(`a compliant ledger file was flagged: ${JSON.stringify(clean)}`);
+  for (const clean of CLEAN_PROBES) {
+    const findings = scanFile(clean);
+    if (findings.length)
+      failures.push(`a compliant file was flagged: ${clean.path} ${JSON.stringify(findings)}`);
+  }
   return failures;
 }
 
@@ -357,6 +408,7 @@ function main() {
   const covered = {
     verification: files.filter((f) => VERIFICATION_TREE.test(f.path)).length,
     "rank path": files.filter((f) => RANK_PATH.test(f.path)).length,
+    orchestrator: files.filter((f) => ORCHESTRATOR.test(f.path)).length,
     "pure core": files.filter((f) => DECIDING_CORE.test(f.path) && !/\.test\./.test(f.path)).length,
   };
   for (const [name, count] of Object.entries(covered)) {
@@ -379,8 +431,9 @@ function main() {
   }
   console.log(
     `[check:verification] ${files.length} files: pure core, single write door, append-only history, ` +
-      `rank firewall and rank-input ban all hold (${covered.verification} verification, ` +
-      `${covered["rank path"]} rank-path, ${covered["pure core"]} pure-core).`,
+      `rank firewall, rank-input ban and one-way handoff all hold (${covered.verification} verification, ` +
+      `${covered["rank path"]} rank-path, ${covered.orchestrator} orchestrator, ` +
+      `${covered["pure core"]} pure-core).`,
   );
 }
 

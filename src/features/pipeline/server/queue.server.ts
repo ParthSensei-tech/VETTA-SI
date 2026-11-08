@@ -134,7 +134,13 @@ export async function refreshBatchStats(batchId: string) {
   }
 }
 
-export async function persistRanked(job: JobRow): Promise<{ applicationId: string; name: string }> {
+export async function persistRanked(job: JobRow): Promise<{
+  applicationId: string;
+  name: string;
+  candidateId: string;
+  orgId: string;
+  roleId: string;
+}> {
   const sql = await getSql();
   const roles = await sql<RoleLite>`
     select id, company_name, company_stage, title, location, work_mode,
@@ -284,7 +290,13 @@ export async function persistRanked(job: JobRow): Promise<{ applicationId: strin
         end,
         updated_at = now()
       where id = ${appId} and user_id = ${job.user_id}`;
-    return { applicationId: appId, name: profile.full_name };
+    return {
+      applicationId: appId,
+      name: profile.full_name,
+      candidateId,
+      orgId: org.orgId,
+      roleId: job.role_id,
+    };
   }
 
   await sql`
@@ -316,7 +328,13 @@ export async function persistRanked(job: JobRow): Promise<{ applicationId: strin
         fromCache: ranked.ok ? ranked.fromCache : false,
       })})`;
 
-  return { applicationId, name: profile.full_name };
+  return {
+    applicationId,
+    name: profile.full_name,
+    candidateId,
+    orgId: org.orgId,
+    roleId: job.role_id,
+  };
 }
 
 async function recoverStuckJobs() {
@@ -361,7 +379,8 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
   const recordMetric = (status: "completed" | "failed" | "requeued", error: string = "") => {
     void (async () => {
       try {
-        const { recordQueueMetric } = await import("../../../platform/observability/observability.server.ts");
+        const { recordQueueMetric } =
+          await import("../../../platform/observability/observability.server.ts");
         await recordQueueMetric({
           jobId: job.id,
           batchId: job.batch_id,
@@ -388,6 +407,25 @@ async function processOne(job: JobRow): Promise<"completed" | "failed" | "requeu
   }
   try {
     const saved = await persistRanked(job);
+    // Hand the ranked application to the verification queue. Best-effort in the
+    // strict sense: the await is inside its own try, so a ledger that is down,
+    // a migration that has not applied, or a queue row that will not insert can
+    // cost this candidate a verdict and nothing else. The rank path does not
+    // learn from it, does not wait on it beyond one insert, and does not change
+    // what it wrote — which is the same firewall the rail enforces in the other
+    // direction, kept honest here by `features/verification/server/queue.test.ts`.
+    try {
+      const { enqueueVerification } = await import("../../verification/server/queue.server.ts");
+      await enqueueVerification({
+        userId: job.user_id,
+        applicationId: saved.applicationId,
+        candidateId: saved.candidateId,
+        roleId: saved.roleId,
+        orgId: saved.orgId,
+      });
+    } catch (err) {
+      console.error("[vetta-verification]", err);
+    }
     await sql`
       update ingest_jobs
       set status = 'completed', application_id = ${saved.applicationId}, error = '', updated_at = now()
@@ -467,6 +505,20 @@ export async function processQueueSlice(opts?: {
 
 export function ensureQueueWorker() {
   if (g.__vettaQueueTimer__) return;
+  // Verification is queued by the ranks this loop produces, so its worker is
+  // armed here rather than from app boot: nothing else in the app enqueues a
+  // job, and a timer that starts before the first upload just wakes up idle.
+  // The import is dynamic and swallowed for the same reason the handoff below
+  // is — a feature that cannot load must not take ingestion with it.
+  void (async () => {
+    try {
+      const { ensureVerificationWorker } =
+        await import("../../verification/server/queue.server.ts");
+      ensureVerificationWorker();
+    } catch (err) {
+      console.error("[vetta-verification]", err);
+    }
+  })();
   const loop = () => {
     void processQueueSlice({ maxJobs: 32, concurrency: 8, budgetMs: 50_000 }).finally(() => {
       // Tight loop while work exists; idle still wakes often enough for UX.

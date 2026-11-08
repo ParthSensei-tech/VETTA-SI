@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  CLEAN_PROBE,
+  CLEAN_PROBES,
   PROBES,
   RANK_INPUT_COLUMNS,
   VERDICT_READS,
@@ -15,21 +15,23 @@ import {
 /**
  * The rails over the verification feature have to be tested harder than the
  * feature: a check that never fires is indistinguishable from a clean codebase,
- * and every one of these five rules exists to stop one future commit.
+ * and every one of these six rules exists to stop one future commit.
  */
 
 test("the probes prove each rule still fires, and a real ledger file stays clean", () => {
   assert.deepEqual(probeRules(), []);
-  assert.ok(PROBES.length >= 8, "a rule added without a probe is a rule nobody can show working");
+  assert.ok(PROBES.length >= 10, "a rule added without a probe is a rule nobody can show working");
   const rules = new Set(PROBES.map((p) => p.rule));
   assert.deepEqual([...rules].sort(), [
     "append-only",
+    "orchestrator-read",
     "purity",
     "rank-firewall",
     "rank-inputs",
     "write-door",
   ]);
-  assert.equal(scanFile(CLEAN_PROBE).length, 0, CLEAN_PROBE.source);
+  for (const clean of CLEAN_PROBES)
+    assert.equal(scanFile(clean).length, 0, `${clean.path}: ${clean.source}`);
 });
 
 test("stripComments removes prose and keeps code, including prose that names forbidden columns", () => {
@@ -174,6 +176,56 @@ test("the rank firewall holds in both directions and on both spellings", () => {
       source: "const v = application.verification_status;",
     }).length,
     0,
+  );
+});
+
+test("the orchestrator may hand work to the queue but may not read a verdict back", () => {
+  const handoff = (source) =>
+    scanFile({ path: "src/features/pipeline/server/queue.server.ts", source });
+
+  assert.equal(
+    handoff(
+      'const { enqueueVerification } = await import("../../verification/server/queue.server.ts");',
+    ).length,
+    0,
+    "the handoff import is the whole point of the wiring",
+  );
+  assert.equal(
+    handoff("const q = sql`update verification_jobs set status = 'completed' where id = 1`;")
+      .length,
+    0,
+    "and finishing the job row is its own, legal write",
+  );
+
+  const reads = handoff(
+    "const q = sql`select verification_status, verification_summary_json from applications`;",
+  );
+  assert.ok(
+    reads.some((f) => f.rule === "orchestrator-read"),
+    `a pipeline that reads a verdict is how a verdict becomes a score: ${JSON.stringify(reads)}`,
+  );
+  assert.equal(
+    reads.filter((f) => f.rule === "orchestrator-read").length,
+    1,
+    "one finding for the file, not one per token",
+  );
+
+  // The ban is on the tier that owns the ranking handoff, not on the word: the
+  // chip's own read model sits elsewhere and is the feature's only purpose.
+  assert.equal(
+    scanFile({
+      path: "src/features/verification/api/report.ts",
+      source: "const v = application.verification_status;",
+    }).length,
+    0,
+  );
+  assert.equal(
+    scanFile({
+      path: "src/features/pipeline/ui/batch-progress.tsx",
+      source: "const v = application.verification_status;",
+    }).length,
+    0,
+    "the rule is the server tier that ranks, not every file under pipeline/",
   );
 });
 
