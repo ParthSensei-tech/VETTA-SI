@@ -19,10 +19,18 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { CandidatePanel } from "@/features/ranking/ui/candidate-panel";
 import { EmptyState } from "@/shared/components/empty-state";
 import { PipelineChip, ScoreChip, StageChip } from "@/shared/components/status-chip";
+import { VerificationChip } from "@/features/verification/ui/verification-chip";
+import { VerificationReport } from "@/features/verification/ui/verification-report";
+import { useSlateVerdictsQuery, verificationQueryKeys } from "@/features/verification/api/query";
 import { StaleBanner } from "@/features/ranking/ui/provenance-badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ingestResume, rerankStaleApplications } from "@/features/recruiting/api/api";
-import { errorMessage, queryKeys, useRoleBatchesQuery, useRoleQuery } from "@/features/recruiting/api/query";
+import {
+  errorMessage,
+  queryKeys,
+  useRoleBatchesQuery,
+  useRoleQuery,
+} from "@/features/recruiting/api/query";
 import { cn, initials } from "@/shared/utils";
 
 export const Route = createFileRoute("/app/roles/$roleId")({ component: RoleWorkspace });
@@ -31,6 +39,14 @@ function RoleWorkspace() {
   const { roleId } = Route.useParams();
   const { data, isPending, error } = useRoleQuery(roleId);
   const batchesQuery = useRoleBatchesQuery(roleId);
+  // Verification is a second read of the same slate, on its own key: the rank
+  // data and the verdict data come from different features and refresh on
+  // different clocks, and a chip must not be able to invalidate a score.
+  const verdictsQuery = useSlateVerdictsQuery(roleId);
+  const verdictByApp = useMemo(
+    () => new Map((verdictsQuery.data?.verdicts ?? []).map((v) => [v.applicationId, v])),
+    [verdictsQuery.data],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ingestOpen, setIngestOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -49,6 +65,7 @@ function RoleWorkspace() {
       void qc.invalidateQueries({ queryKey: queryKeys.role(roleId) });
       void qc.invalidateQueries({ queryKey: queryKeys.workspace });
       void qc.invalidateQueries({ queryKey: queryKeys.talent });
+      void qc.invalidateQueries({ queryKey: verificationQueryKeys.slate(roleId) });
       setSelectedId(result.application.id);
       setResumeText("");
       setIngestOpen(false);
@@ -207,6 +224,7 @@ function RoleWorkspace() {
                     <span className="flex flex-col items-end gap-1">
                       <ScoreChip score={app.rankScore} />
                       <PipelineChip status={app.pipelineStatus} />
+                      <VerificationChip verdict={verdictByApp.get(app.id)} />
                       {app.isStale && (
                         <span className="text-[10px] text-warn font-medium">⚠ stale</span>
                       )}
@@ -217,7 +235,14 @@ function RoleWorkspace() {
             </ul>
           </aside>
 
-          <div>{selected ? <CandidatePanel application={selected} roleId={role.id} /> : null}</div>
+          <div className="flex flex-col gap-3">
+            {selected ? (
+              <div className="flex justify-end">
+                <VerificationReport applicationId={selected.id} />
+              </div>
+            ) : null}
+            {selected ? <CandidatePanel application={selected} roleId={role.id} /> : null}
+          </div>
         </div>
       )}
 
