@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
 import type {
   AutonomousPortal,
   HitlCheckpointType,
@@ -307,6 +307,53 @@ export const CLIENT_HELPING_STEPS: Record<string, ClientOptionGuide> = {
     recommendedSettings: {
       batchSize: "20-50",
       autoRerank: "enabled",
+    },
+  },
+
+  company_website_portal: {
+    id: "company_website_portal",
+    title: "Official Company Career Portal Direct Ingestion",
+    badge: "Premium Feature • Zero Threat Isolation",
+    description:
+      "Directly ingest and rank candidate resumes submitted to your official company website or career portal for specific openings, with complete isolation and zero security threat to your primary web servers.",
+    tradeOffs: {
+      pros: [
+        "Applicants apply directly on your official company website",
+        "Zero website intrusion: no scripts or tracking pixels loaded on your site",
+        "Zero customer credentials stored or required",
+        "SSRF-protected and DPDP privacy filtered automatically",
+      ],
+      cons: ["Requires recruiter to toggle permission and configure per-job ingestion endpoint"],
+    },
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Select Role & Enable Ingestion Toggle",
+        detail:
+          "Open your target job opening in Roles workspace and click 'Career Portal Ingest'. Toggle on 'Enable Direct Ingestion for this Role'.",
+      },
+      {
+        stepNumber: 2,
+        instruction: "Link Official Job URL & Choose Ingest Mode",
+        detail:
+          "Enter your official careers URL (e.g., https://careers.acmecorp.com/jobs/cloud-architect). Select between real-time Webhook Push Relay or scheduled Read-Only Feed Sync.",
+      },
+      {
+        stepNumber: 3,
+        instruction: "Certify Authorization & Sync",
+        detail:
+          "Confirm legal authorization checkbox. Copy your dedicated webhook token or click 'Sync & Fetch Now' to immediately evaluate applicants against your rubric.",
+      },
+    ],
+    recommendedSettings: {
+      ingestionModes: "Webhook Relay / Feed Sync",
+      fileLimit: "15 MB (PDF, DOCX, TXT)",
+      securityBoundary: "SSRF Defense, Magic-Byte Scans, DPDP Filter",
+    },
+    copySnippet: {
+      label: "Webhook Ingestion Relay Endpoint",
+      language: "text",
+      code: "{WEBHOOK_RELAY_URL}",
     },
   },
 };
@@ -701,12 +748,122 @@ export function formatPortalRow(r: Record<string, unknown>): AutonomousPortal {
 }
 
 // ============================================================================
-// 6. ATS WEBHOOK RELAY PROCESSOR (WORKDAY, TALEO, GREENHOUSE, LEVER)
+// 6. ATS WEBHOOK SECURITY: HMAC SIGNATURES, REPLAY PROTECTION & RATE LIMITING
+// ============================================================================
+
+export const MAX_WEBHOOK_TIMESTAMP_DRIFT_MS = 300_000; // 5 minutes max drift
+export const WEBHOOK_RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute window
+export const WEBHOOK_RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests/minute
+
+const webhookRateLimits = new Map<string, number[]>();
+
+export function clearWebhookRateLimits(): void {
+  webhookRateLimits.clear();
+}
+
+export function checkWebhookRateLimit(opts: {
+  key: string;
+  limit?: number;
+  windowMs?: number;
+  nowMs?: number;
+}): { allowed: boolean; remaining: number } {
+  const limit = opts.limit ?? WEBHOOK_RATE_LIMIT_MAX_REQUESTS;
+  const windowMs = opts.windowMs ?? WEBHOOK_RATE_LIMIT_WINDOW_MS;
+  const now = opts.nowMs ?? Date.now();
+
+  const history = webhookRateLimits.get(opts.key) || [];
+  const validHistory = history.filter((t) => now - t < windowMs);
+
+  if (validHistory.length >= limit) {
+    webhookRateLimits.set(opts.key, validHistory);
+    return { allowed: false, remaining: 0 };
+  }
+
+  validHistory.push(now);
+  webhookRateLimits.set(opts.key, validHistory);
+  return { allowed: true, remaining: limit - validHistory.length };
+}
+
+export function generateAtsWebhookSignature(opts: {
+  payloadString: string;
+  secret: string;
+  timestamp: number;
+}): string {
+  return createHmac("sha256", opts.secret)
+    .update(`${opts.timestamp}.${opts.payloadString}`)
+    .digest("hex");
+}
+
+export function verifyAtsWebhookSignature(opts: {
+  payloadString: string;
+  signatureHeader?: string | null;
+  timestampHeader?: string | number | null;
+  secret: string;
+  maxDriftMs?: number;
+  nowMs?: number;
+}): { valid: boolean; reason?: string } {
+  if (!opts.secret) {
+    return { valid: false, reason: "Missing webhook secret" };
+  }
+  if (opts.timestampHeader === undefined || opts.timestampHeader === null || opts.timestampHeader === "") {
+    return { valid: false, reason: "Missing timestamp header (replay protection required)" };
+  }
+
+  const timestamp =
+    typeof opts.timestampHeader === "number"
+      ? opts.timestampHeader
+      : parseInt(String(opts.timestampHeader), 10);
+
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return { valid: false, reason: "Invalid timestamp header" };
+  }
+
+  const now = opts.nowMs ?? Date.now();
+  const maxDrift = opts.maxDriftMs ?? MAX_WEBHOOK_TIMESTAMP_DRIFT_MS;
+  if (Math.abs(now - timestamp) > maxDrift) {
+    return {
+      valid: false,
+      reason: `Timestamp drift exceeds allowable threshold (${maxDrift / 1000}s) - replay attack rejected`,
+    };
+  }
+
+  if (!opts.signatureHeader) {
+    return { valid: false, reason: "Missing signature header" };
+  }
+
+  const rawSig = opts.signatureHeader.replace(/^(v1=|sha256=)/, "").trim();
+  const expectedSig = generateAtsWebhookSignature({
+    payloadString: opts.payloadString,
+    secret: opts.secret,
+    timestamp,
+  });
+
+  try {
+    const sigBuf = Buffer.from(rawSig, "hex");
+    const expectedBuf = Buffer.from(expectedSig, "hex");
+    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+      return { valid: false, reason: "Cryptographic signature mismatch" };
+    }
+  } catch {
+    return { valid: false, reason: "Malformed signature format" };
+  }
+
+  return { valid: true };
+}
+
+// ============================================================================
+// 7. ATS WEBHOOK RELAY PROCESSOR (WORKDAY, TALEO, GREENHOUSE, LEVER)
 // ============================================================================
 
 export async function processAtsWebhookIngestion(opts: {
   portalId: string;
   payload: AtsWebhookPayload;
+  rawBody?: string;
+  signatureHeader?: string | null;
+  timestampHeader?: string | number | null;
+  clientIp?: string;
+  skipSecurityChecks?: boolean;
+  nowMs?: number;
 }): Promise<{
   ok: boolean;
   applicationId: string;
@@ -722,6 +879,35 @@ export async function processAtsWebhookIngestion(opts: {
   `;
   if (!portalRow) throw new Error("Autonomous portal not found");
   const portal = formatPortalRow(portalRow);
+
+  // Apply rate limiting (per portal + clientIp)
+  if (!opts.skipSecurityChecks) {
+    const rateLimitKey = `${portal.id}:${opts.clientIp || "default"}`;
+    const rateCheck = checkWebhookRateLimit({
+      key: rateLimitKey,
+      nowMs: opts.nowMs,
+    });
+    if (!rateCheck.allowed) {
+      throw new Error("Rate limit exceeded: maximum 60 requests per minute per origin");
+    }
+
+    // Verify HMAC signature & replay timestamp if security headers or webhook secret provided
+    if (opts.signatureHeader !== undefined || opts.timestampHeader !== undefined || portal.webhookSecret) {
+      if (opts.signatureHeader || opts.timestampHeader) {
+        const payloadString = opts.rawBody ?? JSON.stringify(opts.payload);
+        const verification = verifyAtsWebhookSignature({
+          payloadString,
+          signatureHeader: opts.signatureHeader,
+          timestampHeader: opts.timestampHeader,
+          secret: portal.webhookSecret,
+          nowMs: opts.nowMs,
+        });
+        if (!verification.valid) {
+          throw new Error(`Webhook authentication failed: ${verification.reason}`);
+        }
+      }
+    }
+  }
 
   // Find target role
   let roleId = opts.payload.job.roleId;

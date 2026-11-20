@@ -335,12 +335,119 @@ function deterministicVectorFallback(text: string, dim: number): number[] {
   return out;
 }
 
+/**
+ * Cloud Embedding Gateway: OpenAI (text-embedding-3-small)
+ * Batches inputs up to 100 texts per API call with explicit dimension projection.
+ */
+async function embedViaOpenAI(texts: string[], dim: number, apiKey: string): Promise<number[][]> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < texts.length; i += 100) {
+    chunks.push(texts.slice(i, i + 100));
+  }
+  const results: number[][] = [];
+  for (const chunk of chunks) {
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "text-embedding-3-small",
+        input: chunk,
+        dimensions: dim,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`OpenAI Embeddings API HTTP ${res.status}: ${await res.text()}`);
+    }
+    const data = (await res.json()) as { data: Array<{ embedding: number[]; index: number }> };
+    const sorted = [...data.data].sort((a, b) => a.index - b.index);
+    for (const item of sorted) {
+      results.push(item.embedding);
+    }
+  }
+  return results;
+}
+
+/**
+ * Cloud Embedding Gateway: Google Gemini (text-embedding-004)
+ * Batches inputs up to 100 texts per API call with outputDimensionality.
+ */
+async function embedViaGemini(texts: string[], dim: number, apiKey: string): Promise<number[][]> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < texts.length; i += 100) {
+    chunks.push(texts.slice(i, i + 100));
+  }
+  const results: number[][] = [];
+  for (const chunk of chunks) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requests: chunk.map((text) => ({
+          model: "models/text-embedding-004",
+          content: { parts: [{ text }] },
+          outputDimensionality: dim,
+        })),
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Gemini Embeddings API HTTP ${res.status}: ${await res.text()}`);
+    }
+    const data = (await res.json()) as { embeddings: Array<{ values: number[] }> };
+    for (const item of data.embeddings) {
+      results.push(item.values);
+    }
+  }
+  return results;
+}
+
+/**
+ * Attempts to embed texts via configured Cloud Embeddings APIs (OpenAI or Gemini).
+ * Returns null if no cloud API keys are set or if cloud requests fail.
+ */
+export async function embedTextsViaCloud(texts: string[], dim: number): Promise<number[][] | null> {
+  if (texts.length === 0) return [];
+
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey && openaiKey.trim().length > 0) {
+    try {
+      return await embedViaOpenAI(texts, dim, openaiKey.trim());
+    } catch (err) {
+      console.warn("[embed-text] OpenAI cloud embedding failed, falling back to alternatives:", err);
+    }
+  }
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey && geminiKey.trim().length > 0) {
+    try {
+      return await embedViaGemini(texts, dim, geminiKey.trim());
+    } catch (err) {
+      console.warn("[embed-text] Gemini cloud embedding failed, falling back to alternatives:", err);
+    }
+  }
+
+  return null;
+}
+
 export async function embedTexts(
   texts: string[],
   kind: "query" | "passage",
   modelName: string = DEFAULT_EMBEDDING_MODEL,
 ): Promise<number[][]> {
   const info = getModelInfo(modelName);
+
+  // 1. Dual Cloud Gateway: Serverless fast-path avoiding local model loading cold starts
+  if (process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY) {
+    const cloudVectors = await embedTextsViaCloud(texts, info.dim);
+    if (cloudVectors && cloudVectors.length === texts.length) {
+      return cloudVectors;
+    }
+  }
+
+  // 2. Local ONNX Pipeline: @xenova/transformers quantized model execution
   try {
     const run = await getExtractor(info.id);
     const out: number[][] = [];
@@ -351,7 +458,7 @@ export async function embedTexts(
     }
     return out;
   } catch {
-    // Graceful fallback to deterministic unit vector so indexing & tests never fail
+    // 3. Graceful fallback to deterministic unit vector so indexing & tests never fail
     return texts.map((t) => deterministicVectorFallback(t, info.dim));
   }
 }

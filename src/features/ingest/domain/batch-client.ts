@@ -7,7 +7,7 @@ export type PreparedUpload = {
 };
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
-const MAX_ITEMS = 200;
+export const MAX_ITEMS = 500;
 const INNER_EXTS = /\.(pdf|docx|txt|md|csv|xlsx)$/i;
 
 function basename(path: string): string {
@@ -94,7 +94,7 @@ export async function prepareBatchFiles(files: File[]): Promise<{
       skipped.push(`${name} (unreadable)`);
     }
     if (items.length >= MAX_ITEMS) {
-      skipped.push("Stopped at 200 files — drop another batch for the rest.");
+      skipped.push(`Stopped at ${MAX_ITEMS} files — drop another batch for the rest.`);
       break;
     }
   }

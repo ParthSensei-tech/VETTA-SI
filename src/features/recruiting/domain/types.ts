@@ -390,6 +390,8 @@ export type PublicJob = {
   niceToHaves: string[];
   jdText: string;
   postedAt: string;
+  /** Original posting time (ISO) — JobPosting datePosted. Optional: not every read model selects it. */
+  createdAt?: string;
 };
 
 export type PortalStage = "received" | "screening" | "complete";
@@ -762,4 +764,228 @@ export type AtsWebhookPayload = {
     roleId?: string;
     title?: string;
   };
+};
+
+export type PortalSyncMode = "webhook_push" | "feed_pull" | "manual_pull";
+
+export type RoleExternalPortalConfig = {
+  id: string;
+  roleId: string;
+  orgId: string;
+  isEnabled: boolean;
+  portalJobUrl: string;
+  syncMode: PortalSyncMode;
+  feedApiUrl: string;
+  feedAuthToken: string;
+  webhookToken: string;
+  autoShortlist: boolean;
+  authorizedByUserId: string | null;
+  authorizedAt: string | null;
+  lastSyncAt: string | null;
+  lastSyncStatus: "idle" | "syncing" | "success" | "failed";
+  lastSyncMessage: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PortalSyncLog = {
+  id: string;
+  roleId: string;
+  orgId: string;
+  syncType: "webhook" | "feed_pull" | "manual";
+  resumesFetched: number;
+  resumesParsed: number;
+  candidatesShortlisted: number;
+  status: "success" | "partial" | "failed";
+  detailsJson: string;
+  errorMessage: string;
+  createdAt: string;
+};
+
+export type ExternalPortalCandidatePayload = {
+  fullName: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  linkedinUrl?: string;
+  resumeText?: string;
+  resumeBase64?: string;
+  resumeFilename?: string;
+  mediaType?: string;
+  appliedAt?: string;
+};
+
+export type ExternalPortalSyncSummary = {
+  ok: boolean;
+  syncedCount: number;
+  shortlistedCount: number;
+  hitlCheckpointsCreated: number;
+  errors: string[];
+};
+
+// ─── Offer Guard: Pre-boarding Dropout Prevention ──────────────────────
+
+export const INTENT_STATES = [
+  "committed",
+  "wavering",
+  "counteroffered",
+  "imminent_renege",
+  "joined",
+  "reneged",
+] as const;
+export type IntentState = (typeof INTENT_STATES)[number];
+
+export const RISK_TIERS = ["low", "moderate", "high", "critical"] as const;
+export type RiskTier = (typeof RISK_TIERS)[number];
+
+export const OFFER_RESOLUTIONS = ["active", "joined", "reneged", "rescinded"] as const;
+export type OfferResolution = (typeof OFFER_RESOLUTIONS)[number];
+
+export const SIGNAL_TYPES = [
+  "response_latency",
+  "resignation_milestone",
+  "document_velocity",
+  "portal_dwell",
+  "recruiter_sentiment",
+  "counteroffer_hint",
+  "doj_delay_request",
+  "manual_override",
+] as const;
+export type SignalType = (typeof SIGNAL_TYPES)[number];
+
+export const PLAYBOOK_KEYS = [
+  "resignation_escalation",
+  "counteroffer_defense",
+  "peer_buddy_sync",
+  "executive_alignment",
+  "preboarding_engagement",
+  "silver_medalist_warm",
+  "doj_delay_counter",
+] as const;
+export type PlaybookKey = (typeof PLAYBOOK_KEYS)[number];
+
+export const INTERVENTION_STATUSES = [
+  "recommended",
+  "in_progress",
+  "completed",
+  "dismissed",
+] as const;
+export type InterventionStatus = (typeof INTERVENTION_STATUSES)[number];
+
+export type PreboardingOffer = {
+  id: string;
+  orgId: string;
+  roleId: string;
+  candidateId: string;
+  applicationId: string;
+  offerAcceptedDate: string;
+  targetJoiningDate: string;
+  totalNoticeDays: number;
+  offeredCtc: number;
+  currentCtc: number;
+  hikePercentage: number;
+  placementFee: number;
+  currency: string;
+  intentState: IntentState;
+  hazardScore: number;
+  riskTier: RiskTier;
+  resignationSubmitted: boolean;
+  resignationSubmittedDate: string | null;
+  resignationAccepted: boolean;
+  bgvDocumentsSubmitted: boolean;
+  preboardingPortalVisits: number;
+  lastResponseLatencyHours: number;
+  silverMedalistAppId: string | null;
+  silverMedalistWarmed: boolean;
+  buddyAssignedName: string;
+  buddyAssignedEmail: string;
+  swagDispatched: boolean;
+  resolution: OfferResolution;
+  resolvedAt: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  // Joined from related tables for display
+  candidateName?: string;
+  roleTitle?: string;
+  companyName?: string;
+};
+
+export type PreboardingSignal = {
+  id: string;
+  offerId: string;
+  signalType: SignalType;
+  signalValue: number;
+  signalPayload: Record<string, string | number | boolean | null>;
+  notes: string;
+  detectedAt: string;
+};
+
+export type PreboardingIntervention = {
+  id: string;
+  offerId: string;
+  playbookKey: PlaybookKey;
+  status: InterventionStatus;
+  recommendedBy: string;
+  actorUserId: string;
+  actionSummary: string;
+  outcomeNotes: string;
+  completedAt: string | null;
+  createdAt: string;
+};
+
+export type HazardAssessment = {
+  hazardScore: number;
+  riskTier: RiskTier;
+  intentState: IntentState;
+  primaryDrivers: string[];
+  playbooks: PlaybookRecommendation[];
+};
+
+export type PlaybookRecommendation = {
+  key: PlaybookKey;
+  title: string;
+  urgency: "low" | "medium" | "high" | "critical";
+  rationale: string;
+  suggestedAction: string;
+};
+
+export type BaselineHazardParams = {
+  totalNoticeDays: number;
+  hikePercentage: number;
+  currentEmployerType: "gcc_product" | "tier1_it_services" | "midmarket_services" | "startup" | "unknown";
+  requiresRelocation: boolean;
+};
+
+export type TelemetrySnapshot = {
+  daysSinceAcceptance: number;
+  totalNoticeDays: number;
+  resignationSubmitted: boolean;
+  daysSinceAcceptanceToResignation: number | null;
+  averageResponseLatencyHours: number;
+  responseLatencyTrend: number; // multiplier: 1.0 = stable, >2.5 = alarming drift
+  preboardingPortalVisits: number;
+  bgvDocumentsSubmitted: boolean;
+  dojDelayRequested: boolean;
+  evasionSignalCount: number;
+  counterofferHintCount: number;
+};
+
+export type OfferGuardDashboard = {
+  activeOffers: number;
+  totalFeeProtected: number;
+  avgNoticeDays: number;
+  riskDistribution: Record<RiskTier, number>;
+  joinedThisMonth: number;
+  renegedThisMonth: number;
+  joiningRatioThisMonth: number;
+  offers: PreboardingOffer[];
+};
+
+export type OfferGuardTutorialStep = {
+  id: string;
+  stage: "setup" | "monitoring" | "intervention" | "resolution";
+  title: string;
+  body: string;
+  anchorSelector?: string;
 };

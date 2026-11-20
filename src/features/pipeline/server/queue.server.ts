@@ -116,7 +116,7 @@ export async function refreshBatchStats(batchId: string) {
     if (row) {
       void (async () => {
         try {
-          const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
+          const { deepenRoleTopN } = await import("../../ranking/server/deepen.server.ts");
           await deepenRoleTopN({
             userId: row.user_id,
             roleId: row.role_id,

@@ -9,6 +9,10 @@ import {
   loadHitlCheckpoints,
   decideHitlCheckpoint,
   processAtsWebhookIngestion,
+  generateAtsWebhookSignature,
+  verifyAtsWebhookSignature,
+  checkWebhookRateLimit,
+  clearWebhookRateLimits,
 } from "../server/autonomous-portal.server.ts";
 import { getSql } from "../../../platform/db.ts";
 import { randomUUID } from "node:crypto";
@@ -35,7 +39,13 @@ test("Algorithm: SkillTrie provides fast multi-pattern text scanning", () => {
 });
 
 test("Client Connection Wizard: Comprehensive helping steps for all connection channels", () => {
-  const channels = ["career_portal", "embed_widget", "ats_webhook", "direct_drop"] as const;
+  const channels = [
+    "career_portal",
+    "embed_widget",
+    "ats_webhook",
+    "company_website_portal",
+    "direct_drop",
+  ] as const;
 
   for (const ch of channels) {
     const guide = CLIENT_HELPING_STEPS[ch];
@@ -240,4 +250,78 @@ test("ATS Webhook Relay: Ingests Workday/Taleo applicant, runs multi-stage retri
   const checkpoints = await loadHitlCheckpoints({ orgId: testOrgId });
   assert.ok(checkpoints.length >= 1, "HITL checkpoint must be recorded");
   assert.equal(checkpoints[0].candidateName, "Sanjay Singhania");
+});
+
+test("Security: Webhook HMAC signature, replay protection & rate limiting", async () => {
+  const secret = "whsec_test_secret_key_123456789";
+  const now = 1762700000000;
+  const rawPayload = JSON.stringify({ event: "candidate.created", test: true });
+
+  // 1. Valid signature & timestamp within window passes
+  const validSig = generateAtsWebhookSignature({
+    payloadString: rawPayload,
+    secret,
+    timestamp: now,
+  });
+
+  const verified = verifyAtsWebhookSignature({
+    payloadString: rawPayload,
+    signatureHeader: `sha256=${validSig}`,
+    timestampHeader: now,
+    secret,
+    nowMs: now + 5000, // 5s later
+  });
+  assert.equal(verified.valid, true, "Valid signature must pass");
+
+  // 2. Expired timestamp (> 300s) rejected with replay attack protection
+  const expiredVerification = verifyAtsWebhookSignature({
+    payloadString: rawPayload,
+    signatureHeader: `sha256=${validSig}`,
+    timestampHeader: now - 350_000, // 350s ago
+    secret,
+    nowMs: now,
+  });
+  assert.equal(expiredVerification.valid, false);
+  assert.ok(
+    expiredVerification.reason?.includes("replay attack rejected"),
+    "Must explicitly flag replay attack drift",
+  );
+
+  // 3. Missing timestamp rejected
+  const missingTimestamp = verifyAtsWebhookSignature({
+    payloadString: rawPayload,
+    signatureHeader: `sha256=${validSig}`,
+    timestampHeader: null,
+    secret,
+    nowMs: now,
+  });
+  assert.equal(missingTimestamp.valid, false);
+  assert.ok(missingTimestamp.reason?.includes("Missing timestamp"));
+
+  // 4. Tampered payload rejected
+  const tampered = verifyAtsWebhookSignature({
+    payloadString: JSON.stringify({ event: "candidate.created", test: "tampered" }),
+    signatureHeader: `sha256=${validSig}`,
+    timestampHeader: now,
+    secret,
+    nowMs: now,
+  });
+  assert.equal(tampered.valid, false);
+  assert.ok(tampered.reason?.includes("mismatch"));
+
+  // 5. Sliding-window rate-limiter: 60 req/min
+  clearWebhookRateLimits();
+  const testKey = "portal_ratelimit_test";
+  for (let i = 0; i < 60; i++) {
+    const res = checkWebhookRateLimit({ key: testKey, limit: 60, nowMs: now });
+    assert.equal(res.allowed, true, `Request ${i + 1} should be allowed`);
+  }
+  // 61st request in same minute must be blocked
+  const blocked = checkWebhookRateLimit({ key: testKey, limit: 60, nowMs: now });
+  assert.equal(blocked.allowed, false, "61st request in same minute must be blocked");
+  assert.equal(blocked.remaining, 0);
+
+  // 61st request 61 seconds later must be allowed (sliding window reset)
+  const allowedLater = checkWebhookRateLimit({ key: testKey, limit: 60, nowMs: now + 61_000 });
+  assert.equal(allowedLater.allowed, true, "Request in subsequent minute window must be allowed");
 });

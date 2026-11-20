@@ -1,8 +1,43 @@
 @import "tailwindcss";
 
+/* The app is always Midnight; `dark:` must follow the class the boot script
+   sets, not the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Self-hosted, same faces, no Google.
+ *
+ * These replace the single render-blocking `fonts.googleapis.com/css2` link the
+ * root document used to carry, and they are the *only* reason the repo depends
+ * on a font package: each file is a `@font-face` block pointing at a woff2
+ * inside `node_modules`, which the build fingerprints into this app's own
+ * static assets. Requests stay same-origin, the PWA works offline, and a
+ * blocked or rate-limited third party cannot decide what Vetta's headings look
+ * like. The latin subset is asked for explicitly for the static families;
+ * `unicode-range` means the browser never downloads a range this copy does not
+ * use. Weight set matches the old URL exactly, no more.
+ */
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-400-italic.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource-variable/unbounded";
+@import "@fontsource-variable/inter";
+
 @theme {
+  /*
+   * `"Newsreader Variable"` is first because that is the family Fontsource's
+   * variable package registers, while the old Google URL served the same design
+   * under plain `Newsreader`. Both spellings are listed, and the serif fallbacks
+   * stay behind them, so a visitor still gets a Palatino-class face while the
+   * local woff2 arrives. The Plex stacks need no change: those packages register
+   * under the names already written here.
+   */
   --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Newsreader", "Iowan Old Style", "Palatino Linotype", serif;
+  --font-display: "Newsreader Variable", "Newsreader", "Iowan Old Style", "Palatino Linotype", serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --color-bg: var(--vetta-bg);
@@ -35,6 +70,8 @@
   --color-destructive: var(--vetta-danger);
   --color-input: var(--vetta-border);
   --color-accent-muted: var(--vetta-elevated);
+  --color-accent-ink: var(--vetta-accent-ink);
+  --color-field: var(--vetta-field);
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -45,55 +82,79 @@
   --radius: 12px;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Aurora Fjord — landing-only palette (dark, cinematic). */
+  --color-l-bg: #07100f;
+  --color-l-surface: rgba(233, 240, 236, 0.06);
+  --color-l-text: #e9f0ec;
+  --color-l-muted: rgba(233, 240, 236, 0.6);
+  --color-l-hairline: rgba(233, 240, 236, 0.14);
+  --color-mint: #7cf2c0;
+  --color-ember: #ff9468;
+  --color-glacier: #8fb8d9;
+  --font-l-display: "Unbounded Variable", "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --font-l-body: "Inter Variable", "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
+/*
+ * Brand palette — Midnight Black, Pure White, Lime Green. One theme, no toggle.
+ *
+ * One rule: the three colours carry *meaning*, not decoration.
+ *   - Midnight #0B0B0C is the canvas and the ink printed on lime.
+ *   - Pure White #FFFFFF is the text and the edge light on glass.
+ *   - Lime #C6F432 is action: primary fills, focus, active state, progress —
+ *     and the ambient glow the glass panels sit in, like the reference.
+ *
+ * Surfaces are layered, not drawn: `--glass-*` gives the frosted fill, hairline
+ * and top highlight, `--shadow-soft-*` the diffuse depth, and the body mesh
+ * below gives the blur something to refract. Status hues (danger/warn/success/
+ * info) stay chromatic on purpose — a recruiting desk reads verdicts by colour.
+ */
 :root,
 html.dark {
   color-scheme: dark;
-  --vetta-bg: #0c0c0b;
-  --vetta-surface: #141412;
-  --vetta-elevated: #1c1c18;
-  --vetta-fg: #f2f0ea;
-  --vetta-muted: #9c9890;
-  --vetta-subtle: #6e6b64;
-  --vetta-accent: #d8d0c4;
-  --vetta-accent-fg: #0c0c0b;
-  --vetta-primary: #d8d0c4;
-  --vetta-primary-fg: #0c0c0b;
-  --vetta-border: #2a2925;
-  --vetta-border-strong: #3d3b36;
-  --vetta-ring: #d8d0c4;
-  --vetta-danger: #c45c4a;
-  --vetta-warn: #c4a15a;
-  --vetta-success: #7a9474;
-  --vetta-info: #7a8a9a;
-  --shadow-border: 0 0 0 1px rgba(242, 240, 234, 0.08);
-  --shadow-border-hover: 0 0 0 1px rgba(242, 240, 234, 0.14);
-  --shadow-lift: 0 16px 40px -24px rgba(0, 0, 0, 0.55);
-}
+  --vetta-bg: #0b0b0c;
+  --vetta-surface: #131316;
+  --vetta-elevated: #1b1b20;
+  --vetta-fg: #ffffff;
+  --vetta-muted: #a4a4ad;
+  --vetta-subtle: #77777f;
+  --vetta-accent: #c6f432;
+  --vetta-accent-fg: #0b0b0c;
+  --vetta-accent-ink: #c6f432;
+  --vetta-primary: #c6f432;
+  --vetta-primary-fg: #0b0b0c;
+  --vetta-border: rgba(255, 255, 255, 0.1);
+  --vetta-border-strong: rgba(255, 255, 255, 0.18);
+  --vetta-ring: #c6f432;
+  --vetta-danger: #ff6b5f;
+  --vetta-warn: #f5b544;
+  --vetta-success: #35d07f;
+  --vetta-info: #7cb3ff;
 
-html.light {
-  color-scheme: light;
-  --vetta-bg: #f3f0e8;
-  --vetta-surface: #fffcf6;
-  --vetta-elevated: #ebe6db;
-  --vetta-fg: #1c1b18;
-  --vetta-muted: #6b6760;
-  --vetta-subtle: #8a857c;
-  --vetta-accent: #3f3c36;
-  --vetta-accent-fg: #f3f0e8;
-  --vetta-primary: #1c1b18;
-  --vetta-primary-fg: #f3f0e8;
-  --vetta-border: #ddd6c8;
-  --vetta-border-strong: #c9c1b2;
-  --vetta-ring: #3f3c36;
-  --vetta-danger: #b42318;
-  --vetta-warn: #9a6700;
-  --vetta-success: #3f6b4a;
-  --vetta-info: #4d6275;
-  --shadow-border: 0 0 0 1px rgba(28, 27, 24, 0.08);
-  --shadow-border-hover: 0 0 0 1px rgba(28, 27, 24, 0.16);
-  --shadow-lift: 0 18px 40px -24px rgba(28, 27, 24, 0.28);
+  --glass-fill: rgba(255, 255, 255, 0.045);
+  --glass-fill-strong: rgba(255, 255, 255, 0.07);
+  --glass-hairline: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.16);
+  --glass-blur: 18px;
+
+  --shadow-soft-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--glass-hairline);
+  --shadow-soft-2: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 32px -18px rgba(0, 0, 0, 0.7),
+    0 0 0 1px var(--glass-hairline);
+  --shadow-soft-3: 0 6px 16px rgba(0, 0, 0, 0.45), 0 32px 64px -26px rgba(0, 0, 0, 0.8),
+    0 0 0 1px var(--glass-hairline);
+  --shadow-lime: 0 10px 26px -12px rgba(198, 244, 50, 0.5);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  --vetta-field: rgba(255, 255, 255, 0.035);
+  --field-inset: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+
+  --shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  --shadow-lift: 0 16px 40px -24px rgba(0, 0, 0, 0.7);
+
+  --mesh-a: rgba(198, 244, 50, 0.09);
+  --mesh-b: rgba(124, 179, 255, 0.06);
+  --mesh-glow: rgba(198, 244, 50, 0.16);
 }
 
 @layer base {
@@ -106,9 +167,22 @@ html.light {
 
   body {
     min-height: 100dvh;
-    background: var(--vetta-bg);
     color: var(--vetta-fg);
     font-family: var(--font-sans);
+    /*
+     * The mesh the frosted panels refract. Fixed, so it holds still while
+     * content scrolls past it — that parallax is what sells glass as a
+     * material rather than a lighter grey. The signature of the reference:
+     * one large lime pool rising from the bottom edge, so the panels nearest
+     * the action catch green light, with a smaller one behind the top-right
+     * where primary buttons live. Both stay far below the text's contrast
+     * budget.
+     */
+    background-color: var(--vetta-bg);
+    background-image: radial-gradient(72rem 44rem at 50% 114%, var(--mesh-glow), transparent 64%),
+      radial-gradient(56rem 38rem at 88% -10%, var(--mesh-a), transparent 62%),
+      radial-gradient(44rem 34rem at -6% 106%, var(--mesh-b), transparent 60%);
+    background-attachment: fixed, fixed, fixed;
   }
 
   h1,
@@ -192,6 +266,55 @@ html.light {
   animation: vetta-shimmer 1.4s linear infinite;
 }
 
+/*
+ * Glassmorphism 2.0 + 3D soft realism, as reusable surfaces.
+ *
+ * A glass panel is four things at once: a translucent fill, a blur that
+ * samples the mesh behind it, a hairline that catches the edge, and a top
+ * inner highlight that reads as the thickness of the sheet. The `--shadow-soft-*`
+ * ramp is the 3D half — diffuse, low-opacity, layered, so panels sit *above*
+ * the page instead of being outlined by it. Kept in `components` so a utility
+ * class on the element still wins.
+ */
+@layer components {
+  .glass {
+    background-color: var(--glass-fill);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    border: 1px solid var(--glass-hairline);
+    box-shadow: var(--shadow-soft-2), var(--shadow-inset);
+  }
+
+  .glass-strong {
+    background-color: var(--glass-fill-strong);
+    backdrop-filter: blur(calc(var(--glass-blur) * 1.6)) saturate(165%);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.6)) saturate(165%);
+    border: 1px solid var(--glass-hairline);
+    box-shadow: var(--shadow-soft-3), var(--shadow-inset);
+  }
+
+  /* Lime action surface: lit from above, pressing it sinks the light. */
+  .soft-lime {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--vetta-primary) 100%, white 14%),
+      var(--vetta-primary) 58%,
+      color-mix(in oklab, var(--vetta-primary) 100%, black 6%)
+    );
+    box-shadow: var(--shadow-lime), var(--shadow-inset);
+  }
+
+  .soft-1 {
+    box-shadow: var(--shadow-soft-1);
+  }
+  .soft-2 {
+    box-shadow: var(--shadow-soft-2);
+  }
+  .soft-3 {
+    box-shadow: var(--shadow-soft-3);
+  }
+}
+
 @media print {
   body {
     background: #fff !important;
@@ -203,4 +326,168 @@ html.light {
   .print\:hidden {
     display: none !important;
   }
+}
+
+/* ── Aurora Fjord landing ─────────────────────────────────────────── */
+
+.landing {
+  background: var(--color-l-bg);
+  color: var(--color-l-text);
+  font-family: var(--font-l-body);
+}
+
+.landing :focus-visible {
+  outline: 2px solid var(--color-mint);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.l-glass {
+  background: var(--color-l-surface);
+  border: 1px solid var(--color-l-hairline);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 48px rgba(233, 240, 236, 0.045),
+    0 24px 60px -32px rgba(0, 0, 0, 0.7);
+}
+
+.l-vignette {
+  background:
+    radial-gradient(120% 90% at 50% 40%, transparent 40%, rgba(7, 16, 15, 0.72) 100%),
+    linear-gradient(to top, rgba(7, 16, 15, 0.92) 0%, transparent 34%),
+    linear-gradient(to bottom, rgba(7, 16, 15, 0.66) 0%, transparent 26%);
+}
+
+.l-bust-static {
+  background: linear-gradient(160deg, var(--color-mint) 10%, var(--color-glacier) 90%);
+  mask-image: url("/bust-mask.webp");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("/bust-mask.webp");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.l-pill-ember {
+  background: var(--color-ember);
+  color: #201009;
+  transition:
+    transform 200ms var(--ease-out-soft),
+    box-shadow 200ms var(--ease-out-soft),
+    background 200ms var(--ease-out-soft);
+}
+
+.l-pill-ember:hover {
+  background: #ffa884;
+  box-shadow: 0 8px 32px -12px rgba(255, 148, 104, 0.55);
+  transform: translateY(-1px);
+}
+
+.l-pill-ghost {
+  border: 1px solid var(--color-l-hairline);
+  color: var(--color-l-text);
+  transition:
+    border-color 200ms var(--ease-out-soft),
+    background 200ms var(--ease-out-soft);
+}
+
+.l-pill-ghost:hover {
+  border-color: rgba(233, 240, 236, 0.32);
+  background: rgba(233, 240, 236, 0.05);
+}
+
+/* Hero intro: CSS-only so SSR HTML is visible without JS and the global
+   reduced-motion clamp switches it off. Total sequence ~1.15s. */
+@keyframes l-resolve {
+  from {
+    opacity: 0;
+    filter: blur(16px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes l-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.l-intro-resolve {
+  animation: l-resolve 0.9s var(--ease-out-soft) both;
+}
+
+.l-intro-rise {
+  animation: l-rise 0.6s var(--ease-out-soft) both;
+}
+
+.l-d1 {
+  animation-delay: 0.25s;
+}
+.l-d2 {
+  animation-delay: 0.4s;
+}
+.l-d3 {
+  animation-delay: 0.55s;
+}
+
+/* Pinned how-it-works: only when GSAP takes over; otherwise a readable grid. */
+.l-how-live .l-how-stage {
+  display: block;
+  height: 24rem;
+}
+
+.l-how-live [data-how-card] {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes l-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 242, 192, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(124, 242, 192, 0);
+  }
+}
+
+.l-pulse-ring {
+  animation: l-pulse 3.2s var(--ease-out-soft) infinite;
+}
+
+@keyframes l-acc-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes l-acc-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.l-acc-content[data-state="open"] {
+  animation: l-acc-down 240ms var(--ease-out-soft);
+}
+
+.l-acc-content[data-state="closed"] {
+  animation: l-acc-up 200ms var(--ease-out-soft);
 }

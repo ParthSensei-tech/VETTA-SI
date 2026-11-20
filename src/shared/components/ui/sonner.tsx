@@ -9,7 +9,7 @@ export function Toaster() {
       position="bottom-right"
       toastOptions={{
         classNames: {
-          toast: "bg-elevated text-fg border-border shadow-[var(--shadow-border)]",
+          toast: "glass-strong text-fg",
           description: "text-muted",
           actionButton: "bg-primary text-primary-foreground",
         },

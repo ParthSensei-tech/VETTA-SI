@@ -5,8 +5,8 @@ import { useCurrentUserState } from "@/platform/auth/use-current-user";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { ThemeToggle } from "@/shared/components/theme-toggle";
 import { VettaMark } from "@/shared/components/vetta-mark";
+import { TermsOfServiceLink, DpaLink } from "@/features/compliance/ui/legal-terms-dialog";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -74,9 +74,6 @@ function Login() {
       </section>
 
       <section className="relative flex flex-col justify-center px-6 py-12 sm:px-12">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
         <Link to="/" className="mb-10 inline-flex items-center gap-2 lg:hidden">
           <VettaMark className="size-5" />
           <span className="font-display text-lg">Vetta</span>
@@ -143,11 +140,26 @@ function Login() {
             </form>
             <button
               type="button"
-              className="text-left text-sm text-muted hover:text-fg"
+              className="text-left text-sm text-muted hover:text-fg cursor-pointer"
               onClick={() => setMode((m) => (m === "in" ? "up" : "in"))}
             >
               {mode === "in" ? "Need an account? Create one" : "Already have an account? Sign in"}
             </button>
+            {mode === "in" ? (
+              <p className="text-sm text-muted">
+                New here?{" "}
+                <Link to="/signup" className="text-fg underline-offset-4 hover:underline">
+                  Set up your company workspace
+                </Link>{" "}
+                — one minute, then paste your first role.
+              </p>
+            ) : null}
+
+            <div className="pt-2 border-t border-border/50 text-[11px] text-muted leading-relaxed">
+              By continuing, you agree to Vetta's{" "}
+              <TermsOfServiceLink className="font-semibold text-blue-600 dark:text-blue-400" /> and the statutory{" "}
+              <DpaLink className="font-semibold text-blue-600 dark:text-blue-400" /> under the DPDP Act 2023.
+            </div>
           </div>
         ) : (
           <p className="mt-6 text-sm text-muted">Sign-in is disabled.</p>

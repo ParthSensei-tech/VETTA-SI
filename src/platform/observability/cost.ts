@@ -34,6 +34,12 @@ export const MODEL_PRICING_TABLE: Record<string, ModelPricing> = {
   "qwen2.5:14b": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
   "llama3.2": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
 
+  // OpenRouter Free-Tier (always $0.00, even after paid credit is exhausted)
+  "google/gemma-4-31b-it:free": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  "meta-llama/llama-3.3-70b-instruct:free": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  "deepseek/deepseek-r1:free": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  "qwen/qwen-2.5-72b-instruct:free": { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+
   // Local rule-based engine
   evidence: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
   local: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
@@ -46,6 +52,7 @@ export const DEFAULT_PROVIDER_PRICING: Record<string, ModelPricing> = {
   gemini: { promptUsdPerMillion: 0.1, completionUsdPerMillion: 0.4 },
   xai: { promptUsdPerMillion: 2.0, completionUsdPerMillion: 10.0 },
   ollama: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
+  openrouter: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
   local: { promptUsdPerMillion: 0, completionUsdPerMillion: 0 },
 };
 

@@ -2,11 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { FileSpreadsheet, Link2 } from "lucide-react";
+import { FileSpreadsheet, Link2, Globe, Sparkles, ShieldAlert, UploadCloud, MoreHorizontal, UserPlus } from "lucide-react";
 import { BatchIngestDialog } from "@/features/recruiting/ui/batch-ingest-dialog";
 import { ExportSlateDialog } from "@/features/recruiting/ui/export-slate-dialog";
+import { ExternalPortalDialog } from "@/features/people/ui/external-portal-dialog";
 import { RubricEditor } from "@/features/ranking/ui/rubric-editor";
 import { Button } from "@/shared/components/ui/button";
+import { MobileActionBar } from "@/shared/components/action-bar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +35,7 @@ import { useSlateVerdictsQuery, verificationQueryKeys } from "@/features/verific
 import { StaleBanner } from "@/features/ranking/ui/provenance-badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ingestResume, rerankStaleApplications } from "@/features/recruiting/api/api";
+import { AntiScrapingPolicyLink } from "@/features/compliance/ui/legal-terms-dialog";
 import {
   errorMessage,
   queryKeys,
@@ -53,7 +62,9 @@ function RoleWorkspace() {
   const [ingestOpen, setIngestOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [portalOpen, setPortalOpen] = useState(false);
   const [resumeText, setResumeText] = useState("");
+  const [sourcingConfirmed, setSourcingConfirmed] = useState(false);
   const qc = useQueryClient();
 
   const selected = useMemo(
@@ -139,7 +150,19 @@ function RoleWorkspace() {
             ) : null}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        {/* Hick's Law Action Strip: 1 Dominant Radiant Primary CTA, ≤3 Contextual Secondary CTAs, and Progressive Disclosure */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Dominant Primary Action CTA */}
+          <Button
+            variant="default"
+            onClick={() => setBatchOpen(true)}
+            className="gap-2 shadow-lime"
+          >
+            <UploadCloud className="size-4" />
+            Upload resumes
+          </Button>
+
+          {/* Secondary Action 1: Share Apply Link (visible only when role is open) */}
           {role.status === "open" ? (
             <Button
               variant="secondary"
@@ -152,23 +175,55 @@ function RoleWorkspace() {
                   toast.message("Apply link", { description: url });
                 }
               }}
+              className="gap-1.5"
             >
               <Link2 className="size-4" />
               Share apply link
             </Button>
           ) : null}
+
+          {/* Secondary Action 2: Career Portal Sync */}
           <Button
             variant="secondary"
-            onClick={() => setExportOpen(true)}
-            disabled={applications.length === 0}
+            onClick={() => setPortalOpen(true)}
+            className="gap-1.5"
           >
-            <FileSpreadsheet className="size-4" />
-            Export
+            <Globe className="size-4 text-amber-500" />
+            Portal Ingest
           </Button>
-          <Button variant="secondary" onClick={() => setBatchOpen(true)}>
-            Drop resumes
-          </Button>
-          <Button onClick={() => setIngestOpen(true)}>Add one</Button>
+
+          {/* Secondary Action 3: Export Slate (hidden via progressive disclosure if no candidates) */}
+          {applications.length > 0 ? (
+            <Button
+              variant="secondary"
+              onClick={() => setExportOpen(true)}
+              className="gap-1.5"
+            >
+              <FileSpreadsheet className="size-4" />
+              Export
+            </Button>
+          ) : null}
+
+          {/* Overflow Menu for Auxiliary Tasks */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="More actions" className="size-11">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setIngestOpen(true)} className="gap-2">
+                <UserPlus className="size-4 text-muted" />
+                <span>Paste single resume</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/app/offer-guard" className="flex items-center gap-2">
+                  <ShieldAlert className="size-4 text-accent" />
+                  <span>Offer Guard Preboarding</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -252,7 +307,10 @@ function RoleWorkspace() {
         </div>
       )}
 
-      <Dialog open={ingestOpen} onOpenChange={setIngestOpen}>
+      <Dialog open={ingestOpen} onOpenChange={(open) => {
+        setIngestOpen(open);
+        if (!open) setSourcingConfirmed(false);
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add a resume</DialogTitle>
@@ -264,20 +322,59 @@ function RoleWorkspace() {
             value={resumeText}
             onChange={(e) => setResumeText(e.target.value)}
             placeholder="Paste resume text…"
-            className="min-h-64 text-sm"
+            className="min-h-56 text-sm"
           />
+          <div className="rounded-xl border border-border/70 bg-surface/40 p-3 text-xs text-muted">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 rounded border-border text-primary cursor-pointer"
+                checked={sourcingConfirmed}
+                onChange={(e) => setSourcingConfirmed(e.target.checked)}
+              />
+              <span className="leading-relaxed">
+                I certify this profile complies with our{" "}
+                <AntiScrapingPolicyLink className="font-semibold text-blue-600 dark:text-blue-400" /> and was obtained through direct application, client mandate, or lawful consent (DPDP Act 2023 compliant).
+              </span>
+            </label>
+          </div>
           <div className="flex justify-end">
             <Button
-              disabled={ingestMut.isPending || resumeText.trim().length < 40}
+              disabled={ingestMut.isPending || resumeText.trim().length < 40 || !sourcingConfirmed}
               onClick={() => ingestMut.mutate()}
+              className="cursor-pointer"
             >
-              {ingestMut.isPending ? "Adding…" : "Add"}
+              {ingestMut.isPending ? "Adding…" : "Add Candidate"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
       <BatchIngestDialog open={batchOpen} onOpenChange={setBatchOpen} roleId={roleId} />
       <ExportSlateDialog open={exportOpen} onOpenChange={setExportOpen} roleId={roleId} />
+      <ExternalPortalDialog
+        open={portalOpen}
+        onOpenChange={setPortalOpen}
+        roleId={roleId}
+        roleTitle={role.title}
+      />
+
+      {/* Fitts's Law Mobile Thumb Zone Action Bar */}
+      <MobileActionBar>
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold text-fg truncate">{role.title}</span>
+          <span className="text-[11px] text-muted">
+            {applications.length} candidates ranked
+          </span>
+        </div>
+        <Button
+          size="sm"
+          onClick={() => setBatchOpen(true)}
+          className="gap-2 shadow-lime"
+        >
+          <UploadCloud className="size-4" />
+          Upload resumes
+        </Button>
+      </MobileActionBar>
     </div>
   );
 }

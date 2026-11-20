@@ -4,7 +4,7 @@
  * Retries with backoff on 429 / 503. Circuit opens briefly after hard failures.
  */
 
-export type LadderProvider = "groq" | "gemini" | "openai" | "ollama" | "xai";
+export type LadderProvider = "openrouter" | "groq" | "gemini" | "openai" | "ollama" | "xai";
 
 export type ProviderCallResult =
   | {
@@ -133,6 +133,7 @@ function ollamaModel(): string {
 
 export function availableLadderProviders(): LadderProvider[] {
   const out: LadderProvider[] = [];
+  if (process.env.OPENROUTER_API_KEY?.trim()) out.push("openrouter");
   if (process.env.GROQ_API_KEY?.trim()) out.push("groq");
   if (process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim()) out.push("gemini");
   if (process.env.OPENAI_API_KEY?.trim()) out.push("openai");
@@ -388,11 +389,78 @@ async function callXai(args: {
   return { ok: true, text, model, promptTokens, completionTokens };
 }
 
+async function callOpenRouter(args: {
+  system: string;
+  user: string;
+  maxTokens: number;
+  signal: AbortSignal;
+  model?: string;
+}): Promise<ProviderCallResult> {
+  const key = process.env.OPENROUTER_API_KEY?.trim();
+  if (!key) return { ok: false, error: "OPENROUTER_API_KEY missing", retryable: false };
+
+  const { checkOpenRouterBudget, tripOpenRouterCircuit } = await import(
+    "./openrouter-guardrail.server.ts"
+  );
+
+  const model = args.model?.trim() || process.env.OPENROUTER_MODEL?.trim() || "google/gemma-4-31b-it:free";
+
+  const guard = await checkOpenRouterBudget({ model });
+  if (!guard.allowed) {
+    return { ok: false, error: guard.reason || "OpenRouter budget cap tripped", retryable: false, model };
+  }
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+      "HTTP-Referer": "https://vetta.ai",
+      "X-Title": "Vetta ATS Guardrail",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      max_tokens: args.maxTokens,
+      messages: [
+        { role: "system", content: args.system },
+        { role: "user", content: args.user },
+      ],
+    }),
+    signal: args.signal,
+  });
+
+  if (res.status === 402) {
+    tripOpenRouterCircuit("OpenRouter payment required (402). Insufficient credit balance.");
+    return { ok: false, error: "OpenRouter 402: Insufficient credit balance", retryable: false, model };
+  }
+  if (res.status === 429 || res.status === 503) {
+    return { ok: false, error: `OpenRouter ${res.status}`, retryable: true, model };
+  }
+  if (!res.ok) {
+    return { ok: false, error: `OpenRouter ${res.status}`, retryable: res.status >= 500, model };
+  }
+
+  const body = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  const text = stripThink(body.choices?.[0]?.message?.content ?? "");
+  if (!text) return { ok: false, error: "Empty OpenRouter response", retryable: true, model };
+
+  const promptTokens =
+    body.usage?.prompt_tokens ?? Math.ceil((args.system.length + args.user.length) / 4);
+  const completionTokens = body.usage?.completion_tokens ?? Math.ceil(text.length / 4);
+  return { ok: true, text, model, promptTokens, completionTokens };
+}
+
 async function callProvider(
   provider: LadderProvider,
   args: { system: string; user: string; maxTokens: number; signal: AbortSignal; model?: string },
 ): Promise<ProviderCallResult> {
   switch (provider) {
+    case "openrouter":
+      return callOpenRouter(args);
     case "groq":
       return callGroq(args);
     case "gemini":
@@ -420,6 +488,7 @@ export async function completeWithLadder(args: {
   const timeoutMs = args.timeoutMs ?? 14_000;
   const maxAttempts = args.maxAttemptsPerProvider ?? 2;
   const order = availableLadderProviders().filter((p) => {
+    if (p === "openrouter" && !process.env.OPENROUTER_API_KEY?.trim()) return false;
     if (p === "groq" && !process.env.GROQ_API_KEY?.trim()) return false;
     if (
       p === "gemini" &&

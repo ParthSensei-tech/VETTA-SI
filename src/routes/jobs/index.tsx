@@ -7,7 +7,27 @@ import { EMPLOYMENT_LABEL, STAGE_LABEL, WORK_MODE_LABEL } from "@/features/recru
 import { useOpenJobsQuery } from "@/features/recruiting/api/query";
 import { formatRelative } from "@/shared/utils";
 
-export const Route = createFileRoute("/jobs/")({ component: JobsIndex });
+export const Route = createFileRoute("/jobs/")({
+  loader: async () => {
+    const { seoOrigin } = await import("@/platform/seo/origin");
+    return { origin: seoOrigin() };
+  },
+  head: ({ loaderData }) => {
+    const origin = loaderData?.origin ?? "";
+    return {
+      meta: [
+        { title: "Open roles — Vetta" },
+        {
+          name: "description",
+          content:
+            "Browse open roles from startups hiring on Vetta. Apply with a resume — every application is parsed, ranked against the role and reviewed by a human.",
+        },
+      ],
+      links: origin ? [{ rel: "canonical", href: `${origin}/jobs` }] : [],
+    };
+  },
+  component: JobsIndex,
+});
 
 function JobsIndex() {
   const { data, isPending, error } = useOpenJobsQuery();

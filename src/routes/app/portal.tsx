@@ -44,7 +44,7 @@ function AutonomousPortalManagement() {
     "connect",
   );
   const [selectedChannel, setSelectedChannel] = useState<
-    "career_portal" | "embed_widget" | "ats_webhook" | "direct_drop"
+    "career_portal" | "embed_widget" | "ats_webhook" | "direct_drop" | "company_website_portal"
   >("career_portal");
 
   // Portal config query
@@ -185,8 +185,8 @@ function AutonomousPortalManagement() {
           </div>
 
           {/* Option Selector Cards */}
-          <div className="grid gap-3 md:grid-cols-4">
-            {(["career_portal", "embed_widget", "ats_webhook", "direct_drop"] as const).map(
+          <div className="grid gap-3 md:grid-cols-5">
+            {(["career_portal", "embed_widget", "ats_webhook", "company_website_portal", "direct_drop"] as const).map(
               (channelKey) => {
                 const guide = guides[channelKey];
                 const isSelected = selectedChannel === channelKey;

@@ -3,7 +3,7 @@ import { unzipSync } from "fflate";
 
 const MAX_CHARS = 40000;
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
-const MAX_ZIP_ENTRIES = 200;
+const MAX_ZIP_ENTRIES = 500;
 const MIN_RESUME_CHARS = 40;
 
 export function clipResume(text: string): string {

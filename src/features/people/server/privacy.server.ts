@@ -402,6 +402,16 @@ export async function eraseSubject(opts: {
     await sql`delete from rank_traces where resume_hash = any(${scope.resumeHashes})`;
   }
 
+  // The public teaser is the one surface where this person was ever rendered for
+  // a stranger. It caches masked rows for five minutes, and even that window is
+  // one an erasure request should not have to wait out.
+  try {
+    const { clearTeaserCache } = await import("../../marketing/server/teaser.server.ts");
+    clearTeaserCache();
+  } catch {
+    /* in-memory cache eviction */
+  }
+
   const embeddings =
     await sql`delete from candidate_embeddings where candidate_id = ${opts.subjectId} returning 1`;
   stores.embeddings = embeddings.length;
@@ -478,6 +488,20 @@ export async function eraseSubject(opts: {
   stores.applications = apps.length;
   const people = await sql`delete from candidates where id = ${opts.subjectId} returning 1`;
   stores.candidates = people.length;
+
+  // The Index is the other public surface this person's application ever
+  // touched — not their name, but their nine days between applying and being
+  // shortlisted, inside a median a stranger quotes. Clearing a cache is not
+  // enough here: the published cut is a stored row, so it is cut again without
+  // them. A failure must not undo the deletion, which is why this is the same
+  // best-effort shape as the byte stores above.
+  try {
+    const { recomputePublicIndex } =
+      await import("../../marketing/server/public-index.server.ts");
+    await recomputePublicIndex();
+  } catch {
+    /* the next read recuts it, and the read is behind the same floor */
+  }
 
   if (orgId) {
     await sql`
@@ -584,6 +608,12 @@ export async function withdrawConsent(opts: {
   if (purpose === "client_disclosure") {
     const scope = await applicationIdsFor(opts.subjectId);
     await stripShares(opts.orgId, scope.userId, scope.applicationIds);
+    try {
+      const { clearTeaserCache } = await import("../../marketing/server/teaser.server.ts");
+      clearTeaserCache();
+    } catch {
+      /* the teaser cache is a convenience; the read re-checks consent anyway */
+    }
     if (scope.applicationIds.length) {
       await sql`
         update approvals

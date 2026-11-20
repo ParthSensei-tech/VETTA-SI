@@ -15,7 +15,7 @@
 
 import type { ModelTaskType } from "../../../platform/observability/types.ts";
 
-export type ArmProvider = "groq" | "gemini" | "openai" | "ollama" | "xai" | "local" | "xenova";
+export type ArmProvider = "openrouter" | "groq" | "gemini" | "openai" | "ollama" | "xai" | "local" | "xenova";
 
 /** `paid` bills per token, `free_tier` bills nothing until a quota is exhausted,
  *  `keyless_local` runs in this process with no credential at all. */
@@ -32,7 +32,7 @@ export type ModelCandidate = {
    * Only the provider's *default* arm carries this. Sharing one env var across several arms
    * would collapse them all onto the same model and make the choice meaningless.
    */
-  modelEnvVar?: "GROQ_MODEL" | "GEMINI_MODEL" | "OPENAI_MODEL" | "OLLAMA_MODEL" | "XAI_MODEL";
+  modelEnvVar?: "GROQ_MODEL" | "GEMINI_MODEL" | "OPENAI_MODEL" | "OLLAMA_MODEL" | "XAI_MODEL" | "OPENROUTER_MODEL";
   kind: ArmKind;
   /** True when a served call costs nothing. */
   isFree: boolean;
@@ -257,6 +257,46 @@ export const MODEL_ARMS: ModelCandidate[] = [
   },
 
   // ---- cloud free tiers: ₹0 until the provider quota runs out ------------------------------
+  // OpenRouter: google/gemma-4-31b-it:free — $0.00/token even after credit is exhausted
+  {
+    id: "openrouter:google/gemma-4-31b-it:free",
+    provider: "openrouter",
+    declaredModel: "google/gemma-4-31b-it:free",
+    modelEnvVar: "OPENROUTER_MODEL",
+    kind: "free_tier",
+    isFree: true,
+    envKeys: ["OPENROUTER_API_KEY"],
+    requiresHost: false,
+    // 128K context window; Gemma-4-31B supports native reasoning tokens
+    contextWindowTokens: 128_000,
+    jsonReliability: 0.85,
+    speedClassMs: 1_200,
+    decodeTokensPerSec: 60,
+    prefillTokensPerSec: 800,
+    callOverheadMs: 500,
+    qualityPrior: 0.83,
+    spendsOwnerQuota: false, // :free models never consume paid credit
+    tasks: CLOUD_TEXT_TASKS,
+  },
+  // OpenRouter secondary free-tier fallback (Llama-3.3-70B)
+  {
+    id: "openrouter:meta-llama/llama-3.3-70b-instruct:free",
+    provider: "openrouter",
+    declaredModel: "meta-llama/llama-3.3-70b-instruct:free",
+    kind: "free_tier",
+    isFree: true,
+    envKeys: ["OPENROUTER_API_KEY"],
+    requiresHost: false,
+    contextWindowTokens: 131_072,
+    jsonReliability: 0.88,
+    speedClassMs: 1_500,
+    decodeTokensPerSec: 50,
+    prefillTokensPerSec: 700,
+    callOverheadMs: 500,
+    qualityPrior: 0.80,
+    spendsOwnerQuota: false,
+    tasks: CLOUD_TEXT_TASKS,
+  },
   {
     id: "groq:llama-3.1-8b-instant",
     provider: "groq",

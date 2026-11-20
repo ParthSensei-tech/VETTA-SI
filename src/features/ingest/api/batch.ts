@@ -6,7 +6,7 @@ import { iso } from "@/shared/utils";
 import type { IngestBatch, IngestBatchStatus, IngestJob, IngestJobStatus } from "../../recruiting/domain/types";
 
 const MAX_ITEMS_PER_APPEND = 25;
-const MAX_JOBS_PER_BATCH = 200;
+const MAX_JOBS_PER_BATCH = 500;
 const MAX_BASE64 = 8_000_000;
 
 function newId(): string {
@@ -203,7 +203,7 @@ export const appendIngestItems = createServerFn({ method: "POST" })
 
       for (const item of data.items) {
         if (used >= MAX_JOBS_PER_BATCH) {
-          errors.push("Batch is full (200 resumes). Start another drop for the rest.");
+          errors.push(`Batch is full (${MAX_JOBS_PER_BATCH} resumes). Start another drop for the rest.`);
           break;
         }
         try {

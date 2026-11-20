@@ -1,9 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { CheckCircle2, MessageSquare, ThumbsDown, ThumbsUp, XCircle } from "lucide-react";
 import { ClientCardView } from "@/features/recruiting/ui/client-card-view";
 import { CandidatePortalShell } from "@/shared/components/candidate-portal-shell";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { Label } from "@/shared/components/ui/label";
 import { usePublicShareQuery } from "@/features/recruiting/api/query";
+import { submitClientCandidateFeedback } from "@/features/ranking/api/taste-api";
+import type { TasteCategory } from "@/features/ranking/domain/taste-types";
 import { cn } from "@/shared/utils";
 
 export const Route = createFileRoute("/share/$token")({ component: SharePage });
@@ -103,7 +118,7 @@ function SharePage() {
 
           <section className="grid gap-4 lg:grid-cols-2">
             {data.candidates.map((c, i) => (
-              <div key={c.applicationId} className={cn(i === 0 && "lg:col-span-2")}>
+              <div key={c.applicationId} className={cn("flex flex-col gap-2", i === 0 && "lg:col-span-2")}>
                 {c.card ? (
                   <ClientCardView card={c.card} />
                 ) : (
@@ -113,6 +128,13 @@ function SharePage() {
                     <p className="mt-4 text-sm leading-relaxed">{c.rankSummary}</p>
                   </article>
                 )}
+                {/* YC Perfectly Taste Learning: Client Reaction Strip */}
+                <ClientCandidateActionStrip
+                  shareToken={token}
+                  candidateId={c.applicationId}
+                  applicationId={c.applicationId}
+                  candidateName={c.candidateName}
+                />
               </div>
             ))}
           </section>
@@ -123,5 +145,177 @@ function SharePage() {
         </article>
       )}
     </CandidatePortalShell>
+  );
+}
+
+function ClientCandidateActionStrip({
+  shareToken,
+  candidateId,
+  applicationId,
+  candidateName,
+}: {
+  shareToken: string;
+  candidateId: string;
+  applicationId?: string;
+  candidateName: string;
+}) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectCategory, setRejectCategory] = useState<TasteCategory>("tech_depth");
+  const [rejectNotes, setRejectNotes] = useState("");
+  const [status, setStatus] = useState<"interview" | "rejected" | null>(null);
+
+  const feedbackMut = useMutation({
+    mutationFn: (args: {
+      action: "interview" | "reject";
+      category: TasteCategory;
+      notes?: string;
+    }) =>
+      submitClientCandidateFeedback({
+        data: {
+          shareToken,
+          candidateId,
+          applicationId,
+          action: args.action,
+          category: args.category,
+          notes: args.notes,
+        },
+      }),
+    onSuccess: (_, vars) => {
+      setStatus(vars.action === "interview" ? "interview" : "rejected");
+      setRejectOpen(false);
+      toast.success(
+        vars.action === "interview"
+          ? `Interview requested for ${candidateName}. Taste model calibrated!`
+          : `Feedback recorded for ${candidateName}. Taste profile updated!`,
+      );
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Could not record feedback");
+    },
+  });
+
+  if (status === "interview") {
+    return (
+      <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-4 py-2.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+        <CheckCircle2 className="size-4" />
+        <span>Interview Requested · Recruiter notified to coordinate</span>
+      </div>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
+      <div className="flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-xs font-medium text-muted border border-border">
+        <XCircle className="size-4 text-warn" />
+        <span>Passed on Candidate · Preference recorded in hiring taste model</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/80 bg-surface/70 px-4 py-2.5 backdrop-blur-sm">
+        <span className="text-xs font-medium text-muted">Hiring Manager Decision:</span>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={feedbackMut.isPending}
+            onClick={() => setRejectOpen(true)}
+            className="h-8 gap-1.5 text-xs text-muted hover:text-rose-400 hover:bg-rose-500/10"
+          >
+            <ThumbsDown className="size-3.5" />
+            <span>Pass with reason</span>
+          </Button>
+          <Button
+            size="sm"
+            disabled={feedbackMut.isPending}
+            onClick={() =>
+              feedbackMut.mutate({
+                action: "interview",
+                category: "culture_pace",
+                notes: "Requesting interview slate slot",
+              })
+            }
+            className="h-8 gap-1.5 text-xs soft-lime text-primary-foreground font-semibold"
+          >
+            <ThumbsUp className="size-3.5" />
+            <span>Request interview</span>
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pass on {candidateName}</DialogTitle>
+            <DialogDescription>
+              Your feedback immediately trains the matching model so future candidates better match your team's bar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs">Primary reason</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "tech_depth", label: "Lacks tech depth" },
+                  { id: "culture_pace", label: "Too corporate / slow" },
+                  { id: "ctc_gap", label: "CTC expectation high" },
+                  { id: "service_firm_bias", label: "Prefers product-led" },
+                  { id: "notice_too_long", label: "Notice period too long" },
+                  { id: "autonomy", label: "Needs more ownership" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setRejectCategory(item.id as TasteCategory)}
+                    className={cn(
+                      "rounded-lg border p-2 text-left text-xs transition-colors",
+                      rejectCategory === item.id
+                        ? "border-accent bg-accent/15 text-accent-fg font-medium"
+                        : "border-border text-muted hover:border-fg/30 hover:text-fg",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="reject-note" className="text-xs">Specific notes (optional)</Label>
+              <Textarea
+                id="reject-note"
+                value={rejectNotes}
+                onChange={(e) => setRejectNotes(e.target.value)}
+                placeholder="e.g. Looked good on paper but we need someone with heavy production Kafka experience."
+                className="min-h-20 text-xs"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button size="sm" variant="ghost" onClick={() => setRejectOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={feedbackMut.isPending}
+                onClick={() =>
+                  feedbackMut.mutate({
+                    action: "reject",
+                    category: rejectCategory,
+                    notes: rejectNotes,
+                  })
+                }
+              >
+                {feedbackMut.isPending ? "Recording…" : "Submit & train model"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -11,8 +11,9 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { appendIngestItems, createIngestBatch } from "@/features/ingest/api/batch";
-import { chunkItems, prepareBatchFiles, sourceLabel } from "@/features/ingest/domain/batch-client";
+import { MAX_ITEMS, chunkItems, prepareBatchFiles, sourceLabel } from "@/features/ingest/domain/batch-client";
 import { errorMessage, queryKeys } from "@/features/recruiting/api/query";
+import { AntiScrapingPolicyLink } from "@/features/compliance/ui/legal-terms-dialog";
 import { cn } from "@/shared/utils";
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.zip,.csv,.xlsx";
@@ -32,6 +33,7 @@ export function BatchIngestDialog({
   const [dragging, setDragging] = useState(false);
   const [phase, setPhase] = useState<"idle" | "preparing" | "uploading">("idle");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [sourcingConfirmed, setSourcingConfirmed] = useState(false);
 
   const busy = phase !== "idle";
 
@@ -157,7 +159,7 @@ export function BatchIngestDialog({
           <Upload className="size-5 text-muted" />
           <p className="text-sm">Drop a zip, CSV, Excel, or resume files</p>
           <p className="text-xs text-subtle">
-            PDF · DOCX · TXT · ZIP · CSV · XLSX · up to 200 per drop
+            PDF · DOCX · TXT · ZIP · CSV · XLSX · up to {MAX_ITEMS} per drop
           </p>
         </button>
         <input
@@ -192,19 +194,43 @@ export function BatchIngestDialog({
           </p>
         ) : null}
 
+        {files.length > 0 && !busy && (
+          <div className="rounded-xl border border-border/70 bg-surface/40 p-3 text-xs text-muted">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 rounded border-border text-primary cursor-pointer"
+                checked={sourcingConfirmed}
+                onChange={(e) => setSourcingConfirmed(e.target.checked)}
+              />
+              <span className="leading-relaxed">
+                I certify these {files.length} candidate files were lawfully gathered via direct applications, client mandates, or verified agency agreements per our{" "}
+                <AntiScrapingPolicyLink className="font-semibold text-blue-600 dark:text-blue-400" /> (DPDP Act 2023 anti-mass scraping standard).
+              </span>
+            </label>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           {files.length > 0 && !busy ? (
             <button
               type="button"
-              className="text-sm text-muted hover:text-fg"
-              onClick={() => setFiles([])}
+              className="text-sm text-muted hover:text-fg cursor-pointer"
+              onClick={() => {
+                setFiles([]);
+                setSourcingConfirmed(false);
+              }}
             >
               Clear
             </button>
           ) : (
             <span />
           )}
-          <Button disabled={busy || files.length === 0} onClick={() => enqueueMut.mutate()}>
+          <Button
+            disabled={busy || files.length === 0 || !sourcingConfirmed}
+            onClick={() => enqueueMut.mutate()}
+            className="cursor-pointer"
+          >
             {busy ? "Queuing…" : "Parse and queue"}
           </Button>
         </div>

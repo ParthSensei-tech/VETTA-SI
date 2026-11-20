@@ -324,7 +324,32 @@ export class PgVectorSearchEngine {
     const sql = await getSql();
     const location = params.location?.trim() ?? "";
 
-    // Fetch candidate vectors scoped by organization and structured filters
+    // 1. Native pgvector HNSW acceleration path (O(log n) ANN retrieval in Neon/Postgres)
+    const nativeSupported = await this.isNativePgVectorAvailable();
+    if (nativeSupported) {
+      try {
+        const queryVecStr = `[${params.queryVector.join(",")}]`;
+        const nativeRows = await sql<{ candidate_id: string; similarity: number }>`
+          select e.candidate_id, 1 - (e.embedding_str::vector <=> ${queryVecStr}::vector) as similarity
+          from candidate_embeddings e
+          join candidates c on c.id = e.candidate_id
+          where (c.org_id = ${params.orgId} or c.org_id is null)
+            and e.model = ${params.model}
+            and (${location} = '' or c.location ilike ${"%" + location + "%"})
+            and (${params.noticeMaxDays ?? null}::int is null or c.notice_period_days is null or c.notice_period_days <= ${params.noticeMaxDays ?? null})
+            and (${params.ctcMaxLakh ?? null}::float8 is null or c.expected_ctc_lakh is null or c.expected_ctc_lakh <= ${params.ctcMaxLakh ?? null})
+          order by e.embedding_str::vector <=> ${queryVecStr}::vector asc
+          limit ${params.limit}`;
+
+        return nativeRows
+          .filter((r) => Number(r.similarity) > 0.05)
+          .map((r) => ({ candidateId: r.candidate_id, similarity: Number(r.similarity) }));
+      } catch {
+        // Graceful fallback to portable in-memory cosine scan
+      }
+    }
+
+    // 2. Portable fallback: In-memory cosine calculation (PGLite / environments without native vector ops)
     const rows = await sql<{ candidate_id: string; vector_json: string }>`
       select e.candidate_id, e.vector_json
       from candidate_embeddings e
@@ -643,8 +668,10 @@ export async function reviewAndAdvanceCandidate(input: {
     limit 1`;
 
   let appId: string;
+  let previousStatus = "";
   if (existing[0]) {
     appId = existing[0].id;
+    previousStatus = existing[0].pipeline_status;
     await sql`
       update applications
       set pipeline_status = ${input.nextStatus}, updated_at = now()
@@ -655,6 +682,20 @@ export async function reviewAndAdvanceCandidate(input: {
       insert into applications (id, candidate_id, role_id, user_id, org_id, pipeline_status, created_at, updated_at)
       values (${appId}, ${input.candidateId}, ${input.roleId}, ${input.recruiterUserId}, ${input.orgId}, ${input.nextStatus}, now(), now())`;
   }
+
+  // The same decision, in the trail the Vetta Index measures from: a shortlist
+  // and a rejection are both facts about how fast a company decides, and today
+  // they were only visible as the end state of a row.
+  const { recordPipelineTrail } = await import("../../analytics/server/pipeline-trail.server.ts");
+  await recordPipelineTrail({
+    orgId: input.orgId,
+    applicationId: appId,
+    candidateId: input.candidateId,
+    roleId: input.roleId,
+    fromStage: previousStatus,
+    toStage: input.nextStatus,
+    actorUserId: input.recruiterUserId,
+  });
 
   // Record outcome event in feedback table to close the loop
   await recordSearchOutcomeFeedback({

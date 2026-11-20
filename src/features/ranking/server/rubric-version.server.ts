@@ -457,7 +457,7 @@ export async function persistRubricEdits(opts: {
     rerankTriggered = true;
     void (async () => {
       try {
-        const { deepenRoleTopN } = await import("./deepen.server");
+        const { deepenRoleTopN } = await import("./deepen.server.ts");
         await deepenRoleTopN({
           userId: opts.userId,
           roleId: opts.roleId,

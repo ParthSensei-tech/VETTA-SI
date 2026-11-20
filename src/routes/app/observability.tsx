@@ -16,7 +16,9 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
+import { DpdpComplianceCard } from "@/features/compliance/ui/dpdp-compliance-card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -358,7 +360,7 @@ function ObservabilityPage() {
 
       {/* Deep-Dive Tabs */}
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-surface/50 p-1 border border-border">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-surface/50 p-1 border border-border">
           <TabsTrigger value="overview" className="gap-2 text-xs">
             <Activity className="size-3.5" />
             Alerts & Rules
@@ -366,6 +368,10 @@ function ObservabilityPage() {
           <TabsTrigger value="cost" className="gap-2 text-xs">
             <Coins className="size-3.5" />
             Model Costs
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="gap-2 text-xs">
+            <ShieldCheck className="size-3.5 text-primary" />
+            Data Trust & DPDP
           </TabsTrigger>
           <TabsTrigger value="queue" className="gap-2 text-xs">
             <Layers className="size-3.5" />
@@ -746,7 +752,12 @@ function ObservabilityPage() {
           </Card>
         </TabsContent>
 
-        {/* Tab 3: Queue & Failed Jobs */}
+        {/* Tab 3: Data Trust & DPDP Compliance */}
+        <TabsContent value="compliance" className="space-y-4">
+          <DpdpComplianceCard />
+        </TabsContent>
+
+        {/* Tab 4: Queue & Failed Jobs */}
         <TabsContent value="queue" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="border-border bg-surface/30">

@@ -1,11 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ChevronDown, Sparkles, MessageSquare, ShieldCheck, RefreshCw, Award, CheckCircle2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { PipelineChip, ScoreChip } from "@/shared/components/status-chip";
 import { ProvenanceChip, ProvenanceDetail } from "@/features/ranking/ui/provenance-badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import {
   generateAsyncScreen,
   prepareClientPack,
@@ -225,32 +233,121 @@ export function CandidatePanel({
             <ProvenanceChip provenance={application.provenance} />
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {MOVES.map((m) => (
+        {/* Hick's Law: 1 Dominant Primary Next Step CTA + Consolidated Secondary Menus */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {application.pipelineStatus !== "shortlisted" ? (
             <Button
-              key={m.status}
               size="sm"
-              variant={application.pipelineStatus === m.status ? "default" : "secondary"}
+              variant="default"
               disabled={statusMut.isPending}
-              onClick={() => statusMut.mutate(m.status)}
+              onClick={() => statusMut.mutate("shortlisted")}
+              className="gap-1.5 shadow-lime"
             >
-              {m.label}
+              <CheckCircle2 className="size-4" />
+              Shortlist candidate
             </Button>
-          ))}
+          ) : !screen ? (
+            <Button
+              size="sm"
+              variant="default"
+              disabled={screenMut.isPending}
+              onClick={() => screenMut.mutate()}
+              className="gap-1.5 shadow-lime"
+            >
+              <Sparkles className="size-4" />
+              Generate screen
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="default"
+              disabled={packMut.isPending || !rank}
+              onClick={() => packMut.mutate()}
+              className="gap-1.5 shadow-lime"
+            >
+              <Award className="size-4" />
+              Prepare client pack
+            </Button>
+          )}
+
+          {/* Secondary Dropdown: Move Stage */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="gap-1.5">
+                <span>Stage: {application.pipelineStatus}</span>
+                <ChevronDown className="size-3.5 text-muted" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-40">
+              {MOVES.map((m) => (
+                <DropdownMenuItem
+                  key={m.status}
+                  onClick={() => statusMut.mutate(m.status)}
+                  className={cn(application.pipelineStatus === m.status && "font-semibold text-accent")}
+                >
+                  {m.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Secondary Dropdown: Record Outcome */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Award className="size-3.5 text-muted" />
+                <span>Outcome</span>
+                <ChevronDown className="size-3 text-muted" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {OUTCOMES.map((o) => (
+                <DropdownMenuItem
+                  key={o.kind}
+                  onClick={() => outcomeMut.mutate(o.kind)}
+                >
+                  {o.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Subtle Auxiliary Re-rank */}
           <Button
             size="sm"
-            variant="outline"
+            variant="ghost"
             disabled={rerankMut.isPending}
             onClick={() => rerankMut.mutate()}
+            className="gap-1.5 text-xs text-muted hover:text-fg"
           >
-            {rerankMut.isPending ? "Ranking…" : "Re-rank"}
+            <RefreshCw className={cn("size-3.5", rerankMut.isPending && "animate-spin")} />
+            <span>{rerankMut.isPending ? "Ranking…" : "Re-rank"}</span>
           </Button>
         </div>
       </header>
 
-      {rank ? (
-        <section className="grid gap-4">
-          <div className="rounded-2xl bg-elevated p-5">
+      {/* Miller's Law: 3 Scannable Information Chunks */}
+      <Tabs defaultValue="fit" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 h-11 mb-2">
+          <TabsTrigger value="fit" className="gap-2 font-medium">
+            <Sparkles className="size-4" />
+            <span>Match & Fit</span>
+          </TabsTrigger>
+          <TabsTrigger value="screen" className="gap-2 font-medium">
+            <MessageSquare className="size-4" />
+            <span>Screen & Q&A</span>
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="gap-2 font-medium">
+            <ShieldCheck className="size-4" />
+            <span>Notes & Resume</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab 1: Match & Fit */}
+        <TabsContent value="fit" className="flex flex-col gap-4">
+          {rank ? (
+            <section className="grid gap-4">
+              <div className="rounded-2xl bg-elevated p-5">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h3 className="font-display text-xl">Ranking</h3>
               <p className="text-sm text-muted">
@@ -289,19 +386,6 @@ export function CandidatePanel({
                   : `Quality model is learning. Interview ${rank.outcome.samples.interview}/8, offer ${rank.outcome.samples.offer}/8, join ${rank.outcome.samples.join}/8, stay ${rank.outcome.samples.retain90}/8.`}
               </p>
             ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {OUTCOMES.map((o) => (
-                <Button
-                  key={o.kind}
-                  size="sm"
-                  variant="outline"
-                  disabled={outcomeMut.isPending}
-                  onClick={() => outcomeMut.mutate(o.kind)}
-                >
-                  {o.label}
-                </Button>
-              ))}
-            </div>
             {rank.match?.hardGates && rank.match.hardGates.length > 0 ? (
               <ul className="mt-3 space-y-1 text-xs text-danger">
                 {rank.match.hardGates.map((g) => (
@@ -423,7 +507,10 @@ export function CandidatePanel({
           </Button>
         </div>
       )}
+      </TabsContent>
 
+      {/* Tab 2: Async Screen & Evaluation */}
+      <TabsContent value="screen" className="flex flex-col gap-4">
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -540,7 +627,10 @@ export function CandidatePanel({
           </p>
         )}
       </section>
+      </TabsContent>
 
+      {/* Tab 3: Notes & Raw Resume */}
+      <TabsContent value="notes" className="flex flex-col gap-6">
       <section className="grid gap-3">
         <Label>Private recruiter notes</Label>
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-24" />
@@ -571,6 +661,8 @@ export function CandidatePanel({
           {candidate.resumeText}
         </pre>
       </section>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }

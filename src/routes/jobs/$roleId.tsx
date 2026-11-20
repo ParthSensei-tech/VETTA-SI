@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { ShieldCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -9,12 +10,47 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { StageChip } from "@/shared/components/status-chip";
 import { applyToJob } from "@/features/people/api/portal";
+import { getStoredUtm } from "@/platform/telemetry/utm";
 import { CITIES, EMPLOYMENT_LABEL, STAGE_LABEL, WORK_MODE_LABEL } from "@/features/recruiting/domain/constants";
 import { errorMessage, usePublicJobQuery } from "@/features/recruiting/api/query";
 import { extractResumeText, resumeFileLabel } from "@/features/ingest/domain/resume-file";
+import { CandidatePrivacyNoticeLink, TermsOfServiceLink } from "@/features/compliance/ui/legal-terms-dialog";
+import { jobPostingLd } from "@/platform/seo/jsonld";
 import { cn } from "@/shared/utils";
 
-export const Route = createFileRoute("/jobs/$roleId")({ component: JobApply });
+export const Route = createFileRoute("/jobs/$roleId")({
+  loader: async ({ params }) => {
+    const [{ getPublicJob }, { seoOrigin }] = await Promise.all([
+      import("@/features/people/api/portal"),
+      import("@/platform/seo/origin"),
+    ]);
+    const job = await getPublicJob({ data: { roleId: params.roleId } }).catch(() => null);
+    return { job, origin: seoOrigin() };
+  },
+  head: ({ loaderData, params }) => {
+    const job = loaderData?.job;
+    const origin = loaderData?.origin ?? "";
+    if (!job) {
+      return {
+        meta: [
+          { title: "Role not open — Vetta" },
+          { name: "robots", content: "noindex" },
+        ],
+      };
+    }
+    const url = `${origin}/jobs/${params.roleId}`;
+    const description = job.jdText.replace(/\s+/g, " ").trim().slice(0, 155);
+    return {
+      meta: [
+        { title: `${job.title} — ${job.companyName} | Vetta` },
+        { name: "description", content: description },
+        ...(origin ? [{ "script:ld+json": jobPostingLd(job, url) }] : []),
+      ],
+      links: origin ? [{ rel: "canonical", href: url }] : [],
+    };
+  },
+  component: JobApply,
+});
 
 const WORKFLOW = [
   "Parse resume",
@@ -25,7 +61,8 @@ const WORKFLOW = [
 
 function JobApply() {
   const { roleId } = Route.useParams();
-  const { data: job, isPending, error } = usePublicJobQuery(roleId);
+  const { job: initialJob } = Route.useLoaderData();
+  const { data: job, isPending, error } = usePublicJobQuery(roleId, initialJob ?? undefined);
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -47,8 +84,9 @@ function JobApply() {
   const [consentToProcess, setConsentToProcess] = useState(false);
 
   const applyMut = useMutation({
-    mutationFn: () =>
-      applyToJob({
+    mutationFn: () => {
+      const utm = getStoredUtm();
+      return applyToJob({
         data: {
           roleId,
           fullName,
@@ -64,8 +102,15 @@ function JobApply() {
           coverNote,
           resumeText,
           consentToProcess: true as const,
+          utmSource: utm?.utm_source || "",
+          utmMedium: utm?.utm_medium || "",
+          utmCampaign: utm?.utm_campaign || "",
+          utmTerm: utm?.utm_term || "",
+          utmContent: utm?.utm_content || "",
+          initialReferrer: utm?.initial_referrer || "",
         },
-      }),
+      });
+    },
     onSuccess: (app) => {
       toast.success("Application received. The desk is already ranking you.");
       void navigate({ to: "/apply/$applicationId", params: { applicationId: app.id } });
@@ -345,19 +390,37 @@ function JobApply() {
               />
             </Field>
 
-            <label className="flex items-start gap-3 rounded-xl border border-border px-3 py-3 text-sm leading-relaxed">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={consentToProcess}
-                onChange={(e) => setConsentToProcess(e.target.checked)}
-              />
-              <span>
-                I consent to this company processing my personal data (resume, contact details,
-                notice, and compensation signals) to evaluate me for this role, under applicable
-                Indian data protection law. I can request withdrawal later via the employer.
-              </span>
-            </label>
+            <div className="rounded-xl border border-border bg-surface/30 p-3.5 space-y-2.5 text-xs text-muted">
+              <div className="flex items-center gap-1.5 font-semibold text-fg">
+                <ShieldCheck className="size-4 text-emerald-500" />
+                <span>DPDP Act (2023) Rule 4 Itemized Consent Notice</span>
+              </div>
+              <p>
+                By applying, you authorize {job?.companyName ?? "this company"} as Data Fiduciary and Vetta as Data Processor
+                to process your resume, contact information, and signals for:
+              </p>
+              <ul className="list-disc list-inside space-y-0.5 pl-1">
+                <li><strong className="text-fg">Application Assessment</strong>: Parsing and AI matching against job requirements.</li>
+                <li><strong className="text-fg">Hiring Team Sharing</strong>: Review by authorized interviewers and hiring managers.</li>
+                <li><strong className="text-fg">Authenticity Verification</strong>: Forensic checks on submitted credentials.</li>
+              </ul>
+              <p className="text-[11px] text-muted/80">
+                You have the statutory right to withdraw consent or request erasure at any time under DPDP Sections 11–14.
+              </p>
+              <label className="flex items-start gap-2.5 pt-1 text-xs text-muted cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 rounded border-border text-primary cursor-pointer"
+                  checked={consentToProcess}
+                  onChange={(e) => setConsentToProcess(e.target.checked)}
+                />
+                <span className="leading-relaxed">
+                  I have read and agree to the{" "}
+                  <CandidatePrivacyNoticeLink className="font-semibold text-blue-600 dark:text-blue-400" /> and the{" "}
+                  <TermsOfServiceLink className="font-semibold text-blue-600 dark:text-blue-400" />, and I provide explicit consent for the processing of my application data.
+                </span>
+              </label>
+            </div>
 
             <Button type="submit" disabled={applyMut.isPending || readingFile || !consentToProcess}>
               Submit application

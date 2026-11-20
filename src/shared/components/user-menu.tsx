@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signOut } from "@/platform/auth/client";
 import { useCurrentUserState } from "@/platform/auth/use-current-user";
-import { useTheme } from "@/shared/components/theme-provider";
 import { initials } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -15,7 +14,6 @@ import {
 
 export function UserMenu() {
   const { user, isPending } = useCurrentUserState();
-  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -54,15 +52,6 @@ export function UserMenu() {
             <p className="truncate text-xs text-muted">{user.primaryEmail}</p>
           ) : null}
         </div>
-        <DropdownMenuItem
-          onSelect={(event) => {
-            event.preventDefault();
-            toggle();
-          }}
-        >
-          {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          {theme === "light" ? "Night mode" : "Day mode"}
-        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void navigate({ to: "/jobs" })}>
           Candidate portal
         </DropdownMenuItem>

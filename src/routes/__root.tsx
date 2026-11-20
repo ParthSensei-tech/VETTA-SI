@@ -34,11 +34,12 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/favicon.svg" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap",
-      },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      // The three type families used to arrive from fonts.googleapis.com here.
+      // They are self-hosted now, as `@import` lines inside `src/styles.css`,
+      // which this same `appCss` link already carries: the `@font-face` rules
+      // stay in the server-rendered head instead of riding in with a later
+      // script, and no page in the app waits on a third party to paint.
     ],
   }),
   component: RootDocument,

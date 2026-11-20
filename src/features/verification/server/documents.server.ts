@@ -106,6 +106,107 @@ function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+// ============================================================================
+// CLOUD OBJECT STORAGE ADAPTER INTERFACE
+// ============================================================================
+
+export interface DocumentBlobStore {
+  store(id: string, bytes: Uint8Array, opts?: { contentType?: string }): Promise<void>;
+  fetch(id: string): Promise<Uint8Array | null>;
+  delete(id: string): Promise<void>;
+}
+
+export class DatabaseBlobStore implements DocumentBlobStore {
+  async store(id: string, bytes: Uint8Array): Promise<void> {
+    const sql = await getSql();
+    await sql`
+      update documents
+      set content = ${Buffer.from(bytes)},
+          updated_at = now()
+      where id = ${id}`;
+  }
+
+  async fetch(id: string): Promise<Uint8Array | null> {
+    const sql = await getSql();
+    const rows = await sql<{ content: Uint8Array | null }>`
+      select content from documents where id = ${id} limit 1`;
+    return rows[0]?.content ?? null;
+  }
+
+  async delete(id: string): Promise<void> {
+    const sql = await getSql();
+    await sql`
+      update documents
+      set content = null,
+          updated_at = now()
+      where id = ${id}`;
+  }
+}
+
+export class S3BlobStore implements DocumentBlobStore {
+  private bucket: string;
+  private region: string;
+  private endpoint?: string;
+
+  constructor(opts?: { bucket?: string; region?: string; endpoint?: string }) {
+    this.bucket = opts?.bucket || process.env.S3_BUCKET || "vetta-resumes";
+    this.region = opts?.region || process.env.S3_REGION || "ap-south-1";
+    this.endpoint = opts?.endpoint || process.env.S3_ENDPOINT_URL;
+  }
+
+  async store(id: string, bytes: Uint8Array, opts?: { contentType?: string }): Promise<void> {
+    if (!process.env.S3_BUCKET && !process.env.AWS_ACCESS_KEY_ID) {
+      const dbStore = new DatabaseBlobStore();
+      return dbStore.store(id, bytes);
+    }
+    const base = this.endpoint ? this.endpoint.replace(/\/$/, "") : `https://${this.bucket}.s3.${this.region}.amazonaws.com`;
+    const url = `${base}/${encodeURIComponent(id)}`;
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": opts?.contentType || "application/octet-stream",
+        "x-amz-content-sha256": sha256Hex(bytes),
+      },
+      body: Buffer.from(bytes),
+    });
+    if (!res.ok) {
+      throw new Error(`S3 upload failed for ${id}: HTTP ${res.status}`);
+    }
+  }
+
+  async fetch(id: string): Promise<Uint8Array | null> {
+    if (!process.env.S3_BUCKET && !process.env.AWS_ACCESS_KEY_ID) {
+      const dbStore = new DatabaseBlobStore();
+      return dbStore.fetch(id);
+    }
+    const base = this.endpoint ? this.endpoint.replace(/\/$/, "") : `https://${this.bucket}.s3.${this.region}.amazonaws.com`;
+    const url = `${base}/${encodeURIComponent(id)}`;
+    const res = await fetch(url);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`S3 fetch failed for ${id}: HTTP ${res.status}`);
+    const arrayBuf = await res.arrayBuffer();
+    return new Uint8Array(arrayBuf);
+  }
+
+  async delete(id: string): Promise<void> {
+    if (!process.env.S3_BUCKET && !process.env.AWS_ACCESS_KEY_ID) {
+      const dbStore = new DatabaseBlobStore();
+      return dbStore.delete(id);
+    }
+    const base = this.endpoint ? this.endpoint.replace(/\/$/, "") : `https://${this.bucket}.s3.${this.region}.amazonaws.com`;
+    const url = `${base}/${encodeURIComponent(id)}`;
+    await fetch(url, { method: "DELETE" }).catch(() => {});
+  }
+}
+
+export function getBlobStore(): DocumentBlobStore {
+  const driver = (process.env.DOCUMENT_BLOB_STORE || "db").toLowerCase();
+  if (driver === "s3" || driver === "gcs") {
+    return new S3BlobStore();
+  }
+  return new DatabaseBlobStore();
+}
+
 /**
  * The lineage hash, or the refusal to keep one.
  *
@@ -277,6 +378,11 @@ export async function captureUploadedDocument(opts: {
       ${retentionDays}, ${new Date(expiresAtMs).toISOString()},
       ${new Date(nowMs).toISOString()}, ${new Date(nowMs).toISOString()}
     )`;
+
+  if (keep && (process.env.DOCUMENT_BLOB_STORE === "s3" || process.env.DOCUMENT_BLOB_STORE === "gcs")) {
+    await getBlobStore().store(id, bytes, { contentType: opts.mediaType }).catch(() => {});
+  }
+
   return { documentId: id, docClass, contentState, retained: keep };
 }
 
@@ -445,7 +551,10 @@ export async function loadDocumentForAnalysis(
   const sql = await getSql();
   const rows = await sql<{ content: Uint8Array | null }>`
     select content from documents where id = ${document.id} limit 1`;
-  const content = rows[0]?.content ?? null;
+  let content = rows[0]?.content ?? null;
+  if (!content || content.length === 0) {
+    content = await getBlobStore().fetch(document.id).catch(() => null);
+  }
   if (!content || content.length === 0) {
     // The state says held and the column says otherwise. A row that is lying
     // about having a file is treated as one we do not have, so an arm never
@@ -540,7 +649,10 @@ export async function analyzeDocumentsForApplication(
     }
     const contentRows = await sql<{ content: Uint8Array | null }>`
       select content from documents where id = ${document.id} limit 1`;
-    const content = contentRows[0]?.content ?? null;
+    let content = contentRows[0]?.content ?? null;
+    if (!content || content.length === 0) {
+      content = await getBlobStore().fetch(document.id).catch(() => null);
+    }
     // The state says held and the column says otherwise: a row lying about having
     // a file is dropped, so no arm reaches a conclusion over an empty buffer.
     if (!content || content.length === 0) continue;
@@ -703,6 +815,9 @@ async function purgeBytesByIds(ids: string[], nowMs: number): Promise<PurgeResul
         updated_at = ${new Date(nowMs).toISOString()}
     where id = any(${ids}) and content_state = 'stored'
     returning id`;
+  if (process.env.DOCUMENT_BLOB_STORE === "s3" || process.env.DOCUMENT_BLOB_STORE === "gcs") {
+    await Promise.all(ids.map((id) => getBlobStore().delete(id).catch(() => {})));
+  }
   return { purged: rows.length };
 }
 
@@ -774,6 +889,9 @@ export async function purgeDocumentBytesForSubject(opts: {
         updated_at = ${now}
     where id = any(${ids}) and content_state = 'stored'
     returning id`;
+  if (process.env.DOCUMENT_BLOB_STORE === "s3" || process.env.DOCUMENT_BLOB_STORE === "gcs") {
+    await Promise.all(ids.map((id) => getBlobStore().delete(id).catch(() => {})));
+  }
   return { purged: rows.length };
 }
 

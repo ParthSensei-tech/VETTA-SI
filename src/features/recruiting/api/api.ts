@@ -59,7 +59,7 @@ const roleInputSchema = z.object({
   workMode: workModeSchema.default("hybrid"),
   employmentType: employmentSchema.default("full_time"),
   compensationBand: z.string().trim().max(120).default(""),
-  stack: z.array(z.string().trim().min(1).max(40)).max(16).default([]),
+  stack: z.array(z.string().trim().min(1).max(60)).max(16).default([]),
   mustHaves: z.array(z.string().trim().min(1).max(200)).max(12).default([]),
   niceToHaves: z.array(z.string().trim().min(1).max(200)).max(12).default([]),
   jdText: z.string().trim().max(20000).default(""),
@@ -554,6 +554,12 @@ export const createRole = createServerFn({ method: "POST" })
     const id = newId();
     const { ensureUserOrg } = await import("../../people/server/org.server");
     const org = await ensureUserOrg(context.userId, data.companyName);
+    // The plan decides how many roles may be open at once. Free keeps one so
+    // self-serve posting never breaks; the gate bites on the role after the cap.
+    const { entitlementForProductOrg } = await import("../../billing/server/plans.server");
+    const { PlanLimitError } = await import("../../billing/domain/plans");
+    const { entitlement } = await entitlementForProductOrg(org.orgId);
+    if (!entitlement.canCreateRole) throw new PlanLimitError(entitlement.reason);
     await sql`
       insert into roles (
         id, user_id, company_name, company_stage, title, location, work_mode,
@@ -855,6 +861,17 @@ export const rerankApplication = createServerFn({ method: "POST" })
         stale_reason = '',
         updated_at = now()
       where id = ${bundle.app.id} and (org_id = ${bundle.app.org_id} or (org_id is null and user_id = ${context.userId}))`;
+    // A recruiter who re-ranked and looked is an activated workspace — recorded
+    // once per org, from the write path that proves the shortlist exists.
+    if (bundle.app.org_id) {
+      const { recordActivation } = await import("../../marketing/server/activation.server");
+      await recordActivation({
+        orgId: bundle.app.org_id,
+        userId: context.userId,
+        kind: "first_shortlist_viewed",
+        roleId: bundle.app.role_id,
+      });
+    }
     const next = await loadApplicationBundle(context.userId, data.applicationId);
     return toApplication(
       next.app,
@@ -878,7 +895,7 @@ export const deepenTopCandidates = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
+    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server.ts");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -905,7 +922,7 @@ export const rerankStaleApplications = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ deepened: number; engines: string[] }> => {
     await loadRoleOrThrow(context.userId, data.roleId);
-    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server");
+    const { deepenRoleTopN } = await import("../../ranking/server/deepen.server.ts");
     const result = await deepenRoleTopN({
       userId: context.userId,
       roleId: data.roleId,
@@ -940,6 +957,19 @@ export const updateApplication = createServerFn({ method: "POST" })
       await writeAudit(context.userId, "application", data.applicationId, "status", {
         status: data.pipelineStatus,
         orgId: bundle.app.org_id ?? undefined,
+      });
+      // The moment a human decided, written to the trail the Vetta Index is
+      // computed from. `bundle` was read before the update, so this is the real
+      // before/after pair rather than a transition from the new state to itself.
+      const { recordPipelineTrail } = await import("../../analytics/server/pipeline-trail.server.ts");
+      await recordPipelineTrail({
+        orgId: bundle.app.org_id,
+        applicationId: data.applicationId,
+        candidateId: bundle.app.candidate_id,
+        roleId: bundle.app.role_id,
+        fromStage: bundle.app.pipeline_status,
+        toStage: data.pipelineStatus,
+        actorUserId: context.userId,
       });
     }
     if (data.recruiterNotes != null) {
@@ -981,6 +1011,16 @@ export const generateAsyncScreen = createServerFn({ method: "POST" })
       stack_match: [],
       screen_focus: [],
     });
+    // The monthly screen allowance is checked before the AI call is spent and
+    // charged after the screen row exists — the same door-then-meter discipline
+    // the verification queue uses, so a refused screen costs nothing.
+    const screenOrgId = bundle.app.org_id;
+    if (screenOrgId) {
+      const { entitlementForProductOrg } = await import("../../billing/server/plans.server");
+      const { PlanLimitError } = await import("../../billing/domain/plans");
+      const { entitlement } = await entitlementForProductOrg(screenOrgId);
+      if (!entitlement.canScreen) throw new PlanLimitError(entitlement.reason);
+    }
     const { generateScreen } = await import("../../ai/server/ai.server");
     const generated = await generateScreen({
       roleTitle: role.title,
@@ -1009,6 +1049,27 @@ export const generateAsyncScreen = createServerFn({ method: "POST" })
       candidate: bundle.cand.full_name,
       orgId: bundle.app.org_id ?? undefined,
     });
+    // Deciding a candidate is worth a written screen is a shortlist decision, and
+    // the Index counts it as one.
+    const { recordPipelineTrail } = await import("../../analytics/server/pipeline-trail.server.ts");
+    await recordPipelineTrail({
+      orgId: bundle.app.org_id,
+      applicationId: bundle.app.id,
+      candidateId: bundle.app.candidate_id,
+      roleId: bundle.app.role_id,
+      fromStage: bundle.app.pipeline_status,
+      toStage: "screening",
+      actorUserId: context.userId,
+    });
+    if (screenOrgId) {
+      const { chargeScreeningUse } = await import("../../billing/server/plans.server");
+      await chargeScreeningUse({
+        orgId: screenOrgId,
+        userId: context.userId,
+        roleId: bundle.app.role_id,
+        applicationId: bundle.app.id,
+      });
+    }
     const next = await loadApplicationBundle(context.userId, data.applicationId);
     return toApplication(
       next.app,

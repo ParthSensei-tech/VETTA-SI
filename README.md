@@ -90,3 +90,34 @@ Set the following environment variables in your container environment:
 - **Typecheck**: `npm run typecheck`
 - **Lint**: `npm run lint`
 - **Format**: `npm run format`
+
+---
+
+## Design & Content Swaps
+
+**Two identities, one codebase.** The marketing surfaces and the product are
+deliberately different:
+
+- **Landing + intro page** (`/`): Aurora Fjord — dark cinematic `#07100F` with
+  mint/ember/glacier accents, scoped to `.landing` in `src/styles.css`.
+- **Software** (`/app`, `/jobs`, `/portal`, login): Midnight Black `#0B0B0C`,
+  Pure White `#FFFFFF`, Lime Green `#C6F432` in a glassmorphism + soft-3D
+  treatment. This is a **single locked theme — there is no light mode and no
+  toggle**; the tokens live in the `:root, html.dark` block of
+  `src/styles.css` and the surfaces are `.glass` / `.soft-lime` in the
+  `components` layer.
+
+**Hero background video.** Drop a ≤4 MB MP4 at `public/hero.mp4` and set
+`HERO.video` in `src/shared/components/landing/content/site.ts`. It plays
+muted/looping on capable desktop connections only; mobile, Save-Data and
+reduced-motion visitors get `public/hero-poster.webp`, which is also the LCP
+element. To change the scene, replace both files.
+
+**All landing copy** — wordmark, headline, steps, FAQ, footer — lives in
+`src/shared/components/landing/content/site.ts`. Nowhere else.
+
+**Before launch:** replace the `TODO` placeholder stat in the hero card
+(`HERO.stat`) with a real measured value, and set `VITE_PUBLIC_SITE_URL` (see
+`.env.example`) so canonical links, `sitemap.xml`, `robots.txt` and the
+JSON-LD blocks all point at the production host.
+

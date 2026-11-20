@@ -7,8 +7,8 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-elevated text-muted",
-        solid: "bg-accent text-accent-fg",
+        default: "bg-[var(--glass-fill)] text-muted ring-1 ring-[var(--glass-hairline)]",
+        solid: "bg-primary text-primary-foreground shadow-[var(--shadow-soft-1)]",
         success: "bg-success/15 text-success",
         warn: "bg-warn/15 text-warn",
         danger: "bg-danger/15 text-danger",

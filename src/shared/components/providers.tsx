@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { ThemeProvider } from "@/shared/components/theme-provider";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
+import { UtmTracker } from "@/platform/telemetry/utm-tracker";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -18,6 +19,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <QueryClientProvider client={client}>
         <TooltipProvider delayDuration={200}>
+          <UtmTracker />
           {children}
           <Toaster />
         </TooltipProvider>

@@ -36,6 +36,12 @@ const applySchema = z.object({
   shareWithClient: z.boolean().optional(),
   improveModel: z.boolean().optional(),
   voiceAnswers: z.boolean().optional(),
+  utmSource: z.string().trim().max(100).default(""),
+  utmMedium: z.string().trim().max(100).default(""),
+  utmCampaign: z.string().trim().max(120).default(""),
+  utmTerm: z.string().trim().max(120).default(""),
+  utmContent: z.string().trim().max(120).default(""),
+  initialReferrer: z.string().trim().max(254).default(""),
 });
 
 const idSchema = z.object({ roleId: z.string().min(1) });
@@ -79,6 +85,7 @@ function mapPublicJob(row: RoleRow): PublicJob {
     niceToHaves: parseJson<string[]>(row.nice_to_haves, []),
     jdText: row.jd_text,
     postedAt: iso(row.updated_at || row.created_at),
+    createdAt: iso(row.created_at),
   };
 }
 
@@ -427,13 +434,16 @@ export const applyToJob = createServerFn({ method: "POST" })
       insert into applications (
         id, user_id, role_id, candidate_id, pipeline_status, rank_score, rank_json, source,
         resume_hash, role_hash, rank_engine, org_id, rubric_score, rubric_json, rubric_version_id,
-        consent_granted, consent_at
+        consent_granted, consent_at,
+        utm_source, utm_medium, utm_campaign, utm_term, utm_content, initial_referrer
       ) values (
         ${applicationId}, ${ownerId}, ${data.roleId}, ${candidateId}, ${status}, ${score}, ${rankJson}, 'portal',
         ${resumeHash}, ${roleHash}, ${rankEngine}, ${org.orgId}, ${score},
         ${ranked.ok ? JSON.stringify(ranked.rank.match ?? {}) : "{}"},
         ${ranked.ok ? (ranked.rubricVersionId ?? null) : null},
-        ${true}, now()
+        ${true}, now(),
+        ${data.utmSource || ""}, ${data.utmMedium || ""}, ${data.utmCampaign || ""},
+        ${data.utmTerm || ""}, ${data.utmContent || ""}, ${data.initialReferrer || ""}
       )`;
 
     // DPDP: record consent for recruitment processing (portal apply = explicit consent).

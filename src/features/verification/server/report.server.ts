@@ -19,15 +19,20 @@
  * for a client to spend money the workspace never agreed to.
  */
 import { getSql } from "../../../platform/db.ts";
-import { loadReport, type VerificationRun } from "./ledger.server.ts";
+import { ensureUserOrg } from "../../people/server/org.server.ts";
+import { inspectDocumentAuthenticity } from "../domain/certificate-authenticity.ts";
 import {
   reportView,
   slateVerdict,
   type JobState,
+  type RawForensicInspectionView,
   type ReportLedger,
   type SlateVerdict,
   type VerificationReportView,
 } from "../domain/report.ts";
+import { analyzeDocumentsForApplication } from "./documents.server.ts";
+import { loadReport, type VerificationRun } from "./ledger.server.ts";
+import { entitlementForOrg } from "./quota.server.ts";
 
 function reportLedger(run: VerificationRun): ReportLedger {
   return {
@@ -108,10 +113,35 @@ export async function reportForUser(
 
   const reportId = await newestReportId(applicationId, userId);
   const run = reportId ? await loadReport(reportId) : null;
+
+  // Build raw forensic inspection & authenticity report
+  let forensics: RawForensicInspectionView | null = null;
+  try {
+    const org = await ensureUserOrg(userId);
+    const { state, entitlement } = await entitlementForOrg(org.orgId);
+    const { documents } = await analyzeDocumentsForApplication(applicationId);
+
+    forensics = {
+      quota: {
+        plan: entitlement.planTier === "paid" ? "paid" : "free",
+        freeQuota: state.freeQuota,
+        usesSpent: state.usesSpent,
+        usesLeft: entitlement.usesLeft,
+        entitled: entitlement.entitled,
+        reason: entitlement.reason,
+      },
+      documents: documents.map((doc) => inspectDocumentAuthenticity(doc)),
+    };
+  } catch {
+    // If documents or org cannot be read, verification report gracefully presents without raw forensics
+    forensics = null;
+  }
+
   return reportView(
     slateVerdict(applicationId, app.verification_status, app.summary),
     await latestJob(applicationId),
     run ? reportLedger(run) : null,
+    forensics,
   );
 }
 

@@ -15,6 +15,19 @@
  */
 import type { ClaimKind } from "./claims.ts";
 import type { Observation, Verdict, VerdictCounts } from "./adjudicate.ts";
+import type { DocumentAuthenticityReport } from "./certificate-authenticity.ts";
+
+export type RawForensicInspectionView = {
+  readonly quota: {
+    readonly plan: "free" | "paid";
+    readonly freeQuota: number;
+    readonly usesSpent: number;
+    readonly usesLeft: number;
+    readonly entitled: boolean;
+    readonly reason: string;
+  };
+  readonly documents: readonly DocumentAuthenticityReport[];
+};
 
 export const HEADLINES = ["clean", "flagged", "partial", "none"] as const;
 export type Headline = (typeof HEADLINES)[number];
@@ -71,6 +84,7 @@ export type VerificationReportView = {
   counts: VerdictCounts;
   costPaise: number;
   engineVersion: string;
+  forensics?: RawForensicInspectionView | null;
 };
 
 export const EMPTY_COUNTS: VerdictCounts = {
@@ -134,6 +148,7 @@ export function reportView(
   verdict: SlateVerdict | null,
   job: JobState | null,
   ledger: ReportLedger | null,
+  forensics?: RawForensicInspectionView | null,
 ): VerificationReportView {
   return {
     verdict,
@@ -145,5 +160,6 @@ export function reportView(
     counts: ledger?.counts ?? verdict?.counts ?? EMPTY_COUNTS,
     costPaise: ledger?.costPaise ?? 0,
     engineVersion: ledger?.engineVersion ?? verdict?.engineVersion ?? "",
+    forensics: forensics ?? null,
   };
 }

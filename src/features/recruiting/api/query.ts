@@ -5,6 +5,7 @@ import { listIngestBatches } from "../../ingest/api/batch";
 import { getPortalApplication, getPublicJob, listOpenJobs } from "../../people/api/portal";
 import { getPublicShare } from "../../people/api/share";
 import { getScreenByApplication, getScreenByToken } from "../../people/api/screen-session";
+import type { PublicJob } from "../domain/types";
 
 export const queryKeys = {
   workspace: ["workspace"] as const,
@@ -63,11 +64,12 @@ export function useOpenJobsQuery() {
   });
 }
 
-export function usePublicJobQuery(roleId: string) {
+export function usePublicJobQuery(roleId: string, initialData?: PublicJob) {
   return useQuery({
     queryKey: queryKeys.job(roleId),
     queryFn: () => getPublicJob({ data: { roleId } }),
     enabled: Boolean(roleId),
+    initialData,
   });
 }
 

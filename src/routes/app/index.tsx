@@ -5,6 +5,7 @@ import { NightQueue } from "@/features/pipeline/ui/night-queue";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EmptyState } from "@/shared/components/empty-state";
 import { StageChip } from "@/shared/components/status-chip";
+import { MobileActionBar } from "@/shared/components/action-bar";
 import { formatRelative } from "@/shared/utils";
 import { useAllBatchesQuery, useWorkspaceQuery } from "@/features/recruiting/api/query";
 
@@ -158,6 +159,19 @@ function Desk() {
           </ul>
         </section>
       ) : null}
+
+      {/* Fitts's Law: Mobile Bottom Thumb Zone Action Bar */}
+      <MobileActionBar>
+        <span className="text-xs font-medium text-muted">
+          {data.roles.length} {data.roles.length === 1 ? "role" : "roles"} active
+        </span>
+        <Button asChild size="default" className="shadow-lg">
+          <Link to="/app/roles/new">
+            <Plus className="size-4" />
+            New role
+          </Link>
+        </Button>
+      </MobileActionBar>
     </div>
   );
 }

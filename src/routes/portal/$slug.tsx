@@ -9,6 +9,7 @@ import {
   HelpCircle,
   MapPin,
   Send,
+  ShieldCheck,
   Sparkles,
   Upload,
 } from "lucide-react";
@@ -31,6 +32,7 @@ import {
   type PublicPortalRole,
 } from "@/features/people/api/autonomous-portal-api";
 import { extractResumeText } from "@/features/ingest/domain/resume-file";
+import { CandidatePrivacyNoticeLink, TermsOfServiceLink } from "@/features/compliance/ui/legal-terms-dialog";
 
 export const Route = createFileRoute("/portal/$slug")({ component: PublicCareerPortal });
 
@@ -70,7 +72,7 @@ function PublicCareerPortal() {
   const { portal, roles } = portalQuery.data;
 
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="min-h-screen text-fg">
       {/* Branded Header */}
       <header className="border-b border-border bg-surface/50 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -198,6 +200,7 @@ function AutonomousApplicationModal({
   const [resumeText, setResumeText] = useState("");
   const [coverNote, setCoverNote] = useState("");
   const [readingFile, setReadingFile] = useState(false);
+  const [consentToProcess, setConsentToProcess] = useState(false);
 
   // Dynamic Intake State
   const [intakeOpen, setIntakeOpen] = useState(false);
@@ -374,7 +377,35 @@ function AutonomousApplicationModal({
               />
             </div>
 
-            <Button type="submit" disabled={applyMut.isPending} className="mt-2 w-full gap-2">
+            {/* DPDP Act 2023 Consent & Legal Notice */}
+            <div className="rounded-xl border border-border/80 bg-surface/50 p-3.5 space-y-2 text-xs text-muted">
+              <div className="flex items-center gap-1.5 font-semibold text-fg">
+                <ShieldCheck className="size-4 text-emerald-500" />
+                <span>DPDP Act (2023) Rule 4 Itemized Consent</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                By submitting this application, your digital personal data (CV, contact information, background facts) will be processed by {portal?.portalName || "the hiring organization"} and Vetta solely for evaluation against this role.
+              </p>
+              <label className="flex items-start gap-2.5 pt-1 text-xs text-muted cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 rounded border-border text-primary cursor-pointer"
+                  checked={consentToProcess}
+                  onChange={(e) => setConsentToProcess(e.target.checked)}
+                />
+                <span className="leading-relaxed">
+                  I agree to the{" "}
+                  <CandidatePrivacyNoticeLink className="font-semibold text-blue-600 dark:text-blue-400" /> and{" "}
+                  <TermsOfServiceLink className="font-semibold text-blue-600 dark:text-blue-400" />, and consent to my application being evaluated.
+                </span>
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={applyMut.isPending || !consentToProcess}
+              className="mt-2 w-full gap-2 cursor-pointer"
+            >
               <Send className="size-4" />
               {applyMut.isPending ? "Analyzing & Submitting..." : "Submit Application"}
             </Button>

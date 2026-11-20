@@ -11,22 +11,40 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as DataRouteImport } from './routes/data'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TeaserRouteImport } from './routes/teaser'
+import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppAdminLeadsRouteImport } from './routes/app/admin-leads'
+import { Route as AppAgencyMetricsRouteImport } from './routes/app/agency-metrics'
 import { Route as AppApprovalsRouteImport } from './routes/app/approvals'
 import { Route as AppHarnessRouteImport } from './routes/app/harness'
 import { Route as AppObservabilityRouteImport } from './routes/app/observability'
+import { Route as AppOfferGuardRouteImport } from './routes/app/offer-guard'
+import { Route as AppOnboardingRouteImport } from './routes/app/onboarding'
 import { Route as AppPortalRouteImport } from './routes/app/portal'
+import { Route as AppSetupRouteImport } from './routes/app/setup'
 import { Route as AppTalentRouteImport } from './routes/app/talent'
+import { Route as AppTriageRouteImport } from './routes/app/triage'
 import { Route as ApplyApplicationIdRouteImport } from './routes/apply/$applicationId'
+import { Route as CompareCompetitorRouteImport } from './routes/compare.$competitor'
+import { Route as FSlugRouteImport } from './routes/f/$slug'
 import { Route as JobsIndexRouteImport } from './routes/jobs/index'
 import { Route as JobsRoleIdRouteImport } from './routes/jobs/$roleId'
 import { Route as PortalSlugRouteImport } from './routes/portal/$slug'
 import { Route as ScreenTokenRouteImport } from './routes/screen.$token'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiPortalIngestJobRouteImport } from './routes/api/portal/ingest-job'
 import { Route as ApiQueueTickRouteImport } from './routes/api/queue/tick'
+import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay/webhook'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp/webhook'
 import { Route as AppRolesRoleIdRouteImport } from './routes/app/roles.$roleId'
 import { Route as AppRolesNewRouteImport } from './routes/app/roles.new'
@@ -41,9 +59,19 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DataRoute = DataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -51,9 +79,49 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeaserRoute = TeaserRouteImport.update({
+  id: '/teaser',
+  path: '/teaser',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaitlistRoute = WaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminLeadsRoute = AppAdminLeadsRouteImport.update({
+  id: '/admin-leads',
+  path: '/admin-leads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAgencyMetricsRoute = AppAgencyMetricsRouteImport.update({
+  id: '/agency-metrics',
+  path: '/agency-metrics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppApprovalsRoute = AppApprovalsRouteImport.update({
@@ -71,9 +139,24 @@ const AppObservabilityRoute = AppObservabilityRouteImport.update({
   path: '/observability',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOfferGuardRoute = AppOfferGuardRouteImport.update({
+  id: '/offer-guard',
+  path: '/offer-guard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOnboardingRoute = AppOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPortalRoute = AppPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSetupRoute = AppSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTalentRoute = AppTalentRouteImport.update({
@@ -81,9 +164,24 @@ const AppTalentRoute = AppTalentRouteImport.update({
   path: '/talent',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTriageRoute = AppTriageRouteImport.update({
+  id: '/triage',
+  path: '/triage',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApplyApplicationIdRoute = ApplyApplicationIdRouteImport.update({
   id: '/apply/$applicationId',
   path: '/apply/$applicationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareCompetitorRoute = CompareCompetitorRouteImport.update({
+  id: '/compare/$competitor',
+  path: '/compare/$competitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FSlugRoute = FSlugRouteImport.update({
+  id: '/f/$slug',
+  path: '/f/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsIndexRoute = JobsIndexRouteImport.update({
@@ -116,9 +214,19 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPortalIngestJobRoute = ApiPortalIngestJobRouteImport.update({
+  id: '/api/portal/ingest-job',
+  path: '/api/portal/ingest-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiQueueTickRoute = ApiQueueTickRouteImport.update({
   id: '/api/queue/tick',
   path: '/api/queue/tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
+  id: '/api/razorpay/webhook',
+  path: '/api/razorpay/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
@@ -140,14 +248,30 @@ const AppRolesNewRoute = AppRolesNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/data': typeof DataRoute
   '/jobs': typeof JobsRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/teaser': typeof TeaserRoute
+  '/waitlist': typeof WaitlistRoute
+  '/app/admin-leads': typeof AppAdminLeadsRoute
+  '/app/agency-metrics': typeof AppAgencyMetricsRoute
   '/app/approvals': typeof AppApprovalsRoute
   '/app/harness': typeof AppHarnessRoute
   '/app/observability': typeof AppObservabilityRoute
+  '/app/offer-guard': typeof AppOfferGuardRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/portal': typeof AppPortalRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/talent': typeof AppTalentRoute
+  '/app/triage': typeof AppTriageRoute
   '/apply/$applicationId': typeof ApplyApplicationIdRoute
+  '/compare/$competitor': typeof CompareCompetitorRoute
+  '/f/$slug': typeof FSlugRoute
   '/jobs/$roleId': typeof JobsRoleIdRoute
   '/portal/$slug': typeof PortalSlugRoute
   '/screen/$token': typeof ScreenTokenRoute
@@ -155,20 +279,38 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/portal/ingest-job': typeof ApiPortalIngestJobRoute
   '/api/queue/tick': typeof ApiQueueTickRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
   '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
   '/app/roles/$roleId': typeof AppRolesRoleIdRoute
   '/app/roles/new': typeof AppRolesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/data': typeof DataRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/teaser': typeof TeaserRoute
+  '/waitlist': typeof WaitlistRoute
+  '/app/admin-leads': typeof AppAdminLeadsRoute
+  '/app/agency-metrics': typeof AppAgencyMetricsRoute
   '/app/approvals': typeof AppApprovalsRoute
   '/app/harness': typeof AppHarnessRoute
   '/app/observability': typeof AppObservabilityRoute
+  '/app/offer-guard': typeof AppOfferGuardRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/portal': typeof AppPortalRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/talent': typeof AppTalentRoute
+  '/app/triage': typeof AppTriageRoute
   '/apply/$applicationId': typeof ApplyApplicationIdRoute
+  '/compare/$competitor': typeof CompareCompetitorRoute
+  '/f/$slug': typeof FSlugRoute
   '/jobs/$roleId': typeof JobsRoleIdRoute
   '/portal/$slug': typeof PortalSlugRoute
   '/screen/$token': typeof ScreenTokenRoute
@@ -176,7 +318,9 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/portal/ingest-job': typeof ApiPortalIngestJobRoute
   '/api/queue/tick': typeof ApiQueueTickRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
   '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
   '/app/roles/$roleId': typeof AppRolesRoleIdRoute
   '/app/roles/new': typeof AppRolesNewRoute
@@ -185,14 +329,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/data': typeof DataRoute
   '/jobs': typeof JobsRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/teaser': typeof TeaserRoute
+  '/waitlist': typeof WaitlistRoute
+  '/app/admin-leads': typeof AppAdminLeadsRoute
+  '/app/agency-metrics': typeof AppAgencyMetricsRoute
   '/app/approvals': typeof AppApprovalsRoute
   '/app/harness': typeof AppHarnessRoute
   '/app/observability': typeof AppObservabilityRoute
+  '/app/offer-guard': typeof AppOfferGuardRoute
+  '/app/onboarding': typeof AppOnboardingRoute
   '/app/portal': typeof AppPortalRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/talent': typeof AppTalentRoute
+  '/app/triage': typeof AppTriageRoute
   '/apply/$applicationId': typeof ApplyApplicationIdRoute
+  '/compare/$competitor': typeof CompareCompetitorRoute
+  '/f/$slug': typeof FSlugRoute
   '/jobs/$roleId': typeof JobsRoleIdRoute
   '/portal/$slug': typeof PortalSlugRoute
   '/screen/$token': typeof ScreenTokenRoute
@@ -200,7 +360,9 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/portal/ingest-job': typeof ApiPortalIngestJobRoute
   '/api/queue/tick': typeof ApiQueueTickRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
   '/api/whatsapp/webhook': typeof ApiWhatsappWebhookRoute
   '/app/roles/$roleId': typeof AppRolesRoleIdRoute
   '/app/roles/new': typeof AppRolesNewRoute
@@ -210,14 +372,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/data'
     | '/jobs'
+    | '/llms.txt'
     | '/login'
+    | '/pricing'
+    | '/robots.txt'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/teaser'
+    | '/waitlist'
+    | '/app/admin-leads'
+    | '/app/agency-metrics'
     | '/app/approvals'
     | '/app/harness'
     | '/app/observability'
+    | '/app/offer-guard'
+    | '/app/onboarding'
     | '/app/portal'
+    | '/app/setup'
     | '/app/talent'
+    | '/app/triage'
     | '/apply/$applicationId'
+    | '/compare/$competitor'
+    | '/f/$slug'
     | '/jobs/$roleId'
     | '/portal/$slug'
     | '/screen/$token'
@@ -225,20 +403,38 @@ export interface FileRouteTypes {
     | '/app/'
     | '/jobs/'
     | '/api/auth/$'
+    | '/api/portal/ingest-job'
     | '/api/queue/tick'
+    | '/api/razorpay/webhook'
     | '/api/whatsapp/webhook'
     | '/app/roles/$roleId'
     | '/app/roles/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/data'
+    | '/llms.txt'
     | '/login'
+    | '/pricing'
+    | '/robots.txt'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/teaser'
+    | '/waitlist'
+    | '/app/admin-leads'
+    | '/app/agency-metrics'
     | '/app/approvals'
     | '/app/harness'
     | '/app/observability'
+    | '/app/offer-guard'
+    | '/app/onboarding'
     | '/app/portal'
+    | '/app/setup'
     | '/app/talent'
+    | '/app/triage'
     | '/apply/$applicationId'
+    | '/compare/$competitor'
+    | '/f/$slug'
     | '/jobs/$roleId'
     | '/portal/$slug'
     | '/screen/$token'
@@ -246,7 +442,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/jobs'
     | '/api/auth/$'
+    | '/api/portal/ingest-job'
     | '/api/queue/tick'
+    | '/api/razorpay/webhook'
     | '/api/whatsapp/webhook'
     | '/app/roles/$roleId'
     | '/app/roles/new'
@@ -254,14 +452,30 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/data'
     | '/jobs'
+    | '/llms.txt'
     | '/login'
+    | '/pricing'
+    | '/robots.txt'
+    | '/signup'
+    | '/sitemap.xml'
+    | '/teaser'
+    | '/waitlist'
+    | '/app/admin-leads'
+    | '/app/agency-metrics'
     | '/app/approvals'
     | '/app/harness'
     | '/app/observability'
+    | '/app/offer-guard'
+    | '/app/onboarding'
     | '/app/portal'
+    | '/app/setup'
     | '/app/talent'
+    | '/app/triage'
     | '/apply/$applicationId'
+    | '/compare/$competitor'
+    | '/f/$slug'
     | '/jobs/$roleId'
     | '/portal/$slug'
     | '/screen/$token'
@@ -269,7 +483,9 @@ export interface FileRouteTypes {
     | '/app/'
     | '/jobs/'
     | '/api/auth/$'
+    | '/api/portal/ingest-job'
     | '/api/queue/tick'
+    | '/api/razorpay/webhook'
     | '/api/whatsapp/webhook'
     | '/app/roles/$roleId'
     | '/app/roles/new'
@@ -278,14 +494,26 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  DataRoute: typeof DataRoute
   JobsRoute: typeof JobsRouteWithChildren
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   LoginRoute: typeof LoginRoute
+  PricingRoute: typeof PricingRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TeaserRoute: typeof TeaserRoute
+  WaitlistRoute: typeof WaitlistRoute
   ApplyApplicationIdRoute: typeof ApplyApplicationIdRoute
+  CompareCompetitorRoute: typeof CompareCompetitorRoute
+  FSlugRoute: typeof FSlugRoute
   PortalSlugRoute: typeof PortalSlugRoute
   ScreenTokenRoute: typeof ScreenTokenRoute
   ShareTokenRoute: typeof ShareTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPortalIngestJobRoute: typeof ApiPortalIngestJobRoute
   ApiQueueTickRoute: typeof ApiQueueTickRoute
+  ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
 }
 
@@ -305,11 +533,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/data': {
+      id: '/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobs': {
       id: '/jobs'
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -319,11 +561,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teaser': {
+      id: '/teaser'
+      path: '/teaser'
+      fullPath: '/teaser'
+      preLoaderRoute: typeof TeaserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waitlist': {
+      id: '/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof WaitlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/': {
       id: '/app/'
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin-leads': {
+      id: '/app/admin-leads'
+      path: '/admin-leads'
+      fullPath: '/app/admin-leads'
+      preLoaderRoute: typeof AppAdminLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/agency-metrics': {
+      id: '/app/agency-metrics'
+      path: '/agency-metrics'
+      fullPath: '/app/agency-metrics'
+      preLoaderRoute: typeof AppAgencyMetricsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/approvals': {
@@ -347,11 +645,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppObservabilityRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/offer-guard': {
+      id: '/app/offer-guard'
+      path: '/offer-guard'
+      fullPath: '/app/offer-guard'
+      preLoaderRoute: typeof AppOfferGuardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/onboarding': {
+      id: '/app/onboarding'
+      path: '/onboarding'
+      fullPath: '/app/onboarding'
+      preLoaderRoute: typeof AppOnboardingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/portal': {
       id: '/app/portal'
       path: '/portal'
       fullPath: '/app/portal'
       preLoaderRoute: typeof AppPortalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/setup': {
+      id: '/app/setup'
+      path: '/setup'
+      fullPath: '/app/setup'
+      preLoaderRoute: typeof AppSetupRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/talent': {
@@ -361,11 +680,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTalentRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/triage': {
+      id: '/app/triage'
+      path: '/triage'
+      fullPath: '/app/triage'
+      preLoaderRoute: typeof AppTriageRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/apply/$applicationId': {
       id: '/apply/$applicationId'
       path: '/apply/$applicationId'
       fullPath: '/apply/$applicationId'
       preLoaderRoute: typeof ApplyApplicationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/$competitor': {
+      id: '/compare/$competitor'
+      path: '/compare/$competitor'
+      fullPath: '/compare/$competitor'
+      preLoaderRoute: typeof CompareCompetitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/$slug': {
+      id: '/f/$slug'
+      path: '/f/$slug'
+      fullPath: '/f/$slug'
+      preLoaderRoute: typeof FSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs/': {
@@ -410,11 +750,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/portal/ingest-job': {
+      id: '/api/portal/ingest-job'
+      path: '/api/portal/ingest-job'
+      fullPath: '/api/portal/ingest-job'
+      preLoaderRoute: typeof ApiPortalIngestJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/queue/tick': {
       id: '/api/queue/tick'
       path: '/api/queue/tick'
       fullPath: '/api/queue/tick'
       preLoaderRoute: typeof ApiQueueTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/razorpay/webhook': {
+      id: '/api/razorpay/webhook'
+      path: '/api/razorpay/webhook'
+      fullPath: '/api/razorpay/webhook'
+      preLoaderRoute: typeof ApiRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/whatsapp/webhook': {
@@ -442,22 +796,34 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAdminLeadsRoute: typeof AppAdminLeadsRoute
+  AppAgencyMetricsRoute: typeof AppAgencyMetricsRoute
   AppApprovalsRoute: typeof AppApprovalsRoute
   AppHarnessRoute: typeof AppHarnessRoute
   AppObservabilityRoute: typeof AppObservabilityRoute
+  AppOfferGuardRoute: typeof AppOfferGuardRoute
+  AppOnboardingRoute: typeof AppOnboardingRoute
   AppPortalRoute: typeof AppPortalRoute
+  AppSetupRoute: typeof AppSetupRoute
   AppTalentRoute: typeof AppTalentRoute
+  AppTriageRoute: typeof AppTriageRoute
   AppIndexRoute: typeof AppIndexRoute
   AppRolesRoleIdRoute: typeof AppRolesRoleIdRoute
   AppRolesNewRoute: typeof AppRolesNewRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminLeadsRoute: AppAdminLeadsRoute,
+  AppAgencyMetricsRoute: AppAgencyMetricsRoute,
   AppApprovalsRoute: AppApprovalsRoute,
   AppHarnessRoute: AppHarnessRoute,
   AppObservabilityRoute: AppObservabilityRoute,
+  AppOfferGuardRoute: AppOfferGuardRoute,
+  AppOnboardingRoute: AppOnboardingRoute,
   AppPortalRoute: AppPortalRoute,
+  AppSetupRoute: AppSetupRoute,
   AppTalentRoute: AppTalentRoute,
+  AppTriageRoute: AppTriageRoute,
   AppIndexRoute: AppIndexRoute,
   AppRolesRoleIdRoute: AppRolesRoleIdRoute,
   AppRolesNewRoute: AppRolesNewRoute,
@@ -480,14 +846,26 @@ const JobsRouteWithChildren = JobsRoute._addFileChildren(JobsRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  DataRoute: DataRoute,
   JobsRoute: JobsRouteWithChildren,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   LoginRoute: LoginRoute,
+  PricingRoute: PricingRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TeaserRoute: TeaserRoute,
+  WaitlistRoute: WaitlistRoute,
   ApplyApplicationIdRoute: ApplyApplicationIdRoute,
+  CompareCompetitorRoute: CompareCompetitorRoute,
+  FSlugRoute: FSlugRoute,
   PortalSlugRoute: PortalSlugRoute,
   ScreenTokenRoute: ScreenTokenRoute,
   ShareTokenRoute: ShareTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPortalIngestJobRoute: ApiPortalIngestJobRoute,
   ApiQueueTickRoute: ApiQueueTickRoute,
+  ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport

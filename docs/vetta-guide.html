@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vetta — what it does, how fast, what it costs</title>
+<style>
+  @font-face {
+    font-family: "Unbounded";
+    src: url("/node_modules/@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2") format("woff2");
+    font-weight: 200 900;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Inter";
+    src: url("/node_modules/@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Plex Mono";
+    src: url("/node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+
+  :root {
+    --bg: #07100f;
+    --ink: #e9f0ec;
+    --muted: rgba(233, 240, 236, 0.62);
+    --faint: rgba(233, 240, 236, 0.38);
+    --hair: rgba(233, 240, 236, 0.14);
+    --mint: #7cf2c0;
+    --ember: #ff9468;
+    --panel: rgba(233, 240, 236, 0.045);
+  }
+
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    font-size: 9.6pt;
+    line-height: 1.5;
+  }
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 16mm 16mm 13mm;
+    position: relative;
+    page-break-after: always;
+    overflow: hidden;
+    background:
+      radial-gradient(1200px 500px at 80% -10%, rgba(124, 242, 192, 0.09), transparent 60%),
+      var(--bg);
+  }
+  .page:last-child { page-break-after: auto; }
+  .wordmark {
+    font-family: "Unbounded", sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    font-size: 10pt;
+  }
+  h1, h2, h3, .display { font-family: "Unbounded", sans-serif; font-weight: 400; margin: 0; }
+  h2 { font-size: 17pt; line-height: 1.2; letter-spacing: -0.01em; }
+  h3 { font-size: 9.4pt; letter-spacing: 0.01em; }
+  p { margin: 0; }
+  .kicker {
+    font-family: "Plex Mono", monospace;
+    font-size: 7.4pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mint);
+  }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .mono { font-family: "Plex Mono", monospace; }
+  .rule { height: 1px; background: var(--hair); }
+  .foot {
+    position: absolute;
+    left: 16mm; right: 16mm; bottom: 9mm;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: "Plex Mono", monospace;
+    font-size: 7pt; color: var(--faint);
+    letter-spacing: 0.04em;
+  }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: 6mm; border-bottom: 1px solid var(--hair);
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 5mm;
+    padding: 6mm;
+  }
+
+  /* cover */
+  .cover { display: flex; flex-direction: column; }
+  .cover-mark { display: flex; align-items: center; gap: 3mm; }
+  .bars { display: flex; align-items: flex-end; gap: 1.2mm; height: 5.4mm; }
+  .bars i { display: block; width: 1.5mm; background: var(--mint); border-radius: 0.4mm; }
+  .cover h1 {
+    margin-top: 42mm;
+    font-size: 33pt;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 150mm;
+  }
+  .cover h1 em { font-style: normal; color: var(--mint); }
+  .cover .lede {
+    margin-top: 8mm;
+    max-width: 132mm;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .chips { display: grid; grid-template-columns: max-content max-content; gap: 2.4mm; margin-top: 12mm; justify-content: start; }
+  .contents { margin-top: auto; display: flex; gap: 7mm; padding-bottom: 6mm; font-family: "Plex Mono", monospace; font-size: 6.8pt; letter-spacing: 0.08em; color: var(--faint); }
+  .contents span { display: flex; gap: 1.6mm; }
+  .contents b { color: var(--mint); font-weight: 400; }
+  .chip {
+    font-family: "Plex Mono", monospace;
+    font-size: 6.9pt;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 2mm 3.2mm;
+    background: rgba(233, 240, 236, 0.03);
+  }
+  .cover-foot {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-top: 1px solid var(--hair);
+    padding-top: 5mm;
+    font-size: 7.6pt;
+    color: var(--faint);
+  }
+
+  /* steps */
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 7mm; }
+  .step { border: 1px solid var(--hair); border-radius: 4mm; padding: 5mm; background: var(--panel); }
+  .step .n { font-family: "Plex Mono", monospace; font-size: 7.6pt; color: var(--mint); letter-spacing: 0.1em; }
+  .step h3 { margin-top: 2.5mm; font-size: 11pt; }
+  .step p { margin-top: 2.2mm; font-size: 8.8pt; line-height: 1.5; color: var(--muted); }
+
+  /* verdict card */
+  .verdict { margin-top: 6mm; }
+  .verdict-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .verdict-score {
+    font-family: "Unbounded", sans-serif; font-size: 26pt; line-height: 1; color: var(--mint);
+  }
+  .verdict-label {
+    font-family: "Plex Mono", monospace; font-size: 7.4pt; letter-spacing: 0.14em; text-transform: uppercase;
+    border: 1px solid var(--mint); color: var(--mint); border-radius: 999px; padding: 1.6mm 3.2mm;
+  }
+  .cite {
+    border-left: 2px solid var(--mint);
+    padding-left: 3.5mm;
+    margin-top: 3mm;
+    font-size: 8.6pt;
+    line-height: 1.45;
+  }
+  .cite .src { display: block; margin-top: 1mm; font-family: "Plex Mono", monospace; font-size: 7pt; color: var(--faint); }
+  .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4mm 6mm; margin-top: 4mm; }
+  .kv div {
+    display: flex; flex-direction: column; gap: 0.6mm;
+    border-bottom: 1px dotted var(--hair); padding-bottom: 1.4mm;
+  }
+  .kv b { font-weight: 500; font-size: 8.3pt; color: var(--ink); }
+  .kv span {
+    font-family: "Plex Mono", monospace;
+    font-size: 6.4pt; letter-spacing: 0.07em; text-transform: uppercase; color: var(--faint);
+  }
+
+  /* feature grid */
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 3.4mm 6mm; margin-top: 5.4mm; }
+  .feature h3 { font-size: 9.4pt; }
+  .feature h3 span { color: var(--mint); font-family: "Plex Mono", monospace; font-size: 7.2pt; margin-right: 2mm; }
+  .feature p { margin-top: 1.3mm; font-size: 8.3pt; line-height: 1.42; color: var(--muted); }
+  .tags { margin-top: 2mm; display: flex; flex-wrap: wrap; gap: 1.6mm; }
+  .tag {
+    font-family: "Plex Mono", monospace; font-size: 6.6pt; letter-spacing: 0.04em;
+    border: 1px solid var(--hair); border-radius: 999px; padding: 0.8mm 2.2mm; color: var(--muted);
+  }
+
+  /* mechanics */
+  .mech { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 6mm; }
+  .mech .panel h3 { font-size: 9.4pt; }
+  .mech .panel p { margin-top: 2mm; font-size: 8.5pt; line-height: 1.5; color: var(--muted); }
+  .mech .panel .mono { font-size: 7.2pt; color: var(--mint); letter-spacing: 0.06em; }
+
+  .chain { display: flex; align-items: center; gap: 1.6mm 2mm; margin-top: 3.6mm; flex-wrap: wrap; }
+  .chain .node + .node::before { content: "→"; margin-right: 1.6mm; color: var(--faint); font-size: 6.4pt; }
+  .chain .brk { flex-basis: 100%; height: 0; }
+  .chain .brk + .node::before { content: none; }
+  .chain .node {
+    font-family: "Plex Mono", monospace; font-size: 6.2pt; letter-spacing: 0.02em;
+    border: 1px solid var(--hair); border-radius: 2mm; padding: 1.3mm 1.8mm; color: var(--ink);
+    background: rgba(233, 240, 236, 0.03); white-space: nowrap;
+  }
+  .chain .arrow { color: var(--faint); font-size: 7pt; }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; vertical-align: top; }
+  .time-table th {
+    font-family: "Plex Mono", monospace; font-size: 6.8pt; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--faint); font-weight: 400; padding: 2mm 3mm 2mm 0; border-bottom: 1px solid var(--hair);
+  }
+  .time-table td { padding: 2.6mm 3mm 2.6mm 0; border-bottom: 1px solid var(--hair); font-size: 8.4pt; }
+  .time-table td:first-child { width: 34%; color: var(--ink); }
+  .time-table td:nth-child(2) { width: 33%; color: var(--muted); }
+  .time-table td:nth-child(3) { color: var(--muted); }
+
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 6mm; }
+  .plan { border: 1px solid var(--hair); border-radius: 4mm; padding: 5mm; background: var(--panel); display: flex; flex-direction: column; }
+  .plan.rec { border-color: rgba(124, 242, 192, 0.45); }
+  .plan .name { font-family: "Unbounded", sans-serif; font-size: 9.6pt; }
+  .plan .price { margin-top: 3mm; font-family: "Unbounded", sans-serif; font-size: 16pt; line-height: 1; }
+  .plan .price small { font-family: "Inter", sans-serif; font-size: 7.6pt; color: var(--muted); }
+  .plan .terms { margin-top: 1.6mm; font-size: 7.4pt; color: var(--faint); }
+  .plan ul { margin: 3.5mm 0 0; padding: 0; list-style: none; font-size: 8pt; color: var(--muted); line-height: 1.45; }
+  .plan li { padding: 1.1mm 0 1.1mm 4mm; position: relative; }
+  .plan li::before { content: "·"; position: absolute; left: 1mm; color: var(--mint); }
+  .plan .badge {
+    align-self: flex-start; margin-bottom: 2.5mm;
+    font-family: "Plex Mono", monospace; font-size: 6.1pt; letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--mint); color: #07100f; border-radius: 999px; padding: 1.1mm 2.6mm; white-space: nowrap;
+  }
+  .portfolio-note { margin-top: 4mm; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 5mm; }
+  .list { margin: 2.4mm 0 0; padding: 0; list-style: none; font-size: 8.4pt; line-height: 1.5; color: var(--muted); }
+  .list li { padding: 1.2mm 0 1.2mm 4.4mm; position: relative; border-bottom: 1px dotted var(--hair); }
+  .list li::before { content: "✓"; position: absolute; left: 0; color: var(--mint); font-size: 7.4pt; }
+  .list.no li::before { content: "—"; color: var(--faint); }
+  .footnote { margin-top: 5mm; font-size: 7.6pt; line-height: 1.5; color: var(--faint); }
+</style>
+</head>
+<body>
+
+<!-- 1 — cover -->
+<section class="page cover">
+  <div class="topbar" style="border-bottom: none; padding: 0;">
+    <div class="cover-mark">
+      <span class="bars"><i style="height:3mm"></i><i style="height:4.6mm"></i><i style="height:5.4mm"></i></span>
+      <span class="wordmark">VETTA</span>
+    </div>
+    <span class="mono faint" style="font-size:7pt; letter-spacing:0.14em;">PRODUCT GUIDE · 13 NOV 2026</span>
+  </div>
+
+  <div class="kicker" style="margin-top:30mm;">Evidence-first hiring</div>
+  <h1>What Vetta does,<br />how fast it does it,<br />and <em>what it costs.</em></h1>
+  <p class="lede">
+    Vetta is an AI-native recruiting platform for seed to Series B startups.
+    You define a role, and Vetta sources, screens and shortlists candidates with
+    every decision traced to evidence. Ranking runs against your job description,
+    not a pedigree or a keyword list — and a human recruiter stamps every
+    decision that leaves the building.
+  </p>
+
+  <div class="chips">
+    <span class="chip">A human stamps every decision</span>
+    <span class="chip">DPDP-native · erasure receipts</span>
+    <span class="chip">India-calibrated rubrics</span>
+    <span class="chip">Prices in INR · Razorpay</span>
+  </div>
+
+  <div class="contents">
+    <span><b>01</b> WHAT IT DOES</span>
+    <span><b>02</b> FEATURES</span>
+    <span><b>03</b> METHOD</span>
+    <span><b>04</b> TIME</span>
+    <span><b>05</b> PRICE</span>
+  </div>
+
+  <div class="cover-foot">
+    <div>
+      <div style="color:var(--ink); font-size:8.4pt;">Vetta</div>
+      <div class="mono" style="margin-top:1mm;">AI-native technical recruiting for India's early-stage teams</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="mono">6 pages · product, method, time, price</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 — what it does -->
+<section class="page">
+  <div class="topbar">
+    <span class="wordmark">VETTA</span>
+    <span class="mono faint" style="font-size:7pt;">01 — WHAT IT DOES</span>
+  </div>
+
+  <div style="margin-top:9mm;">
+    <div class="kicker">The pipeline</div>
+    <h2 style="margin-top:3mm;">Four steps, in plain order.</h2>
+    <p class="muted" style="margin-top:3mm; max-width:150mm; font-size:9pt;">
+      Nothing is skipped and nothing is silent: each step writes what it did, and every score
+      names the line of the resume it came from.
+    </p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="n">01 — DEFINE</div>
+      <h3>Calibrate the role</h3>
+      <p>A short intake turns the job description into a rubric: must-haves, stack, compensation band,
+        work mode, employment type and notice-period reality. That rubric is the only thing the
+        pipeline scores against — no keywords, no pedigree filters.</p>
+    </div>
+    <div class="step">
+      <div class="n">02 — SOURCE</div>
+      <h3>Fill one desk</h3>
+      <p>Public role pages take applications directly. Every resume — PDF or DOCX — is parsed into a
+        structured profile: current title, employer, years, location, phone, links and the full text.
+        Batches are uploaded, parsed and queued continuously.</p>
+    </div>
+    <div class="step">
+      <div class="n">03 — SCREEN</div>
+      <h3>Rank, then verify</h3>
+      <p>Each candidate is ranked against the rubric with cited evidence, and their claims are checked
+        by arithmetic and document forensics. A structured written screen follows — asynchronous,
+        no live call — scored with its reasoning attached.</p>
+    </div>
+    <div class="step">
+      <div class="n">04 — DECIDE</div>
+      <h3>Shortlist, stamp, send</h3>
+      <p>A ranked shortlist with reasoning, client-ready disclosure, approvals and offer support.
+        You approve and stamp; the desk moves the candidate through shortlisted, screening, ready,
+        approved and sent — every transition on the audit trail.</p>
+    </div>
+  </div>
+
+  <div class="panel verdict" style="margin-top:7mm;">
+    <div class="verdict-head">
+      <div>
+        <div class="kicker" style="color:var(--faint);">The verdict card — one screen per candidate</div>
+        <div style="display:flex; align-items:baseline; gap:4mm; margin-top:3mm;">
+          <span class="verdict-score">82</span>
+          <span class="verdict-label">Strong</span>
+          <span class="mono faint" style="font-size:7pt;">rubric v3 · 6 must-haves · ledger owner</span>
+        </div>
+      </div>
+      <div class="mono faint" style="font-size:7pt; text-align:right;">
+        shipped to the client only<br />after a human stamp
+      </div>
+    </div>
+
+    <div style="margin-top:5mm; display:grid; grid-template-columns: 1.15fr 1fr; gap:7mm;">
+      <div>
+        <div class="kicker" style="color:var(--faint); font-size:6.8pt;">Why — cited, not asserted</div>
+        <div class="cite" style="margin-top:2.5mm;">
+          “Owned the ledger service at Zettabyte — 40k writes/day, cut p99 from 900ms to 210ms.”
+          <span class="src">resume · experience · role 2</span>
+        </div>
+        <div class="cite" style="margin-top:2.5mm;">
+          “Led migration of billing to event-sourced core; owned the reconciliation job.”
+          <span class="src">resume · experience · role 1</span>
+        </div>
+        <div class="cite" style="margin-top:2.5mm; border-left-color: var(--ember);">
+          Gap: no evidence of people management, which the rubric weights as a must-have.
+          <span class="src">gap · rubric · must-have 4</span>
+        </div>
+      </div>
+      <div>
+        <div class="kicker" style="color:var(--faint); font-size:6.8pt;">India fit, in the same card</div>
+        <div class="kv">
+          <div><span>Location fit</span><b>Bengaluru · hybrid</b></div>
+          <div><span>Notice period</span><b>30 days</b></div>
+          <div><span>Current CTC</span><b>₹28L</b></div>
+          <div><span>Expected CTC</span><b>₹36–40L</b></div>
+          <div><span>Early-stage fit</span><b>12-person team</b></div>
+          <div><span>Stack match</span><b>Node, Postgres, Kafka</b></div>
+        </div>
+        <p class="faint" style="margin-top:3.5mm; font-size:7.4pt; line-height:1.45;">
+          Illustrative card. The score is arithmetic on the rubric; the sentence next to it is the
+          evidence that produced it.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Vetta · product guide</span><span>01 / 05</span></div>
+</section>
+
+<!-- 3 — features -->
+<section class="page">
+  <div class="topbar">
+    <span class="wordmark">VETTA</span>
+    <span class="mono faint" style="font-size:7pt;">02 — FEATURES</span>
+  </div>
+
+  <div style="margin-top:9mm;">
+    <div class="kicker">What ships today</div>
+    <h2 style="margin-top:3mm;">Twelve things the product actually does.</h2>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <h3><span>01</span>Role calibration</h3>
+      <p>Must-haves, nice-to-haves, stack, compensation band, work mode and employment type compile to a
+        versioned rubric. Edit the rubric and every future score says which version it used.</p>
+      <div class="tags"><span class="tag">versioned</span><span class="tag">per role</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>02</span>Ingest &amp; parsing</h3>
+      <p>Native PDF and DOCX extraction with a structured profile: name, email, phone, location, current
+        title and company, years of experience, links and the resume text, held for the pipeline.</p>
+      <div class="tags"><span class="tag">pdf</span><span class="tag">docx</span><span class="tag">batch upload</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>03</span>Evidence-traced ranking</h3>
+      <p>A score, a level, a summary, cited evidence, gaps, risks, stack match and India fit — location,
+        notice period, current and expected CTC, early-stage fit. Every bullet points at a resume line.</p>
+      <div class="tags"><span class="tag">rubric-scored</span><span class="tag">cited</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>04</span>Verification</h3>
+      <p>Eight arithmetic checks on every workspace — dates that run backwards, a range past today,
+        tenure against dated history, two current employers, degree order, email domain against employer,
+        unsourced scale claims. Paid plans add document forensics: orphaned text, incremental saves,
+        toolchain anachronisms, DOCX edit history, certificate bytes.</p>
+      <div class="tags"><span class="tag">4 free reports</span><span class="tag">verified · contradicted · unverifiable</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>05</span>Async written screen</h3>
+      <p>Scenario questions generated from the role and the candidate's gaps, with up to two follow-ups
+        each. The candidate writes at their own time — no live call — and the evaluation returns a score
+        with its reasoning.</p>
+      <div class="tags"><span class="tag">asynchronous</span><span class="tag">~10 min / question</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>06</span>Client disclosure</h3>
+      <p>Client cards, screen packs and share links built from the same evidence, with masking rules so a
+        client sees the work without seeing what the candidate did not consent to share.</p>
+      <div class="tags"><span class="tag">masked</span><span class="tag">consent-filtered</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>07</span>Approvals &amp; audit</h3>
+      <p>Each artifact is drafted, then approved or rejected by a named user before anything leaves.
+        Every stage move is an event with actor and reason; the audit trail is the product's memory.</p>
+      <div class="tags"><span class="tag">human stamp</span><span class="tag">stage events</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>08</span>Offer Guard</h3>
+      <p>Rene-risk assessment between offer and joining: a hazard model over preboarding signals,
+        risk tiers and playbooks for the conversations that keep a signed candidate from walking.</p>
+      <div class="tags"><span class="tag">preboarding</span><span class="tag">risk tiers</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>09</span>Funnel analytics</h3>
+      <p>Time to shortlist, shortlist to interview, interview to offer, offer to acceptance, acceptance to
+        joining and total time to hire — plus offer acceptance, joining ratio, 90-day retention, repeat
+        mandates and gross margin per placement.</p>
+      <div class="tags"><span class="tag">median + quartiles</span><span class="tag">per role</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>10</span>The Vetta Index</h3>
+      <p>A public benchmark of hiring speed computed from timestamped stage events, cut weekly.
+        Medians and quartiles only, with the denominator printed beside the number — and nothing at all
+        from a cohort under 5 companies, 25 roles and 50 applications.</p>
+      <div class="tags"><span class="tag">/data</span><span class="tag">withheld below the floor</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>11</span>DPDP &amp; privacy</h3>
+      <p>Itemized consent before processing, per-workspace retention days, client-disclosure filtering at
+        read time, consent withdrawal, and erasure with a receipt — derived aggregates are recomputed
+        without the person, not left standing.</p>
+      <div class="tags"><span class="tag">erasure receipts</span><span class="tag">no learning without consent</span></div>
+    </div>
+    <div class="feature">
+      <h3><span>12</span>Desk &amp; operations</h3>
+      <p>One desk for roles, talent, approvals and screening; an observability view over the job queues;
+        retries and idempotent work so a double-click is never a double charge.</p>
+      <div class="tags"><span class="tag">queue</span><span class="tag">retries</span><span class="tag">observability</span></div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Vetta · product guide</span><span>02 / 05</span></div>
+</section>
+
+<!-- 4 — how -->
+<section class="page">
+  <div class="topbar">
+    <span class="wordmark">VETTA</span>
+    <span class="mono faint" style="font-size:7pt;">03 — HOW IT WORKS UNDER THE HOOD</span>
+  </div>
+
+  <div style="margin-top:9mm;">
+    <div class="kicker">Method, not magic</div>
+    <h2 style="margin-top:3mm;">Six rules the software is built on.</h2>
+  </div>
+
+  <div class="mech">
+    <div class="panel">
+      <div class="mono">RULE 01</div>
+      <h3 style="margin-top:2mm;">The rubric decides, not the model's taste</h3>
+      <p>The job description compiles to a rubric — must-haves, stack, band, notice reality. A candidate is
+        scored against that rubric and nothing else, so a school, a former employer or a flattering word
+        cannot move a score on its own.</p>
+    </div>
+    <div class="panel">
+      <div class="mono">RULE 02</div>
+      <h3 style="margin-top:2mm;">Every score names its evidence</h3>
+      <p>A number without a citation is an opinion. Each rank, gap and screen score carries the resume or
+        answer line it rests on, so a founder can disagree with the evidence instead of the algorithm.</p>
+    </div>
+    <div class="panel">
+      <div class="mono">RULE 03</div>
+      <h3 style="margin-top:2mm;">Verification is arithmetic and bytes</h3>
+      <p>Checks are date subtraction, transaction-chain counting and document forensics — never sentiment.
+        Only a definitive check may contradict a claim; everything else is labelled unverifiable rather
+        than dressed up as doubt.</p>
+    </div>
+    <div class="panel">
+      <div class="mono">RULE 04</div>
+      <h3 style="margin-top:2mm;">A human stamps what leaves the building</h3>
+      <p>Vetta drafts. A named person approves. Nothing is sent to a client, and no candidate is marked as
+        decided, without that stamp — and each stamp is written to the audit trail with who and when.</p>
+    </div>
+    <div class="panel">
+      <div class="mono">RULE 05</div>
+      <h3 style="margin-top:2mm;">The model layer fails over, never guesses</h3>
+      <p>Inference runs across a ladder of providers with circuit breaking and automatic failover. Each
+        attempt carries a hard timeout and a budget; an arm that is slow or failing is dropped, and its
+        failure never becomes a verdict.</p>
+    </div>
+    <div class="panel">
+      <div class="mono">RULE 06</div>
+      <h3 style="margin-top:2mm;">Privacy is a construction, not a setting</h3>
+      <p>Consent is itemized and recorded before processing. Disclosure is filtered when the client reads
+        it, not when it is stored. Erasure deletes the subject's data and recomputes the derived
+        aggregates that had counted them, so nothing quietly survives in a median.</p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:6mm;">
+    <div class="kicker" style="color:var(--faint); font-size:6.8pt;">What happens to one resume</div>
+    <div class="chain">
+      <span class="node">UPLOAD</span>
+      <span class="node">PARSE · PDF / DOCX</span>
+      <span class="node">RUBRIC</span>
+      <span class="node">RANK · CITED</span>
+      <span class="brk"></span>
+      <span class="node">CLAIM CHECKS</span>
+      <span class="node">WRITTEN SCREEN</span>
+      <span class="node">HUMAN STAMP</span>
+      <span class="node">CLIENT CARD</span>
+    </div>
+    <p class="muted" style="margin-top:4mm; font-size:8.4pt;">
+      Each arrow is a stored event with a timestamp. Those timestamps are what the Vetta Index measures,
+      and they are why the product can tell you how long hiring actually took instead of asking.
+    </p>
+  </div>
+
+  <div class="foot"><span>Vetta · product guide</span><span>03 / 05</span></div>
+</section>
+
+<!-- 5 — time -->
+<section class="page">
+  <div class="topbar">
+    <span class="wordmark">VETTA</span>
+    <span class="mono faint" style="font-size:7pt;">04 — HOW LONG IT TAKES</span>
+  </div>
+
+  <div style="margin-top:9mm;">
+    <div class="kicker">The clock</div>
+    <h2 style="margin-top:3mm;">Machine time is minutes.<br />Hiring time is people.</h2>
+    <p class="muted" style="margin-top:4mm; max-width:152mm;">
+      Vetta compresses the work that used to be a recruiter's evenings — reading, ranking, drafting,
+      chasing. What it deliberately does not compress is the two places a person has to be:
+      your review, and the candidate's answer.
+    </p>
+  </div>
+
+  <table class="time-table" style="margin-top:8mm;">
+    <thead>
+      <tr><th>Step</th><th>Machine time</th><th>What it is actually waiting on</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Role goes live</td>
+        <td>Immediate on save</td>
+        <td>No model call; the rubric is compiled from the form and the job description.</td>
+      </tr>
+      <tr>
+        <td>Resume parsed</td>
+        <td>Seconds per file</td>
+        <td>Native extraction, no inference in the path. Batch uploads queue and drain continuously.</td>
+      </tr>
+      <tr>
+        <td>Candidate ranked</td>
+        <td>One model call, hard-capped at ~14s per attempt with failover</td>
+        <td>Queue position in front of it — a 200-resume batch is hours of reading compressed into the
+          time the queue takes to drain.</td>
+      </tr>
+      <tr>
+        <td>Screen generated</td>
+        <td>One model call, same cap</td>
+        <td>The click. A draft screen exists before the recruiter finishes reading the verdict.</td>
+      </tr>
+      <tr>
+        <td>Candidate answers</td>
+        <td>~10 minutes per scenario question (bounded 4–25), up to 2 follow-ups each</td>
+        <td>The candidate. Written and asynchronous — no live call to schedule, nothing to attend.</td>
+      </tr>
+      <tr>
+        <td>Verdict leaves</td>
+        <td>A few minutes of a person's attention</td>
+        <td>You. Vetta drafts and cites; it will not decide for you.</td>
+      </tr>
+      <tr>
+        <td>Apply → shortlist, measured</td>
+        <td>Published weekly, from real timestamps</td>
+        <td>The cohort. Below 5 companies, 25 roles and 50 applications the number is withheld, not
+          guessed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="panel" style="margin-top:7mm;">
+    <div class="kicker" style="color:var(--faint); font-size:6.8pt;">Why there is no “hiring is 3× faster” number here</div>
+    <p class="muted" style="margin-top:2.5mm; font-size:8.6pt;">
+      Because we have not measured it on enough of your kind of hiring yet. The caps above are engineering
+      bounds — how the system is built to behave — not benchmarks. The one duration Vetta quotes publicly
+      is the median time from applying to being shortlisted, cut weekly from stage timestamps, and it stays
+      off the page until the cohort behind it is large enough to mean something. That rule is the reason a
+      number beside our name is worth reading.
+    </p>
+  </div>
+
+  <div class="foot"><span>Vetta · product guide</span><span>04 / 05</span></div>
+</section>
+
+<!-- 6 — price -->
+<section class="page">
+  <div class="topbar">
+    <span class="wordmark">VETTA</span>
+    <span class="mono faint" style="font-size:7pt;">05 — WHAT IS FREE, WHAT IS PAID</span>
+  </div>
+
+  <div style="margin-top:9mm;">
+    <div class="kicker">Pricing</div>
+    <h2 style="margin-top:3mm;">Free until it is useful.<br />Paid per company, not per seat.</h2>
+  </div>
+
+  <div class="plans">
+    <div class="plan">
+      <div class="name">Free</div>
+      <div class="price">₹0</div>
+      <div class="terms">Free while you run one role</div>
+      <ul>
+        <li>1 open role at a time</li>
+        <li>30 AI screens a month</li>
+        <li>1 seat</li>
+        <li>Full evidence-traced verdicts</li>
+        <li>DPDP consent and erasure receipts</li>
+        <li>4 verification reports</li>
+      </ul>
+    </div>
+
+    <div class="plan rec">
+      <span class="badge">Seed startups pick this</span>
+      <div class="name">Vetta Engine</div>
+      <div class="price">₹6,999 <small>/month</small></div>
+      <div class="terms">₹69,990 a year — two months free</div>
+      <ul>
+        <li>3 open roles</li>
+        <li>3 seats</li>
+        <li>300 AI screens a month</li>
+        <li>Paid verification arms — document forensics</li>
+        <li>Pay-on-hire option: ₹0 subscription</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <div class="name">Vetta Ops</div>
+      <div class="price">₹16,999 <small>/month</small></div>
+      <div class="terms">₹1,69,990 a year — two months free</div>
+      <ul>
+        <li>Unlimited open roles</li>
+        <li>10 seats</li>
+        <li>Unlimited AI screens</li>
+        <li>Paid verification arms included</li>
+        <li>Offer Guard and the team desk</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel portfolio-note" style="display:flex; justify-content:space-between; align-items:center; gap:8mm;">
+    <div>
+      <div class="name" style="font-family:Unbounded,sans-serif; font-size:9.6pt;">Vetta Portfolio</div>
+      <p class="muted" style="margin-top:2mm; font-size:8.4pt;">
+        For funds running hiring across a portfolio: 50 seats, unlimited roles and screens, quoted annually per fund.
+      </p>
+    </div>
+    <div class="mono" style="font-size:8pt; color:var(--mint); white-space:nowrap;">QUOTED · ANNUAL PER FUND</div>
+  </div>
+
+  <div class="two" style="margin-top:7mm;">
+    <div class="panel">
+      <div class="kicker" style="color:var(--faint); font-size:6.8pt;">Free — no card, no clock</div>
+      <ul class="list">
+        <li>The whole product on one open role: ranking, evidence, screens, client cards</li>
+        <li>30 screens every month</li>
+        <li>8 verification checks, four full reports</li>
+        <li>Public role pages and the candidate portal</li>
+        <li>The Vetta Index and live proof pages</li>
+        <li>Consent, withdrawal and erasure — never metered</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="kicker" style="color:var(--faint); font-size:6.8pt;">Paid — what money adds</div>
+      <ul class="list">
+        <li>More open roles and more seats</li>
+        <li>300 or unlimited screens a month</li>
+        <li>Document forensics: edit history, orphaned text, anachronisms, certificate bytes</li>
+        <li>Offer Guard rene-risk playbooks</li>
+        <li>Pay-on-hire: ₹0 subscription, ₹49,999 flat when a Vetta shortlist is hired</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Prices in INR, exclusive of taxes, billed through Razorpay. A subscription and a hire are separate
+    events: the success fee is drafted when a Vetta-shortlisted candidate joins and is invoiced by a
+    human — never auto-debited. Running out of a monthly allowance stops new work; it never hides roles,
+    candidates or verdicts you already have. Figures on this page are the ones the product enforces in
+    code, not marketing copy.
+  </div>
+
+  <div class="foot"><span>Vetta · product guide</span><span>05 / 05</span></div>
+</section>
+
+</body>
+</html>
