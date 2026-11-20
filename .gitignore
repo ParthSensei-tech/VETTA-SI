@@ -7,6 +7,14 @@ dist/
 .cache/
 .tanstack/
 
+# Documentation & Strategy manuals (PDFs/HTML books)
+docs/
+
+# Temporary media & generated images
+vibe_images/
+*.pdf
+*.mp4
+
 # Regenerated at runtime by the benchmark and QA CLIs
 artifacts/
 screenshots/
